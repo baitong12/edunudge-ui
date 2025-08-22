@@ -1,23 +1,40 @@
+
 import 'package:flutter/material.dart';
 
 
 class ProfileProvider with ChangeNotifier {
-  String _name = "ชื่อ–นามสกุล";
+  String _name = '';
+  String _lastname = '';
+  String _email = '';
+  String _phone = '';
 
+  
   String get name => _name;
+  String get lastname => _lastname;
+  String get email => _email;
+  String get phone => _phone;
 
-  void setName(String newName) {
-    _name = newName;
-    notifyListeners(); // แจ้งผู้ฟังให้รีเฟรช
+  
+  void setProfileData({
+    required String name,
+    required String lastname,
+    required String email,
+    required String phone,
+  }) {
+    _name = name;
+    _lastname = lastname;
+    _email = email;
+    _phone = phone;
+    notifyListeners(); 
   }
 
+  
   String get initials {
-    final parts = _name.trim().split(' ');
-    if (parts.length >= 2) {
-      return parts[0][0] + parts[1][0];
-    } else if (parts.isNotEmpty) {
-      return parts[0][0];
+    final nameInitial = _name.isNotEmpty ? _name[0] : '';
+    final lastnameInitial = _lastname.isNotEmpty ? _lastname[0] : '';
+    if (nameInitial.isNotEmpty && lastnameInitial.isNotEmpty) {
+      return nameInitial + lastnameInitial;
     }
-    return '?';
+    return '';
   }
 }

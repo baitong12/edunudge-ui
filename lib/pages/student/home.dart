@@ -14,123 +14,192 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF221B64),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
-        child: CustomAppBar(
-          onProfileTap: () {
-            Navigator.pushNamed(context, '/profile');
-          },
-          onLogoutTap: () {
-            Navigator.pushNamedAndRemoveUntil(
-                context, '/login', (route) => false);
-          },
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // หัวข้อ + ปุ่มตรวจสอบ
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(80),
+            child: CustomAppBar(
+              onProfileTap: () {
+                Navigator.pushNamed(context, '/profile');
+              },
+              onLogoutTap: () {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/login', (route) => false);
+              },
+            ),
+          ),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'การเข้าเรียนเฉลี่ยทั้งหมด',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/attendance');
-                      },
-                      child: const Text(
-                        'ตรวจสอบข้อมูลการเข้าเรียน',
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'การเข้าเรียนเฉลี่ยทั้งหมด',
                         style: TextStyle(
                           color: Colors.white,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              const Color.fromARGB(255, 1, 150, 63),
+                              const Color.fromARGB(255, 1, 150, 63)
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              spreadRadius: 1,
+                              blurRadius: 5,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/attendance');
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'ตรวจสอบข้อมูลการเข้าเรียน',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(16.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      height: 250,
+                      child: PieChart(
+                        PieChartData(
+                          sectionsSpace: 4,
+                          centerSpaceRadius: 45,
+                          sections: [
+                            _buildPieSection(
+                                'มาเรียน', come, const Color(0xFF1de9b6)),
+                            _buildPieSection(
+                                'มาสาย', late, const Color(0xFFe040fb)),
+                            _buildPieSection(
+                                'ขาด', absent, const Color(0xFFff4081)),
+                            _buildPieSection(
+                                'ลา', leave, const Color(0xFFffab40)),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // Pie chart
-              Center(
-                child: SizedBox(
-                  height: 250,
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 30,
-                      sections: [
-                        _buildPieSection('มาเรียน', come, Colors.greenAccent),
-                        _buildPieSection('มาสาย', late, Colors.purpleAccent),
-                        _buildPieSection('ขาด', absent, Colors.pinkAccent),
-                        _buildPieSection('ลา', leave, Colors.orange),
+                  const SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 20, horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildProgressBar(
+                            context, 'มาเรียน', come, const Color(0xFF1de9b6)),
+                        const SizedBox(height: 16),
+                        _buildProgressBar(
+                            context, 'มาสาย', late, const Color(0xFFe040fb)),
+                        const SizedBox(height: 16),
+                        _buildProgressBar(
+                            context, 'ขาด', absent, const Color(0xFFff4081)),
+                        const SizedBox(height: 16),
+                        _buildProgressBar(
+                            context, 'ลา', leave, const Color(0xFFffab40)),
                       ],
                     ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 20),
-              // Progress bars
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildProgressBar('มาเรียน', come, Colors.greenAccent),
-                    const SizedBox(height: 16),
-                    _buildProgressBar('มาสาย', late, Colors.purpleAccent),
-                    const SizedBox(height: 16),
-                    _buildProgressBar('ขาด', absent, Colors.pinkAccent),
-                    const SizedBox(height: 16),
-                    _buildProgressBar('ลา', leave, Colors.orange),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
+          bottomNavigationBar:
+              CustomBottomNav(currentIndex: 0, context: context),
         ),
       ),
-      bottomNavigationBar: CustomBottomNav(currentIndex: 0, context: context),
     );
   }
 
-  // Pie chart slice
   PieChartSectionData _buildPieSection(
       String title, double value, Color color) {
     return PieChartSectionData(
       color: color,
       value: value,
       title: '${value.toStringAsFixed(1)}%',
-      radius: 60,
+      radius: 65,
       titleStyle: const TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.bold,
         color: Colors.white,
+        shadows: [
+          Shadow(
+            color: Colors.black,
+            blurRadius: 2,
+          )
+        ],
       ),
     );
   }
 
-  // Progress bar item
-  Widget _buildProgressBar(String label, double percent, Color color) {
+  Widget _buildProgressBar(
+      BuildContext context, String label, double percent, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -142,35 +211,42 @@ class Home extends StatelessWidget {
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: Colors.black,
+                color: Colors.black87,
               ),
             ),
             Text(
               '${percent.toStringAsFixed(2)}%',
               style: const TextStyle(
                 fontSize: 16,
-                color: Colors.black,
+                color: Colors.black54,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Stack(
           children: [
             Container(
               height: 10,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: color.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(5),
               ),
             ),
             Container(
               height: 10,
-              width: (percent / 100) * 300,
+              width: (percent / 100) * MediaQuery.of(context).size.width * 0.8,
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: BorderRadius.circular(5),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.4),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
             ),
           ],

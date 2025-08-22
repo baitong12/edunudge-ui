@@ -13,7 +13,7 @@ class ReportMenuPage extends StatelessWidget {
         return false;
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF221B64),
+        backgroundColor: const Color(0xFF00C853), 
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(80),
           child: CustomAppBar(
@@ -25,73 +25,85 @@ class ReportMenuPage extends StatelessWidget {
             },
           ),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20), // ✅ ไม่เปลี่ยนขนาด padding ของกรอบขาว
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: const [
-                BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3)),
-              ],
+        body: Container(
+          
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'ข้อมูลการเข้าชั้นเรียน',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+          ),
+          child: Scaffold(
+            backgroundColor: Colors.transparent, 
+            body: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white, 
+                  borderRadius: BorderRadius.circular(20), 
+                  boxShadow: const [ 
+                    BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3)),
+                  ],
                 ),
-                const Divider(height: 24, color: Colors.grey, thickness: 1.0),
-                const SizedBox(height: 16), // ✅ เพิ่มระยะห่างระหว่าง Divider กับปุ่ม
-                Expanded( // ✅ ทำให้ช่องปุ่มขยายได้ และควบคุมระยะด้านล่าง
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 4), // ✅ ลดช่องว่างด้านล่างสุด
-                      child: SizedBox(
-                        width: 320,
-                        child: GridView.count(
-                          shrinkWrap: true,
-                          crossAxisCount: 1,
-                          mainAxisSpacing: 20,
-                          childAspectRatio: 3.5,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: [
-                            _buildReportButton(
-                              context,
-                              label: 'รายงานสรุปรวม',
-                              icon: Icons.insert_chart_outlined_rounded,
-                              color: Colors.green.shade700,
-                              route: '/classroom_report_summarize',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'ข้อมูลการเข้าชั้นเรียน',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const Divider(height: 24, color: Colors.grey, thickness: 1.0), 
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: SizedBox(
+                            width: 320,
+                            child: GridView.count(
+                              shrinkWrap: true,
+                              crossAxisCount: 1,
+                              mainAxisSpacing: 20,
+                              childAspectRatio: 3.5,
+                              physics: const NeverScrollableScrollPhysics(),
+                              children: [
+                                _buildReportButton(
+                                  context,
+                                  label: 'รายงานสรุปรวม',
+                                  icon: Icons.insert_chart_outlined_rounded,
+                                  color: Colors.green.shade700,
+                                  route: '/classroom_report_summarize',
+                                ),
+                                _buildReportButton(
+                                  context,
+                                  label: 'นักเรียนที่เฝ้าระวัง',
+                                  icon: Icons.warning_amber_rounded,
+                                  color: Colors.orange.shade600,
+                                  route: '/classroom_report_becareful',
+                                ),
+                                _buildReportButton(
+                                  context,
+                                  label: 'สรุปนักเรียนแต่ละคน',
+                                  icon: Icons.person_search_rounded,
+                                  color: Colors.blue.shade700,
+                                  route: '/classroom_report_student',
+                                ),
+                              ],
                             ),
-                            _buildReportButton(
-                              context,
-                              label: 'นักเรียนที่เฝ้าระวัง',
-                              icon: Icons.warning_amber_rounded,
-                              color: Colors.orange.shade600,
-                              route: '/classroom_report_becareful',
-                            ),
-                            _buildReportButton(
-                              context,
-                              label: 'สรุปนักเรียนแต่ละคน',
-                              icon: Icons.person_search_rounded,
-                              color: Colors.blue.shade700,
-                              route: '/classroom_report_student',
-                            ),
-
-                          ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

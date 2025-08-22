@@ -21,21 +21,24 @@ class Subject extends StatefulWidget {
 
 class _SubjectPageState extends State<Subject> {
   LocationData? userLocation;
-  int currentWeek = 5; // 👈 ตั้งค่าสัปดาห์ปัจจุบัน
+  int currentWeek = 5; 
 
   final students = List.generate(
     10,
     (index) => {
-      'name': 'ชื่อ-นามสกุล',
+      'name': 'ชื่อ-นามสกุล นักศึกษา ${index + 1}',
       'profile': null,
-      'status': index % 3 == 0
+      'status': index % 4 == 0
           ? 'late'
-          : index % 4 == 0
+          : index % 4 == 1
               ? 'absent'
-              : 'present',
+              : index % 4 == 2
+                  ? 'present'
+                  : 'leave',
     },
   );
 
+  
   Future<void> _getUserLocation() async {
     Location location = Location();
     bool serviceEnabled = await location.serviceEnabled();
@@ -54,16 +57,19 @@ class _SubjectPageState extends State<Subject> {
     setState(() => userLocation = currentLocation);
   }
 
+  
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'present':
-        return Colors.green;
+        return Colors.green; 
       case 'late':
-        return Colors.red;
+        return Colors.orange; 
+      case 'absent':
+        return Colors.red; 
       case 'leave':
-        return Colors.blue;
+        return Colors.blue; 
       case 'no_class':
-        return Colors.grey;
+        return Colors.grey; 
       default:
         return Colors.grey;
     }
@@ -72,173 +78,338 @@ class _SubjectPageState extends State<Subject> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF221B64),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: true,
-        title: const Text(
-          'รายละเอียดรายวิชา',
-          style: TextStyle(color: Colors.black),
+      backgroundColor: Colors.transparent, 
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF00C853), Color(0xFF00BCD4)], 
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // แถบแสดงสีสถานะ
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-             
-             
+        child: Scaffold(
+          backgroundColor: Colors.transparent, 
+          appBar: AppBar(
+            backgroundColor: Colors.transparent, 
+            elevation: 0, 
+            automaticallyImplyLeading: true, 
+            title: const Text( 
+              'รายละเอียดรายวิชา',
+              style: TextStyle(
+                color: Colors.white, 
+                fontSize: 20, 
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: const [
-                _LegendDot(color: Colors.green, label: 'มาเรียน' ),
-                _LegendDot(color: Colors.red, label: 'ยังไม่มา'),
-                _LegendDot(color: Colors.blue, label: 'ลา'),
-                _LegendDot(color: Colors.grey, label: 'ไม่มีเรียน'),
-              ],
-            ),
+            iconTheme: const IconThemeData(color: Colors.white), 
           ),
-           const SizedBox(height: 20),
-
-          // กล่องคะแนน
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade400),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const _ScoreCard(
-                  icon: Icons.close,
-                  count: 2,
-                  label: 'ขาดเรียน',
-                  color: Colors.red,
-                ),
-                Container(height: 40, width: 1, color: Colors.grey.shade300),
-                const _ScoreCard(
-                  icon: Icons.access_time,
-                  count: 1,
-                  label: 'มาเรียนสาย',
-                  color: Colors.orange,
-                ),
-                Container(height: 40, width: 1, color: Colors.grey.shade300),
-                const _ScoreCard(
-                  icon: Icons.star,
-                  count: 20,
-                  label: 'คะแนนสะสม',
-                  color: Colors.red,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // ข้อมูลวิชา + สัปดาห์
-          Column(
+          body: ListView(
+            padding: const EdgeInsets.all(16), 
             children: [
-              Center(
-                child: Text(
-                  widget.subject,
-                  style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
+              
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9), 
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _LegendDot(color: getStatusColor('present'), label: 'มาเรียน'),
+                    _LegendDot(color: getStatusColor('late'), label: 'สาย'), 
+                    _LegendDot(color: getStatusColor('absent'), label: 'ขาด'),
+                    _LegendDot(color: getStatusColor('leave'), label: 'ลา'),
+                    _LegendDot(color: getStatusColor('no_class'), label: 'ไม่มีเรียน'),
+                  ],
                 ),
               ),
-              Center(
-                child: Text(
-                  widget.room,
-                  style: const TextStyle(fontSize: 16, color: Colors.white),
+              const SizedBox(height: 20),
+
+              
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white, 
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _ScoreCard(
+                      icon: Icons.close,
+                      count: 2,
+                      label: 'ขาดเรียน',
+                      color: Colors.red,
+                    ),
+                    Container(height: 40, width: 1, color: Colors.grey.shade300),
+                    _ScoreCard(
+                      icon: Icons.access_time,
+                      count: 1,
+                      label: 'มาเรียนสาย',
+                      color: Colors.orange,
+                    ),
+                    Container(height: 40, width: 1, color: Colors.grey.shade300),
+                    _ScoreCard(
+                      icon: Icons.star,
+                      count: 20,
+                      label: 'คะแนนสะสม',
+                      color: Colors.amber,
+                    ),
+                  ],
                 ),
               ),
-              Center(
-                child: Text(
-                  widget.teacher,
-                  style: const TextStyle(fontSize: 16, color: Colors.white),
+              const SizedBox(height: 20),
+
+              
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center, 
+                children: [
+                  Text(
+                    widget.subject,
+                    textAlign: TextAlign.center, 
+                    style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+                  Text(
+                    widget.room,
+                    textAlign: TextAlign.center, 
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                  const SizedBox(height: 15), 
+                  Text( 
+                    '${widget.teacher}',
+                    textAlign: TextAlign.center, 
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                  const SizedBox(height: 5), 
+                  Text( 
+                    'สัปดาห์ที่: $currentWeek',
+                    textAlign: TextAlign.center, 
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white, 
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'เกณฑ์การให้คะแนน',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const Divider(color: Colors.grey, thickness: 0.5, height: 20),
+                    _buildGradeCriteriaRow(context, 'มาเรียนคิดเป็น:', '0 วัน', 'คะแนนสะสม:', '0 คะแนน'),
+                    const SizedBox(height: 8),
+                    _buildGradeCriteriaRow(context, 'มาเป็นเปอร์เซ็นต์:', '0%', 'คะแนนพิเศษ:', '0 คะแนน'),
+                    const SizedBox(height: 8),
+                    _buildGradeCriteriaRow(context, 'ขาดเป็นเปอร์เซ็นต์:', '0%', 'คะแนนพิเศษ:', '0 คะแนน'),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'สัปดาห์ที่: $currentWeek',
-                style: const TextStyle(fontSize: 14, color: Colors.white),
+              const SizedBox(height: 20),
+
+              
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white, 
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('รายชื่อนักศึกษา',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black87,
+                        )),
+                    const Divider(color: Colors.grey, thickness: 0.5, height: 20),
+                    ...students.map((student) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.black,
+                              radius: 20,
+                              child: Text(
+                                student['name']![0],
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              student['name']!,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            trailing: Icon(Icons.circle,
+                                color: getStatusColor(student['status']!),
+                                size: 12),
+                          ),
+                        )),
+                  ],
+                ),
               ),
+              const SizedBox(height: 20),
+
+              
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white, 
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('ตำแหน่ง',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black87,
+                        )),
+                    const Divider(color: Colors.grey, thickness: 0.5, height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        
+                      },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: const Color(0xFF00C853),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        elevation: 3,
+                        shadowColor: const Color(0xFF00C853).withOpacity(0.5),
+                      ),
+                      child: const Text(
+                        'แผนที่ห้องเรียน',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: _getUserLocation,
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: const Color(0xFF00C853),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        elevation: 3,
+                        shadowColor: const Color(0xFF00C853).withOpacity(0.5),
+                      ),
+                      child: const Text(
+                        'แผนที่นักศึกษา',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    if (userLocation != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          'ตำแหน่งของคุณ: (${userLocation!.latitude?.toStringAsFixed(4)}, ${userLocation!.longitude?.toStringAsFixed(4)})',
+                          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20), 
             ],
           ),
-          const SizedBox(height: 20),
-
-          // รายชื่อนักศึกษา
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('รายชื่อนักศึกษา',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const Divider(),
-                ...students.map((student) => ListTile(
-                      leading: const CircleAvatar(backgroundColor: Colors.black),
-                      title: Text(student['name']!),
-                      trailing: Icon(Icons.circle,
-                          color: getStatusColor(student['status']!), size: 12),
-                    )),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // ตำแหน่ง
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('ตำแหน่ง',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const Divider(),
-                ElevatedButton(
-                  onPressed: () {
-                    // TODO: แสดงตำแหน่งห้องเรียน
-                  },
-                  child: const Text('แผนที่ห้องเรียน'),
-                ),
-                ElevatedButton(
-                  onPressed: _getUserLocation,
-                  child: const Text('แผนที่นักศึกษา'),
-                ),
-                if (userLocation != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                        'ตำแหน่งของคุณ: (${userLocation!.latitude}, ${userLocation!.longitude})'),
-                  ),
-              ],
-            ),
-          ),
-        ],
+          bottomNavigationBar: CustomBottomNav(currentIndex: 2, context: context),
+        ),
       ),
-      bottomNavigationBar: CustomBottomNav(currentIndex: 2, context: context),
+    );
+  }
+
+  
+  Widget _buildGradeCriteriaRow(
+      BuildContext context, String label1, String value1, String label2, String value2) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            '$label1 $value1',
+            style: const TextStyle(color: Colors.black54, fontSize: 14),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            '$label2 $value2',
+            textAlign: TextAlign.end,
+            style: const TextStyle(color: Colors.black54, fontSize: 14),
+          ),
+        ),
+      ],
     );
   }
 }
+
 
 class _ScoreCard extends StatelessWidget {
   final IconData icon;
@@ -260,12 +431,13 @@ class _ScoreCard extends StatelessWidget {
         Icon(icon, color: color, size: 30),
         const SizedBox(height: 4),
         Text('$count',
-            style: TextStyle(fontWeight: FontWeight.bold, color: color)),
-        Text(label),
+            style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 18)),
+        Text(label, style: const TextStyle(color: Colors.black87, fontSize: 14)),
       ],
     );
   }
-}
+  }
+
 
 class _LegendDot extends StatelessWidget {
   final Color color;
@@ -276,12 +448,13 @@ class _LegendDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min, 
       children: [
         Icon(Icons.circle, color: color, size: 12),
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(fontSize: 12, color: Colors.white),  // <-- เพิ่มสีขาวตรงนี้
+          style: const TextStyle(fontSize: 12, color: Colors.black87, fontWeight: FontWeight.w500), 
         ),
       ],
     );

@@ -331,7 +331,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                     ),
                     SizedBox(width: 16),
                     Expanded(
-                      child: ElevatedButton(
+                      child: ElevatedButton( 
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF3F8FAF),
                           foregroundColor: Colors.white,
@@ -371,7 +371,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('ยืนยันการลบห้องเรียน'),
+        title: Text('ยืนยันการลบห้องเรียน', style: TextStyle(fontWeight: FontWeight.bold)),
         content: Text(
             'คุณแน่ใจหรือไม่ว่าต้องการลบห้องเรียนนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -391,7 +391,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('ลบห้องเรียนเรียบร้อยแล้ว')),
               );
-              Navigator.pop(context);
+              Navigator.pop(context); 
             },
             child: Text('ลบ', style: TextStyle(color: Colors.white)),
           ),
@@ -407,15 +407,21 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
   }
 
   String holidaysText() {
-    return 'แตะเพื่อเลือก';
+    if (selectedHolidays.isEmpty) {
+      return 'แตะเพื่อเลือก';
+    } else {
+      
+      final formattedDates = selectedHolidays.map((d) => DateFormat('d MMM', 'th').format(d)).join(', ');
+      return formattedDates;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF080045),
+      backgroundColor: Colors.transparent, 
       appBar: AppBar(
-        backgroundColor: Color(0xFF080045),
+        backgroundColor: Color(0xFF080045), 
         elevation: 0,
         automaticallyImplyLeading: false,
         toolbarHeight: 60,
@@ -448,72 +454,85 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
           ],
         ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('เวลาการแจ้งเตือน',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[300],
-                        fontSize: 16)),
-                SizedBox(height: 10),
-                _buildSettingTile('🟢 แจ้งเตือนระดับสีเขียว',
-                    formatTime(greenTime), () => _selectTime('green', greenTime)),
-                _buildSettingTile('🟡 แจ้งเตือนระดับสีเหลือง',
-                    formatTime(yellowTime), () => _selectTime('yellow', yellowTime)),
-                _buildSettingTile('🔴 แจ้งเตือนระดับสีแดง',
-                    formatTime(redTime), () => _selectTime('red', redTime)),
-                SizedBox(height: 30),
-                Text('สถานะห้องเรียน',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[300],
-                        fontSize: 16)),
-                SizedBox(height: 10),
-                _buildSettingTile(
-                    'สถานะห้องเรียน', isOpen ? 'เปิด' : 'ปิด', _selectStatus),
-                SizedBox(height: 30),
-                Text('วันหยุดแจ้งเตือน',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[300],
-                        fontSize: 16)),
-                SizedBox(height: 10),
-                _buildSettingTile(
-                    'เลือกวันหยุด', holidaysText(), _pickHolidaysDialog),
-                SizedBox(height: 30),
-                Row(
+      body: Container(
+        
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent, 
+          body: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _confirmDeleteClassroom,
-                        icon: Icon(Icons.delete, color: Colors.white),
-                        label: Text(
-                          'ลบห้องเรียน',
-                          style: TextStyle(
-                            color: Colors.white,
+                    Text('เวลาการแจ้งเตือน',
+                        style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                            fontSize: 16,
+                            color: Colors.grey[300],
+                            fontSize: 16)),
+                    SizedBox(height: 10),
+                    _buildSettingTile('🟢 แจ้งเตือนระดับสีเขียว',
+                        formatTime(greenTime), () => _selectTime('green', greenTime)),
+                    _buildSettingTile('🟡 แจ้งเตือนระดับสีเหลือง',
+                        formatTime(yellowTime), () => _selectTime('yellow', yellowTime)),
+                    _buildSettingTile('🔴 แจ้งเตือนระดับสีแดง',
+                        formatTime(redTime), () => _selectTime('red', redTime)),
+                    SizedBox(height: 30),
+                    Text('สถานะห้องเรียน',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[300],
+                            fontSize: 16)),
+                    SizedBox(height: 10),
+                    _buildSettingTile(
+                        'สถานะห้องเรียน', isOpen ? 'เปิด' : 'ปิด', _selectStatus),
+                    SizedBox(height: 30),
+                    Text('วันหยุดแจ้งเตือน',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[300],
+                            fontSize: 16)),
+                    SizedBox(height: 10),
+                    _buildSettingTile(
+                        'เลือกวันหยุด', holidaysText(), _pickHolidaysDialog),
+                    SizedBox(height: 30),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _confirmDeleteClassroom,
+                            icon: Icon(Icons.delete, color: Colors.white),
+                            label: Text(
+                              'ลบห้องเรียน',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                                fontSize: 16,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              elevation: 0,
+                            ),
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

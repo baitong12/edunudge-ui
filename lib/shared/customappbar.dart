@@ -38,12 +38,24 @@ class CustomAppBar extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: onProfileTap,
-                  child: CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.black,
-                    child: Text(
-                      profile.initials,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  child: Container(
+                    
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        profile.initials,
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ),

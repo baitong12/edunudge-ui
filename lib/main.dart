@@ -1,28 +1,37 @@
+//main.dart
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:provider/provider.dart'; // ✅ เพิ่ม
+import 'package:provider/provider.dart';
 
-// 🔧 เพิ่ม Provider ของคุณ
+// ✅ Providers
 import 'providers/profile_provider.dart';
 
-// ไฟล์อื่นๆ
+// ✅ Auth Pages
 import 'auth/login.dart';
 import 'auth/register01.dart';
 import 'auth/register02.dart';
-import 'auth/reset_password.dart';
 import 'auth/forgot_password.dart';
+import 'auth/reset_password.dart';
 
-import 'shared/profile.dart';
 
+// ✅ Shared
+import 'shared/profile.dart'; 
+// ✅ Student Pages
 import 'pages/student/home.dart';
 import 'pages/student/attendance.dart';
 import 'pages/student/classroom.dart';
 import 'pages/student/join_class.dart';
 import 'pages/student/subject.dart';
 
+// ✅ Teacher Pages
 import 'pages/teacher/home.dart';
-import 'pages/teacher/classroom_create.dart';
+
+
+import 'pages/teacher/classroom_cerate01.dart';
+import 'pages/teacher/classroom_cerate02.dart';
+import 'pages/teacher/classroom_cerate03.dart';
+import 'pages/teacher/classroom_cerate04.dart';
 import 'pages/teacher/classroom_settings.dart';
 import 'pages/teacher/classroom_subject.dart';
 import 'pages/teacher/classroom_check.dart';
@@ -33,62 +42,65 @@ import 'pages/teacher/classroom_report_summarize.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('th');
-
-  // ✅ ห่อแอปด้วย MultiProvider
+  await initializeDateFormatting('th'); 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
-      child: const Edunudge(),
+      child: const EduNudgeApp(),
     ),
   );
 }
 
-class Edunudge extends StatelessWidget {
-  const Edunudge({super.key});
-
+class EduNudgeApp extends StatelessWidget {
+  const EduNudgeApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'EduNudge',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
         useMaterial3: true,
+        primarySwatch: Colors.blue,
       ),
+      locale: const Locale('th'),
+      supportedLocales: const [
+        Locale('en'),
+        Locale('th'),
+      ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en'),
-        Locale('th'),
-      ],
       initialRoute: '/login',
       routes: {
-        //ใช้ร่วมกัน
+        // 🔐 Authentication
         '/login': (context) => const Login(),
         '/register01': (context) => Register01(),
         '/register02': (context) => Register02(),
         '/forgot_password': (context) => const ForgotPassword(),
-        '/reset_password': (context) => const ResetPassword(),
+        '/reset_password': (context) => const ResetPassword(), 
 
-        '/profile': (context) => Profile(),
+        // 👤 Shared
+        '/profile': (context) => const ProfilePage(), 
 
-        //นักเรียน
-        '/home_student': (context) => Home(),
-        '/join-classroom': (context) => ClassroomJoin(),
-        '/classroom': (context) => Classroom(),
-        '/attendance': (context) => Attendance(),
+        // 👨‍🎓 Student
+        '/home_student': (context) => const Home(),
+        '/join-classroom': (context) => const ClassroomJoin(),
+        '/classroom': (context) => const Classroom(),
+        '/attendance': (context) => const Attendance(),
 
-        //อาจารย์
-        '/home_teacher': (context) => HomePage(),
-        '/classroom_create': (context) => const CreateClassroom(),
+        // 👩‍🏫 Teacher
+        '/home_teacher': (context) => const HomePage(),
+
+        '/classroom_create01': (context) => const CreateClassroom01(),
+        '/classroom_create02': (context) => const CreateClassroom02(),
+        '/classroom_create03': (context) => const CreateClassroom03(),
+        '/classroom_create04': (context) => const CreateClassroom04(),
         '/classroom_settings': (context) => ClassroomSettingsPage(),
-        '/classroom_subject': (context) => const ClassroomSubject(),
+        '/classroom_subject': (context) => ClassroomSubject(),
         '/classroom_check': (context) => const AttendancePage(),
         '/classroom_report': (context) => const ReportMenuPage(),
         '/classroom_report_student': (context) => const StudentReportPage(),
@@ -106,7 +118,7 @@ class Edunudge extends StatelessWidget {
             ),
           );
         }
-        return null;
+        return null; 
       },
     );
   }

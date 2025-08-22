@@ -13,13 +13,20 @@ class CustomBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF221B64), // สีพื้นหลังรอบนอก
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // เว้นรอบด้าน
+      
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color.fromARGB(255, 3, 193, 149), Color(0xFF00BCD4)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), 
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(30), // มนรอบมุม
+          color: Colors.white, 
+          borderRadius: BorderRadius.circular(30), 
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -31,14 +38,16 @@ class CustomBottomNav extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
+            
             _navBarItem(Icons.home, 'หน้าหลัก', currentIndex == 0, () {
               if (currentIndex != 0) {
                 Navigator.pushReplacementNamed(context, '/home_teacher');
               }
             }),
+            
             _navBarItem(Icons.add_home, 'สร้างห้องเรียน', currentIndex == 1, () {
               if (currentIndex != 1) {
-                Navigator.pushReplacementNamed(context, '/classroom_create');
+                Navigator.pushReplacementNamed(context, '/classroom_create01');
               }
             }),
           ],
@@ -47,28 +56,36 @@ class CustomBottomNav extends StatelessWidget {
     );
   }
 
+  
   Widget _navBarItem(
       IconData icon, String label, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? const Color(0xFF221B64) : Colors.black,
-            size: 26,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: isSelected ? const Color(0xFF221B64) : Colors.black,
+      child: AnimatedContainer( 
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), 
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              
+              color: isSelected ? const Color(0xFF00C853) : Colors.black54,
+              size: 26,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12, 
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500, 
+                
+                color: isSelected ? const Color.fromARGB(255, 7, 255, 131) : Colors.black54,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
