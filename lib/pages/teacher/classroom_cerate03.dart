@@ -13,24 +13,14 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
   final Color primaryColor = const Color(0xFF3F8FAF);
 
   int _selectedItemCount = 1;
-
   final List<String> _itemCountOptions = ['1', '2', '3', '4', '5'];
 
   final List<String> _cumulativeScoreOptions = [
-    '100 %',
-    '90% ขึ้นไป',
-    '80 % ขึ้นไป',
-    '70 % ขึ้นไป',
-    '60% ขึ้นไป',
-    '50 % ขึ้นไป',
-    '40 % ขึ้นไป',
-    '30 % ขึ้นไป',
-    '20 % ขึ้นไป',
-    '10 % ขึ้นไป',
+    '100 %', '90% ขึ้นไป', '80 % ขึ้นไป', '70 % ขึ้นไป', '60% ขึ้นไป',
+    '50 % ขึ้นไป', '40 % ขึ้นไป', '30 % ขึ้นไป', '20 % ขึ้นไป', '10 % ขึ้นไป',
   ];
 
-  final List<String> _bonusScoreOptions =
-      List.generate(10, (index) => (index + 1).toString());
+  final List<String> _bonusScoreOptions = List.generate(10, (index) => (index + 1).toString());
 
   List<String?> _selectedCumulativeScores = List.filled(1, null);
   List<String?> _selectedBonusScores = List.filled(1, null);
@@ -38,8 +28,77 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
   final TextEditingController _visitDaysController = TextEditingController();
   final TextEditingController _scoreXController = TextEditingController();
 
+  // ตัวแปรสำหรับรับ arguments
+  late String nameSubject;
+  late String roomNumber;
+  late String academicYear;
+  late String semester;
+  late String startDateStr;
+  late String endDateStr;
+  late List<dynamic> schedules;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)!.settings.arguments as Map;
+    nameSubject = args['name_subject'];
+    roomNumber = args['room_number'];
+    academicYear = args['year'];
+    semester = args['semester'];
+    startDateStr = args['start_date'];
+    endDateStr = args['end_date'];
+    schedules = args['schedules'];
+  }
+
+  @override
+  void dispose() {
+    _visitDaysController.dispose();
+    _scoreXController.dispose();
+    super.dispose();
+  }
+
   void validateAndSave() {
-    Navigator.pushNamed(context, '/classroom_create04');
+    bool hasError = false;
+
+    // ตรวจสอบ TextField
+    if (_visitDaysController.text.isEmpty || _scoreXController.text.isEmpty) {
+      hasError = true;
+    }
+
+    // ตรวจสอบ dropdown
+    for (int i = 0; i < _selectedItemCount; i++) {
+      if (_selectedCumulativeScores[i] == null || _selectedBonusScores[i] == null) {
+        hasError = true;
+        break;
+      }
+    }
+
+    if (hasError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
+      );
+      return;
+    }
+
+    // สร้าง points (criteria เดิม)
+    final points = List.generate(_selectedItemCount, (i) => {
+      "point_percent": parsePercent(_selectedCumulativeScores[i]),
+      "point_extra": int.tryParse(_selectedBonusScores[i] ?? '0') ?? 0,
+    });
+
+    // ส่งข้อมูลไปหน้า 4
+    Navigator.pushNamed(context, '/classroom_create04', arguments: {
+      'name_subject': nameSubject,
+      'room_number': roomNumber,
+      'year': academicYear,
+      'semester': semester,
+      'start_date': startDateStr,
+      'end_date': endDateStr,
+      'schedules': schedules,
+      "required_days": int.tryParse(_visitDaysController.text) ?? 0,
+      "reward_points": int.tryParse(_scoreXController.text) ?? 0,
+      "points": points,
+    });
   }
 
   Widget _buildTextField(String hint, TextEditingController controller) {
@@ -95,11 +154,10 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
     );
   }
 
-  @override
-  void dispose() {
-    _visitDaysController.dispose();
-    _scoreXController.dispose();
-    super.dispose();
+  int parsePercent(String? s) {
+    if (s == null) return 0;
+    final match = RegExp(r'\d+').firstMatch(s);
+    return match != null ? int.parse(match.group(0)!) : 0;
   }
 
   @override
@@ -236,7 +294,7 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                                     ),
                                     const SizedBox(height: 8),
                                     _buildDropdownField(
-                                      hint: 'คะเเนนสะสม',
+                                      hint: 'คะแนนสะสม',
                                       options: _cumulativeScoreOptions,
                                       selectedValue:
                                           _selectedCumulativeScores[i],

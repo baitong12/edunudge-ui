@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:edunudge/shared/customappbar.dart';
 import 'package:edunudge/pages/teacher/custombottomnav.dart';
 
 class CreateClassroom02 extends StatefulWidget {
@@ -31,20 +30,32 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
 
   bool isSaving = false;
 
+  // ข้อมูลที่รับจากหน้า 01
+  late String nameSubject;
+  late String roomNumber;
+  late String academicYear;
+  late String semester;
+  late DateTime startDate;
+  late DateTime endDate;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)!.settings.arguments as Map;
+    nameSubject = args['name_subject'];
+    roomNumber = args['room_number'];
+    academicYear = args['year'];
+    semester = args['semester'];
+    startDate = args['start_date'];
+    endDate = args['end_date'];
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: const Color(0xFF00C853),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
-        child: CustomAppBar(
-          onProfileTap: () => Navigator.pushNamed(context, '/profile'),
-          onLogoutTap: () =>
-              Navigator.pushNamedAndRemoveUntil(context, '/login', (r) => false),
-        ),
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -80,16 +91,17 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('สร้างห้องเรียน',
-                          style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold)),
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                       const Divider(height: 24, thickness: 1, color: Colors.grey),
                       const SizedBox(height: 16),
-                      const Text('จำนวนวันที่เรียนต่อสัปดาห์', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                      const Text('จำนวนวันที่เรียนต่อสัปดาห์',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                       const SizedBox(height: 8),
                       Container(
                         decoration: daysError
-                            ? BoxDecoration(border: Border.all(color: Colors.red, width: 2), borderRadius: BorderRadius.circular(8))
+                            ? BoxDecoration(
+                                border: Border.all(color: Colors.red, width: 2),
+                                borderRadius: BorderRadius.circular(8))
                             : null,
                         child: Wrap(
                           spacing: 12,
@@ -121,15 +133,19 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('วันที่ ${i + 1}', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
+                              Text('วันที่ ${i + 1}',
+                                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  const Text('วันที่เรียน: '), const SizedBox(width: 12),
+                                  const Text('วันที่เรียน: '),
+                                  const SizedBox(width: 12),
                                   Expanded(
                                     child: Container(
                                       decoration: weekDayError[i]
-                                          ? BoxDecoration(border: Border.all(color: Colors.red, width: 2), borderRadius: BorderRadius.circular(8))
+                                          ? BoxDecoration(
+                                              border: Border.all(color: Colors.red, width: 2),
+                                              borderRadius: BorderRadius.circular(8))
                                           : null,
                                       child: DropdownButton<String>(
                                         isExpanded: true,
@@ -138,7 +154,9 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                                         items: weekDays.map((day) {
                                           return DropdownMenuItem(
                                             value: day,
-                                            child: Text(day, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w500)),
+                                            child: Text(day,
+                                                style: const TextStyle(
+                                                    color: Colors.black, fontWeight: FontWeight.w500)),
                                           );
                                         }).toList(),
                                         onChanged: (value) {
@@ -179,16 +197,15 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red, 
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 3,
                         shadowColor: Colors.black.withOpacity(0.2),
                       ),
                       onPressed: () => Navigator.pop(context),
                       child: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 14),
-                        child: Text('ยกเลิก', style: TextStyle(color: Colors.white, fontSize: 16)), 
+                        child: Text('ยกเลิก', style: TextStyle(color: Colors.white, fontSize: 16)),
                       ),
                     ),
                   ),
@@ -196,16 +213,15 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black, 
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                        backgroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 3,
                         shadowColor: Colors.black.withOpacity(0.5),
                       ),
                       onPressed: validateAndSave,
                       child: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 14),
-                        child: Text('ถัดไป', style: TextStyle(color: Colors.white, fontSize: 16)), 
+                        child: Text('ถัดไป', style: TextStyle(color: Colors.white, fontSize: 16)),
                       ),
                     ),
                   ),
@@ -219,52 +235,98 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
     );
   }
 
-  void validateAndSave() {
-    bool hasError = false;
+ void validateAndSave() {
+  bool hasError = false;
 
-    if (selectedDays == null) {
+  if (selectedDays == null) {
+    setState(() {
+      daysError = true;
+    });
+    hasError = true;
+  }
+
+  for (int i = 0; i < (selectedDays ?? 0); i++) {
+    if (selectedWeekDays[i] == null) {
       setState(() {
-        daysError = true;
+        weekDayError[i] = true;
+      });
+      hasError = true;
+    }
+    if (startTimes[i] == null) {
+      setState(() {
+        startTimeError[i] = true;
+      });
+      hasError = true;
+    }
+    if (endTimes[i] == null) {
+      setState(() {
+        endTimeError[i] = true;
       });
       hasError = true;
     }
 
-    for (int i = 0; i < (selectedDays ?? 0); i++) {
-      if (selectedWeekDays[i] == null) {
-        setState(() {
-          weekDayError[i] = true;
-        });
+    if (startTimes[i] != null && endTimes[i] != null) {
+      if (startTimes[i] == endTimes[i]) {
+        _showAlertDialog('ข้อมูลไม่ถูกต้อง', 'เวลาเริ่มและเวลาจบต้องไม่ตรงกัน');
         hasError = true;
-      }
-
-      if (startTimes[i] == null) {
-        setState(() {
-          startTimeError[i] = true;
-        });
+      } else if (isEndTimeBeforeStartTime(startTimes[i]!, endTimes[i]!)) {
+        _showAlertDialog('ข้อมูลไม่ถูกต้อง', 'เวลาจบคาบเรียนต้องมากกว่าเวลาเริ่มคาบเรียน');
         hasError = true;
-      }
-
-      if (endTimes[i] == null) {
-        setState(() {
-          endTimeError[i] = true;
-        });
-        hasError = true;
-      }
-
-      if (startTimes[i] != null && endTimes[i] != null) {
-        if (isEndTimeBeforeStartTime(startTimes[i]!, endTimes[i]!)) {
-          _showAlertDialog('ข้อมูลไม่ถูกต้อง', 'เวลาจบคาบเรียนต้องมากกว่าเวลาเริ่มคาบเรียน');
-          hasError = true;
-        }
       }
     }
+  }
 
-    if (!hasError) {
-      Navigator.pushNamed(context, '/classroom_create03');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง')),
-      );
+  if (!hasError) {
+    // แปลง schedules
+    List<Map<String, dynamic>> schedules = [];
+    for (int i = 0; i < selectedDays!; i++) {
+      final day = selectedWeekDays[i]!;
+      final start = startTimes[i]!;
+      final end = endTimes[i]!;
+
+      schedules.add({
+        "day_of_week": capitalizeFirstLetter(thaiToEnglishDay(day)),
+        "time_start": "${start.hour.toString().padLeft(2,'0')}:${start.minute.toString().padLeft(2,'0')}", // <-- แก้ตรงนี้
+        "time_end": "${end.hour.toString().padLeft(2,'0')}:${end.minute.toString().padLeft(2,'0')}",     // <-- แก้ตรงนี้
+      });
+    }
+
+    // แปลง start_date, end_date เป็น string format YYYY-MM-DD
+    String startDateStr = "${startDate.year}-${startDate.month.toString().padLeft(2,'0')}-${startDate.day.toString().padLeft(2,'0')}";
+    String endDateStr = "${endDate.year}-${endDate.month.toString().padLeft(2,'0')}-${endDate.day.toString().padLeft(2,'0')}";
+
+    Navigator.pushNamed(
+      context,
+      '/classroom_create03',
+      arguments: {
+        'name_subject': nameSubject,
+        'room_number': roomNumber,
+        'year': academicYear,
+        'semester': semester,
+        'start_date': startDateStr,
+        'end_date': endDateStr,
+        'schedules': schedules,
+      },
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง')),
+    );
+  }
+}
+
+
+  // ฟังก์ชันช่วยแปลงวันไทย -> อังกฤษ
+  String thaiToEnglishDay(String day) {
+    switch(day) {
+      case 'จันทร์': return 'monday';
+      case 'อังคาร': return 'tuesday';
+      case 'พุธ': return 'wednesday';
+      case 'พฤหัสบดี': return 'thursday';
+      case 'ศุกร์': return 'friday';
+      case 'เสาร์': return 'saturday';
+      case 'อาทิตย์': return 'sunday';
+      default: return '';
     }
   }
 
@@ -281,34 +343,6 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
           endTimeError[index] = false;
         }
       });
-      
-      final start = startTimes[index];
-      final end = endTimes[index];
-      if (start != null && end != null) {
-        if (start.hour == end.hour && start.minute == end.minute) {
-          _showAlertDialog('ข้อมูลไม่ถูกต้อง', 'เวลาเริ่มและเวลาจบต้องไม่ตรงกัน');
-          setState(() {
-            if (isStart) {
-              startTimes[index] = null;
-              startTimeError[index] = true;
-            } else {
-              endTimes[index] = null;
-              endTimeError[index] = true;
-            }
-          });
-        } else if (isEndTimeBeforeStartTime(start, end)) {
-          _showAlertDialog('ข้อมูลไม่ถูกต้อง', 'เวลาจบคาบเรียนต้องมากกว่าเวลาเริ่มคาบเรียน');
-          setState(() {
-            if (isStart) {
-              startTimes[index] = null;
-              startTimeError[index] = true;
-            } else {
-              endTimes[index] = null;
-              endTimeError[index] = true;
-            }
-          });
-        }
-      }
     }
   }
 
@@ -332,28 +366,24 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
     );
   }
 
-  Widget buildTimePickerButton({
-    required int index,
-    required bool isStart,
-    bool error = false,
-  }) {
+  Widget buildTimePickerButton({required int index, required bool isStart, bool error = false}) {
     return Row(
       children: [
         Text(isStart ? 'เวลาเริ่ม: ' : 'เวลาจบ: '),
         const SizedBox(width: 12),
-        Container(
-          decoration: error
-              ? BoxDecoration(border: Border.all(color: Colors.red, width: 2), borderRadius: BorderRadius.circular(8))
-              : null,
-          child: ElevatedButton(
-            onPressed: () => pickTime(index, isStart),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: Text(
-              formatTimeOfDay(isStart ? startTimes[index] : endTimes[index]),
-              style: const TextStyle(color: Colors.white),
+        Expanded(
+          child: Container(
+            decoration: error
+                ? BoxDecoration(border: Border.all(color: Colors.red, width: 2), borderRadius: BorderRadius.circular(8))
+                : null,
+            child: ElevatedButton(
+              onPressed: () => pickTime(index, isStart),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: Text(formatTimeOfDay(isStart ? startTimes[index] : endTimes[index]),
+                  style: const TextStyle(color: Colors.white)),
             ),
           ),
         ),
@@ -377,7 +407,8 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
           padding: const EdgeInsets.all(16),
           child: StatefulBuilder(builder: (context, setStateDialog) {
             return Column(mainAxisSize: MainAxisSize.min, children: [
-              Text('เลือกเวลา', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF3F8FAF))),
+              Text('เลือกเวลา',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF3F8FAF))),
               const SizedBox(height: 16),
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 SizedBox(
@@ -442,4 +473,9 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
       );
     });
   }
+}
+
+String capitalizeFirstLetter(String s) {
+  if (s.isEmpty) return s;
+  return s[0].toUpperCase() + s.substring(1).toLowerCase();
 }

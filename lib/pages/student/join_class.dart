@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:edunudge/pages/student/custombottomnav.dart';
+import 'package:edunudge/services/api_service.dart';
 
 class ClassroomJoin extends StatefulWidget {
   const ClassroomJoin({Key? key}) : super(key: key);
@@ -11,6 +12,7 @@ class ClassroomJoin extends StatefulWidget {
 
 class _ClassroomJoinState extends State<ClassroomJoin> {
   final TextEditingController _classCodeController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -18,27 +20,52 @@ class _ClassroomJoinState extends State<ClassroomJoin> {
     super.dispose();
   }
 
+  Future<void> _joinClassroom() async {
+    final code = _classCodeController.text.trim();
+    if (code.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณากรอกรหัสห้องเรียน')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final token = await ApiService.getToken();
+      if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
+
+      final response = await ApiService.joinClassroom(code);
+
+      if (response.containsKey('classroom')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'เข้าร่วมห้องเรียนสำเร็จ: ${response['classroom']['name_subject']}'),
+          ),
+        );
+        Navigator.pushReplacementNamed(context, '/classroom');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'เข้าร่วมห้องเรียนไม่สำเร็จ: ${response['message'] ?? 'ไม่ทราบสาเหตุ'}'),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true, 
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF00C853), 
-        elevation: 0,
-        automaticallyImplyLeading: false, 
-        systemOverlayStyle: SystemUiOverlayStyle.light, 
-        title: const Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            'เข้าร่วมห้องเรียน',
-            style: TextStyle(
-              color: Colors.white, 
-              fontWeight: FontWeight.bold,
-              fontSize: 24,
-            ),
-          ),
-        ),
-      ),
+      extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -48,104 +75,129 @@ class _ClassroomJoinState extends State<ClassroomJoin> {
           ),
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 100.0), 
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 80.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ข้อความเข้าร่วมห้องเรียนตรงกลาง
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 30),
+                  child: Text(
+                    'เข้าร่วมห้องเรียน',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 28,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(1, 1),
+                          blurRadius: 3,
+                          color: Colors.black45,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // กล่องรหัสห้องเรียน
               Container(
                 padding: const EdgeInsets.all(24.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.0),
+                  borderRadius: BorderRadius.circular(20.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       'รหัสห้องเรียน',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     const Text(
                       'ขอรหัสห้องเรียนจากอาจารย์ประจำวิชา นำมาใส่ที่นี่',
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     TextField(
                       controller: _classCodeController,
                       decoration: InputDecoration(
                         hintText: 'รหัสห้องเรียน',
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
+                            horizontal: 16, vertical: 16),
+                        prefixIcon:
+                            const Icon(Icons.vpn_key, color: Colors.green),
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    // ข้อความแนะนำเพิ่มเติมด้านล่าง
+                    const Text(
+                      '- วิธีลงชื่อเข้าใช้ด้วยรหัส\n'
+                      '- ใช้บัญชีที่ได้รับอนุญาต\n'
+                      '- ใช้รหัสห้องเรียนที่ได้รับจากอาจารย์ผู้สอนเท่านั้น',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 40),
 
-              const Text(
-                'วิธีลงชื่อเข้าใช้ด้วยรหัสชั้นเรียน',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+              // ปุ่มเข้าร่วม
+              ElevatedButton(
+                onPressed: _isLoading ? null : _joinClassroom,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade700,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                  elevation: 6,
+                  shadowColor: Colors.black45,
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'เข้าร่วมห้องเรียน',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
               ),
-              const SizedBox(height: 12),
-              _bulletPoint('ใช้บัญชีที่ได้รับอนุญาต'),
-              _bulletPoint('ใช้รหัสห้องเรียนที่ได้รับจากอาจารย์ผู้สอนเท่านั้น'),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
 
+              // ปุ่มยกเลิก
+              // ปุ่มยกเลิก
               ElevatedButton(
                 onPressed: () {
-                  if (_classCodeController.text.isNotEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(
-                              'กำลังเข้าร่วมห้องเรียน ${_classCodeController.text}')),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('กรุณากรอกรหัสห้องเรียน')),
-                    );
-                  }
+                  Navigator.pushReplacementNamed(context, '/home_student');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
+                  backgroundColor: Colors.redAccent,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                child: const Text(
-                  'เข้าร่วมห้องเรียน',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
+                      borderRadius: BorderRadius.circular(30)),
+                  elevation: 6,
+                  shadowColor: Colors.black38,
                 ),
                 child: const Text(
                   'ยกเลิก',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -153,24 +205,6 @@ class _ClassroomJoinState extends State<ClassroomJoin> {
         ),
       ),
       bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
-    );
-  }
-
-  Widget _bulletPoint(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(
-              text,
-              style:
-                  const TextStyle(fontSize: 16, color: Colors.white),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

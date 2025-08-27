@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:edunudge/services/api_service.dart';
+
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -11,14 +14,106 @@ class _LoginState extends State<Login> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  void _login() {
-    const String userRole = 'teacher';
+  bool _isLoading = false;
+  String? _errorMessage;
 
-    if (userRole == 'teacher') {
-      Navigator.pushReplacementNamed(context, '/home_teacher');
-    } else if (userRole == 'student') {
-      Navigator.pushReplacementNamed(context, '/home_student');
+  @override
+  void initState() {
+    super.initState();
+    _checkToken();
+  }
+
+  // ✅ ตรวจสอบ token และ role
+  Future<void> _checkToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('api_token');
+    final roleId = prefs.getInt('role_id') ?? -1;
+
+    if (token != null && roleId != -1) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (roleId == 1) {
+          Navigator.pushReplacementNamed(context, '/home_student');
+        } else if (roleId == 2) {
+          Navigator.pushReplacementNamed(context, '/home_teacher');
+        }
+      });
     }
+  }
+
+  
+  // ✅ ฟังก์ชัน login
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = 'กรุณากรอกอีเมลและรหัสผ่าน';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final data = await ApiService.login(email, password);
+
+      final token = data['token'];
+      final user = data['user'];
+      final roleId = int.tryParse(user['role_id'].toString()) ?? -1;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('api_token', token ?? '');
+      await prefs.setInt('role_id', roleId);
+
+      // ✅ เก็บเฉพาะ field ที่ Laravel ส่งมา
+      await prefs.setInt('user_id', user['id'] ?? -1);
+      await prefs.setString('user_name', user['name'] ?? '');
+      await prefs.setString('user_lastname', user['lastname'] ?? '');
+      await prefs.setString('user_email', user['email'] ?? '');
+      await prefs.setString('user_phone', user['phone'] ?? '');
+      await prefs.setInt('department_id', user['department_id'] ?? -1);
+
+      // Navigate ตาม role
+      if (roleId == 1) {
+        Navigator.pushReplacementNamed(context, '/home_student');
+      } else if (roleId == 2) {
+        Navigator.pushReplacementNamed(context, '/home_teacher');
+      } else {
+        setState(() {
+          _errorMessage = 'ไม่สามารถระบุสถานะผู้ใช้ได้ (Role ID: $roleId)';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'เกิดข้อผิดพลาด: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // ✅ ฟังก์ชัน logout
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('api_token');
+
+    if (token != null) {
+      try {
+        await ApiService.logout(token);
+      } catch (e) {
+        debugPrint('Logout error: $e');
+      }
+    }
+
+    await prefs.clear();
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -36,10 +131,7 @@ class _LoginState extends State<Login> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF00C853), 
-              Color(0xFF00BCD4), 
-            ],
+            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
           ),
         ),
         child: Center(
@@ -48,13 +140,9 @@ class _LoginState extends State<Login> {
             child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset(
-                    'images/logo_notname.png',
-                    height: 300, 
-                  ),
-                  const SizedBox(height: 30), 
+                  Image.asset('images/logo_notname.png', height: 200),
+                  const SizedBox(height: 30),
                   TextField(
                     controller: _emailController,
                     decoration: InputDecoration(
@@ -82,23 +170,37 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  if (_errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 15),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ElevatedButton(
-                    onPressed: _login,
+                    onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                      backgroundColor: Colors.black, // สีพื้นหลัง
+                      foregroundColor: Colors.white, // สีตัวอักษร
                       minimumSize: const Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
                       ),
                     ),
-                    child: const Text(
-                      'เข้าสู่ระบบ',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            'เข้าสู่ระบบ',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 20),
                   Row(

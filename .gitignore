@@ -1,37 +1,12 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
 # Flutter/Dart/Pub related
 **/doc/api/
-**/ios/Flutter/.last_build_id
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub-cache/
 .pub/
-/build/
+build/
 
 # Symbolication related
 app.*.symbols
@@ -39,7 +14,54 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# Android related
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/key.properties
+**/android/.idea/
+**/android/.settings/
+**/android/.project
+**/android/.classpath
+**/android/.DS_Store
+**/android/*.iml
+
+# iOS/Xcode related
+**/ios/Flutter/.last_build_id
+**/ios/Pods
+**/ios/.symlinks
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/.generated/
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/ios/Runner.xcworkspace
+**/ios/*.xcworkspace
+**/ios/*.xcuserstate
+**/ios/*/moved-aside/
+**/ios/DerivedData/
+**/ios/.DS_Store
+**/ios/*.plist
+
+# VS Code related
+.vscode/
+
+# IntelliJ related
+.idea/
+*.iml
+
+# macOS related
+.DS_Store
+
+# Windows related
+Thumbs.db
+
+# PHP/Laravel vendor (ถ้ามีใช้ร่วมกับ Flutter project)
+vendor/

@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class ResetPassword extends StatefulWidget {
   const ResetPassword({super.key});
@@ -10,20 +12,66 @@ class ResetPassword extends StatefulWidget {
 class _ResetPasswordState extends State<ResetPassword> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
-  final TextEditingController otpController = TextEditingController(); 
+  final TextEditingController otpController = TextEditingController();
 
-  void _saveNewPassword() {
-   
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/login',
-      (Route<dynamic> route) => false,
-    );
+  bool _isLoading = false;
+
+  Future<void> _saveNewPassword() async {
+    final password = passwordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
+    final otp = otpController.text.trim();
+
+    if (password.isEmpty || confirmPassword.isEmpty || otp.isEmpty) {
+      _showMessage("กรุณากรอกข้อมูลให้ครบถ้วน");
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showMessage("รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse("http://127.0.0.1:8000/api/reset-password"), // แก้เป็น endpoint จริง
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "otp": otp,
+          "password": password,
+          "password_confirmation": confirmPassword,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        _showMessage(data["message"] ?? "เปลี่ยนรหัสผ่านสำเร็จ", success: true);
+        Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      } else {
+        _showMessage(data["message"] ?? "เกิดข้อผิดพลาด");
+      }
+    } catch (e) {
+      _showMessage("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _cancel() {
     Navigator.of(context).pushNamedAndRemoveUntil(
       '/login',
       (Route<dynamic> route) => false,
+    );
+  }
+
+  void _showMessage(String msg, {bool success = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
     );
   }
 
@@ -38,16 +86,6 @@ class _ResetPasswordState extends State<ResetPassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'ตั้งค่ารหัสผ่านใหม่',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.transparent, 
-        elevation: 0, 
-        iconTheme: const IconThemeData(color: Colors.white),
-        centerTitle: true, 
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -70,8 +108,8 @@ class _ResetPasswordState extends State<ResetPassword> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xFFE8F5E9), 
-                    Color(0xFFE1F5FE), 
+                    Color(0xFFE8F5E9),
+                    Color(0xFFE1F5FE),
                   ],
                 ),
                 boxShadow: const [
@@ -91,10 +129,10 @@ class _ResetPasswordState extends State<ResetPassword> {
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF221B64), 
+                      color: Color(0xFF221B64),
                       shadows: [
                         Shadow(
-                          color: Colors.black26, 
+                          color: Colors.black26,
                           offset: Offset(1, 2),
                           blurRadius: 3,
                         )
@@ -102,114 +140,26 @@ class _ResetPasswordState extends State<ResetPassword> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'รหัสผ่านใหม่',
-                      style: TextStyle(
-                        color: Color(0xFF221B64), 
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  _buildLabel("รหัสผ่านใหม่"),
                   _buildInput(passwordController, obscure: true, hintText: 'รหัสผ่านใหม่'),
                   const SizedBox(height: 16),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'ยืนยันรหัสผ่านใหม่',
-                      style: TextStyle(
-                        color: Color(0xFF221B64), 
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  _buildLabel("ยืนยันรหัสผ่านใหม่"),
                   _buildInput(confirmPasswordController, obscure: true, hintText: 'ยืนยันรหัสผ่านใหม่'),
                   const SizedBox(height: 16),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'รหัส OTP', 
-                      style: TextStyle(
-                        color: Color(0xFF221B64),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildInput(otpController, hintText: 'รหัส OTP'), 
+                  _buildLabel("รหัส OTP"),
+                  _buildInput(otpController, hintText: 'รหัส OTP'),
                   const SizedBox(height: 24),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly, 
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Expanded(
-                        child: Container(
-                          height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black38,
-                                offset: Offset(0, 4),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton(
-                            onPressed: _cancel, 
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red, 
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                              padding: EdgeInsets.zero, 
-                            ),
-                            child: const Text(
-                              'ยกเลิก',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
+                        child: _buildButton("ยกเลิก", Colors.red, _cancel),
                       ),
-                      const SizedBox(width: 16), 
+                      const SizedBox(width: 16),
                       Expanded(
-                        child: Container(
-                          height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black38,
-                                offset: Offset(0, 4),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton(
-                            onPressed: _saveNewPassword, 
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black, 
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                              padding: EdgeInsets.zero, 
-                            ),
-                            child: const Text(
-                              'ยืนยัน',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _buildButton("ยืนยัน", Colors.black, _saveNewPassword),
                       ),
                     ],
                   ),
@@ -222,7 +172,55 @@ class _ResetPasswordState extends State<ResetPassword> {
     );
   }
 
-  Widget _buildInput(TextEditingController controller, {bool obscure = false, String? hintText}) {
+  Widget _buildLabel(String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Color(0xFF221B64),
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButton(String text, Color color, VoidCallback onPressed) {
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black38,
+            offset: Offset(0, 4),
+            blurRadius: 6,
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
+          padding: EdgeInsets.zero,
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInput(TextEditingController controller,
+      {bool obscure = false, String? hintText}) {
     return TextField(
       controller: controller,
       obscureText: obscure,
@@ -232,7 +230,8 @@ class _ResetPasswordState extends State<ResetPassword> {
         hintStyle: const TextStyle(color: Colors.grey),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25),
           borderSide: BorderSide.none,
@@ -243,7 +242,7 @@ class _ResetPasswordState extends State<ResetPassword> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25),
-          borderSide: const BorderSide(color: Color(0xFF221B64), width: 2), 
+          borderSide: const BorderSide(color: Color(0xFF221B64), width: 2),
         ),
       ),
     );

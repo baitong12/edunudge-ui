@@ -3,6 +3,7 @@ import 'package:edunudge/shared/customappbar.dart';
 import 'package:edunudge/pages/teacher/custombottomnav.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:edunudge/services/api_service.dart';
 
 class CreateClassroom04 extends StatefulWidget {
   const CreateClassroom04({super.key});
@@ -12,11 +13,23 @@ class CreateClassroom04 extends StatefulWidget {
 }
 
 class _CreateClassroom04State extends State<CreateClassroom04> {
-  final Color primaryColor = const Color(0xFF3F8FAF);
-
   LatLng? selectedLocation;
   Marker? selectedMarker;
-  LatLng defaultLocation = const LatLng(13.736717, 100.523186); 
+  LatLng defaultLocation = const LatLng(13.736717, 100.523186);
+  bool isLoading = false;
+
+  // ข้อมูลจากหน้า 03
+  late Map<String, dynamic> classroomInfo;
+
+  final Map<String, String> weekDayMap = {
+    'จันทร์': 'monday',
+    'อังคาร': 'tuesday',
+    'พุธ': 'wednesday',
+    'พฤหัสบดี': 'thursday',
+    'ศุกร์': 'friday',
+    'เสาร์': 'saturday',
+    'อาทิตย์': 'sunday',
+  };
 
   @override
   void initState() {
@@ -24,39 +37,30 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
     _getCurrentLocation();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null) classroomInfo = Map.from(args);
+  }
+
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      setState(() {
-        selectedLocation = defaultLocation;
-        selectedMarker = Marker(
-          markerId: const MarkerId('defaultLocation'),
-          position: defaultLocation,
-        );
-      });
-      return;
-    }
+    if (!serviceEnabled) return _setDefaultLocation();
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        setState(() {
-          selectedLocation = defaultLocation;
-          selectedMarker = Marker(
-            markerId: const MarkerId('defaultLocation'),
-            position: defaultLocation,
-          );
-        });
-        return;
+        return _setDefaultLocation();
       }
     }
 
     try {
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
-
       setState(() {
         selectedLocation = LatLng(position.latitude, position.longitude);
         selectedMarker = Marker(
@@ -65,23 +69,25 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
         );
       });
     } catch (e) {
-      setState(() {
-        selectedLocation = defaultLocation;
-        selectedMarker = Marker(
-          markerId: const MarkerId('defaultLocation'),
-          position: defaultLocation,
-        );
-      });
+      _setDefaultLocation();
     }
+  }
+
+  void _setDefaultLocation() {
+    setState(() {
+      selectedLocation = defaultLocation;
+      selectedMarker = Marker(
+        markerId: const MarkerId('defaultLocation'),
+        position: defaultLocation,
+      );
+    });
   }
 
   Widget _buildLocationPicker() {
     return Container(
       height: 300,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.grey[200],
-      ),
+          borderRadius: BorderRadius.circular(12), color: Colors.grey[200]),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: GoogleMap(
@@ -110,6 +116,74 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
         ),
       ),
     );
+  }
+
+  Future<void> submitClassroom() async {
+    if (selectedLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณาเลือกตำแหน่งห้องเรียน')),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    int year = 2023;
+    if (classroomInfo['year'] != null) {
+      int? inputYear;
+      if (classroomInfo['year'] is int) {
+        inputYear = classroomInfo['year'];
+      } else {
+        inputYear =
+            int.tryParse(classroomInfo['year'].toString());
+      }
+      if (inputYear != null) {
+        if (inputYear > 2500) inputYear = inputYear - 543;
+        year = inputYear;
+      }
+    }
+
+    final payload = {
+      "name_subject": classroomInfo['name_subject'] ?? '',
+      "room_number": classroomInfo['room_number'] ?? '',
+      "latitude": selectedLocation!.latitude,
+      "longitude": selectedLocation!.longitude,
+      "required_days": classroomInfo['required_days'] ?? 0,
+      "reward_points": classroomInfo['reward_points'] ?? 0,
+      "points": (classroomInfo['points'] ?? []).map((p) => {
+            "point_percent": p['point_percent'] ?? 0,
+            "point_extra": p['point_extra'] ?? 0,
+          }).toList(),
+      "terms": [
+        {
+          "semester": classroomInfo['semester'] ?? '1',
+          "year": year,
+          "start_date": classroomInfo['start_date'] ?? '',
+          "end_date": classroomInfo['end_date'] ?? '',
+        }
+      ],
+      "schedules": (classroomInfo['schedules'] ?? []).map((s) => {
+            "day_of_week": s['day_of_week'] ?? '',
+            "time_start": s['time_start'] ?? '',
+            "time_end": s['time_end'] ?? '',
+          }).toList(),
+    };
+
+    try {
+      await ApiService.createClassroom(payload);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('สร้างห้องเรียนสำเร็จ')),
+      );
+      Navigator.pop(context);
+      // หรือถ้าต้องการส่งต่อข้อมูลไปหน้าสรุป
+      // Navigator.pushNamed(context, '/classroom_summary', arguments: classroomInfo);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+      );
+    }
+
+    setState(() => isLoading = false);
   }
 
   @override
@@ -164,19 +238,17 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                       const Divider(height: 24, thickness: 1, color: Colors.grey),
                       Row(
-                        children: [
-                          const Icon(Icons.add_location_alt, color: Colors.red),
-                          const SizedBox(width: 8),
-                          const Text('ตำแหน่งห้องเรียน',
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black)),
+                        children: const [
+                          Icon(Icons.add_location_alt, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('ตำแหน่งห้องเรียน',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                         ],
                       ),
                       const SizedBox(height: 12),
                       _buildLocationPicker(),
                       const SizedBox(height: 24),
+                      if (isLoading) const LinearProgressIndicator(),
                     ],
                   ),
                 ),
@@ -200,10 +272,8 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                         onPressed: () => Navigator.pop(context),
                         child: const Padding(
                           padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text(
-                            'ยกเลิก',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                          child: Text('ยกเลิก',
+                              style: TextStyle(color: Colors.white, fontSize: 16)),
                         ),
                       ),
                     ),
@@ -215,15 +285,11 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                         ),
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/home_teacher');
-                        },
+                        onPressed: submitClassroom,
                         child: const Padding(
                           padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text(
-                            'ตกลง',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                          child: Text('ตกลง',
+                              style: TextStyle(color: Colors.white, fontSize: 16)),
                         ),
                       ),
                     ),

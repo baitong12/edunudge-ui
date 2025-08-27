@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:edunudge/shared/customappbar.dart';
-import 'package:edunudge/pages/student/custombottomnav.dart';
+import 'package:edunudge/services/api_service.dart'; // import ApiService
 
 class Attendance extends StatefulWidget {
   const Attendance({super.key});
@@ -10,55 +9,93 @@ class Attendance extends StatefulWidget {
 }
 
 class _AttendanceState extends State<Attendance> {
-  String selectedSubject = 'SA';
+  int? selectedClassroomId;
+  String selectedSubject = '';
+  List<Map<String, dynamic>> subjects = [];
+  Map<String, dynamic> selectedSubjectDetail = {};
+  Map<String, dynamic> attendanceSummary = {};
 
-  final List<String> subjects = [
-    'SA',
-    'IOT',
-    'Program',
-    'Eng',
-    'Calculus',
-    'SW'
-  ];
+  bool isLoading = true;
 
-  final Map<String, String> subjectDetails = {
-    'SA':
-        'ชื่อวิชา: SA\nอาคารเรียน: อาคารเรียนรวม\nอาจารย์ผู้สอน: อ.สมชาย\nเบอร์ติดต่อ: 0812345678',
-    'IOT':
-        'ชื่อวิชา: IOT\nอาคารเรียน: อาคารวิศวกรรม\nอาจารย์ผู้สอน: อ.สมหญิง\nเบอร์ติดต่อ: 0812345679',
-    'Program':
-        'ชื่อวิชา: Program\nอาคารเรียน: อาคารคอมฯ\nอาจารย์ผู้สอน: อ.จิตราภรณ์\nเบอร์ติดต่อ: 0812345680',
-    'Eng':
-        'ชื่อวิชา: Eng\nอาคารเรียน: อาคารมนุษย์ฯ\nอาจารย์ผู้สอน: Mr. Smith\nเบอร์ติดต่อ: 0812345681',
-    'Calculus':
-        'ชื่อวิชา: Calculus\nอาคารเรียน: อาคารวิทยาศาสตร์\nอาจารย์ผู้สอน: อ.วิทวัส\nเบอร์ติดต่อ: 0812345682',
-    'SW':
-        'ชื่อวิชา: SW\nอาคารเรียน: อาคารนวัตกรรม\nอาจารย์ผู้สอน: อ.กุลธิดา\nเบอร์ติดต่อ: 0812345683',
-  };
+  @override
+  void initState() {
+    super.initState();
+    loadStudentHome();
+  }
 
-  final List<List<String>> attendanceData = [
-    ['SA', '2', '0', '0', '0', '12.5%'],
-    ['IOT', '1', '1', '0', '0', '6.25%'],
-    ['Program', '0', '3', '0', '0', '0%'],
-    ['Eng', '2', '0', '0', '0', '18.75%'],
-    ['Calculus', '2', '0', '0', '0', '12.5%'],
-    ['SW', '2', '4', '0', '0', '0%'],
-  ];
+  // โหลดรายการห้องเรียนและสรุปการเข้าเรียน
+  Future<void> loadStudentHome() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      // ดึงรายการห้องเรียน
+      final classroomList = await ApiService.getStudentClassrooms();
+      subjects = classroomList
+          .map((e) => {
+                'id': e['id'], // classroom id
+                'name': e['name_subject'],
+              })
+          .toList();
+
+      if (subjects.isNotEmpty) {
+        selectedClassroomId = subjects.first['id'];
+        selectedSubject = subjects.first['name'];
+        await loadSubjectDetail(selectedClassroomId!);
+        await loadAttendanceSummary(selectedClassroomId!);
+      }
+    } catch (e) {
+      print('Error loading student home: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  // โหลดรายละเอียดรายวิชาที่เลือก
+  Future<void> loadSubjectDetail(int classroomId) async {
+    try {
+      final detail = await ApiService.getSubjectDetail(classroomId);
+      setState(() {
+        selectedSubjectDetail = detail;
+      });
+    } catch (e) {
+      print('Error loading subject detail: $e');
+    }
+  }
+
+  // โหลดสรุปการเข้าเรียนของวิชาที่เลือก
+  Future<void> loadAttendanceSummary(int classroomId) async {
+    try {
+      // สำหรับตัวอย่างนี้ใช้ API Home (อาจปรับเป็น API เฉพาะวิชาได้)
+      final summary = await ApiService.getStudentHome();
+      setState(() {
+        attendanceSummary = summary;
+      });
+    } catch (e) {
+      print('Error loading attendance summary: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF00C853),
+        backgroundColor: const Color(0xFF00C853),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'ข้อมูลการเข้าเรียน',
@@ -80,6 +117,7 @@ class _AttendanceState extends State<Attendance> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ตารางสถิติการเข้าเรียน
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -107,118 +145,105 @@ class _AttendanceState extends State<Attendance> {
                       child: Row(
                         children: const [
                           Expanded(
-                            flex: 2,
-                            child: Center(
-                                child: Text('ชื่อวิชา',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white))),
-                          ),
+                              flex: 2,
+                              child: Center(
+                                  child: Text('ชื่อวิชา',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white)))),
                           Expanded(
-                            flex: 1,
-                            child: Center(
-                                child: Text('มา',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white))),
-                          ),
+                              flex: 1,
+                              child: Center(
+                                  child: Text('มา',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white)))),
                           Expanded(
-                            flex: 1,
-                            child: Center(
-                                child: Text('มาสาย',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white))),
-                          ),
+                              flex: 1,
+                              child: Center(
+                                  child: Text('มาสาย',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white)))),
                           Expanded(
-                            flex: 1,
-                            child: Center(
-                                child: Text('ขาด',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white))),
-                          ),
+                              flex: 1,
+                              child: Center(
+                                  child: Text('ขาด',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white)))),
                           Expanded(
-                            flex: 1,
-                            child: Center(
-                                child: Text('ลา',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white))),
-                          ),
+                              flex: 1,
+                              child: Center(
+                                  child: Text('ลา',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white)))),
                           Expanded(
-                            flex: 2,
-                            child: Center(
-                                child: Text('รวมทั้งหมด',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white))),
-                          ),
+                              flex: 2,
+                              child: Center(
+                                  child: Text('รวมทั้งหมด',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white)))),
                         ],
                       ),
                     ),
-                    ...attendanceData.asMap().entries.map((entry) {
-                      int idx = entry.key;
-                      List<String> val = entry.value;
-                      final bool isLast = idx == attendanceData.length - 1;
-                      final Color rowColor = idx % 2 == 0
-                          ? const Color(0x336D6D6D)
-                          : const Color(0x6E3F8FAF);
-
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: rowColor,
-                          border: const Border(
-                            left: BorderSide(color: Colors.black),
-                            right: BorderSide(color: Colors.black),
-                            bottom: BorderSide(color: Colors.black),
-                          ),
-                          borderRadius: isLast
-                              ? const BorderRadius.only(
-                                  bottomLeft: Radius.circular(16),
-                                  bottomRight: Radius.circular(16),
-                                )
-                              : null,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                                flex: 2, child: Center(child: Text(val[0]))),
-                            Expanded(
-                                flex: 1,
-                                child: Center(
-                                    child: Text(val[1],
-                                        style: const TextStyle(
-                                            color: Colors.green)))),
-                            Expanded(
-                                flex: 1,
-                                child: Center(
-                                    child: Text(val[2],
-                                        style: const TextStyle(
-                                            color: Colors.orange)))),
-                            Expanded(
-                                flex: 1,
-                                child: Center(
-                                    child: Text(val[3],
-                                        style: const TextStyle(
-                                            color: Colors.red)))),
-                            Expanded(
-                                flex: 1,
-                                child: Center(
-                                    child: Text(val[4],
-                                        style: const TextStyle(
-                                            color: Colors.blue)))),
-                            Expanded(
-                                flex: 2, child: Center(child: Text(val[5]))),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+                    Container(
+                      color: const Color(0x336D6D6D),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                              flex: 2,
+                              child: Center(child: Text(selectedSubject))),
+                          Expanded(
+                              flex: 1,
+                              child: Center(
+                                  child: Text(
+                                      attendanceSummary['present']?.toString() ??
+                                          '0',
+                                      style: const TextStyle(
+                                          color: Colors.green)))),
+                          Expanded(
+                              flex: 1,
+                              child: Center(
+                                  child: Text(
+                                      attendanceSummary['late']?.toString() ??
+                                          '0',
+                                      style: const TextStyle(
+                                          color: Colors.orange)))),
+                          Expanded(
+                              flex: 1,
+                              child: Center(
+                                  child: Text(
+                                      attendanceSummary['absent']?.toString() ??
+                                          '0',
+                                      style: const TextStyle(
+                                          color: Colors.red)))),
+                          Expanded(
+                              flex: 1,
+                              child: Center(
+                                  child: Text(
+                                      attendanceSummary['leave']?.toString() ??
+                                          '0',
+                                      style: const TextStyle(
+                                          color: Colors.blue)))),
+                          Expanded(
+                              flex: 2,
+                              child: Center(
+                                  child: Text(
+                                      '${(attendanceSummary['present'] ?? 0)}%'))),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
+
               const SizedBox(height: 16),
+
+              // Dropdown เลือกวิชา
               Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
@@ -230,27 +255,43 @@ class _AttendanceState extends State<Attendance> {
                     border: Border.all(color: Colors.white, width: 1.5),
                   ),
                   child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: selectedSubject,
+                    child: DropdownButton<int>(
+                      value: selectedClassroomId,
                       icon: const Icon(Icons.arrow_drop_down),
                       dropdownColor: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      style: const TextStyle(color: Colors.black, fontSize: 16),
-                      onChanged: (String? newSubject) {
-                        setState(() {
-                          selectedSubject = newSubject!;
-                        });
+                      style:
+                          const TextStyle(color: Colors.black, fontSize: 16),
+                      onChanged: (int? newId) async {
+                        if (newId != null) {
+                          final newSubject = subjects
+                              .firstWhere((e) => e['id'] == newId)['name'];
+                          setState(() {
+                            selectedClassroomId = newId;
+                            selectedSubject = newSubject;
+                            isLoading = true;
+                          });
+
+                          await loadSubjectDetail(newId);
+                          await loadAttendanceSummary(newId);
+
+                          setState(() {
+                            isLoading = false;
+                          });
+                        }
                       },
-                      items: subjects.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
+                      items: subjects.map((e) {
+                        return DropdownMenuItem<int>(
+                          value: e['id'],
+                          child: Text(e['name']),
                         );
                       }).toList(),
                     ),
                   ),
                 ),
               ),
+
+              // รายละเอียดรายวิชา
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.only(top: 8),
@@ -258,7 +299,9 @@ class _AttendanceState extends State<Attendance> {
                 decoration: BoxDecoration(
                   color: Colors.lightBlue.shade50.withOpacity(0.9),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white, width: 1.5),
+                  border: Border.all(
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                      width: 1.5),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -268,10 +311,17 @@ class _AttendanceState extends State<Attendance> {
                   ],
                 ),
                 child: Text(
-                  subjectDetails[selectedSubject] ?? 'ไม่มีข้อมูล',
+                  selectedSubjectDetail.isNotEmpty
+                      ? 'ชื่อวิชา: ${selectedSubjectDetail['name_subject']}\n'
+                          'อาคารเรียน: ${selectedSubjectDetail['room_number']}\n'
+                          'อาจารย์ผู้สอน: ${selectedSubjectDetail['teacher_name']}\n'
+                          'ภาควิชา: ${selectedSubjectDetail['department']}\n'
+                          'เบอร์ติดต่อ: ${selectedSubjectDetail['contact']}'
+                      : 'ไม่มีข้อมูล',
                   style: const TextStyle(fontSize: 16, color: Colors.black87),
                 ),
               ),
+
               const SizedBox(height: 16),
               Center(
                 child: ElevatedButton(
@@ -291,7 +341,6 @@ class _AttendanceState extends State<Attendance> {
           ),
         ),
       ),
-      bottomNavigationBar: CustomBottomNav(currentIndex: 0, context: context),
     );
   }
 }

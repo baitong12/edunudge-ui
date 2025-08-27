@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class Register02 extends StatefulWidget {
   @override
@@ -6,69 +8,148 @@ class Register02 extends StatefulWidget {
 }
 
 class _Register02State extends State<Register02> {
-  String? _selectedFaculty;
-  String? _selectedDepartment;
-  String? _selectedRole;
+  int? _selectedFacultyId;
+  int? _selectedDepartmentId;
+  int? _selectedRoleId;
 
-  // รายการคณะ
-  final List<String> faculties = [
-    'คณะเทคโนโลยีการจัดการ',
-    'คณะเกษตรศาสตร์และเทคโนโลยี',
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  final List<Map<String, dynamic>> _facultiesData = [
+    {'id': 1, 'name': 'คณะเทคโนโลยีการจัดการ'},
+    {'id': 2, 'name': 'คณะเกษตรศาสตร์และเทคโนโลยี'},
   ];
 
-  // รายการสาขาวิชา
-  final List<String> departments = [
-    'สาขาวิชาพืชศาสตร์',
-    'สาขาวิชาการออกแบบภูมิทัศน์และการจัดสวน',
-    'สาขาวิชาเทคโนโลยีสิ่งทอและการออกแบบแฟชั่น',
-    'สาขาอุตสาหกรรมอาหาร',
-    'สาขาวิชาเทคโนโลยีการอาหาร',
-    'สาขาวิชาเทคโนโลยีชีวภาพการเกษตร',
-    'สาขาวิชาเทคโนโลยีเครื่องจักรกลเกษตร',
+  final Map<int, List<Map<String, dynamic>>> _departmentDataMap = {
+    2: [
+      {'id': 1, 'name': 'สาขาพืชศาสตร์'},
+      {'id': 2, 'name': 'สาขาสัตวศาสตร์'},
+      {'id': 3, 'name': 'สาขาประมง'},
+      {'id': 4, 'name': 'สาขาเครื่องกลเกษตร'},
+      {'id': 5, 'name': 'สาขาช่างไฟฟ้า'},
+      {'id': 6, 'name': 'สาขาเทคโนโลยีคอมพิวเตอร์'},
+      {'id': 7, 'name': 'สาขาเทคโนโลยีสิ่งทอและเครื่องนุ่งห่ม'},
+      {'id': 8, 'name': 'สาขาเทคโนโลยีการผลิต'},
+      {'id': 9, 'name': 'สาขาเทคโนโลยีอาหาร'},
+      {'id': 10, 'name': 'สาขาเทคโนโลยีการเกษตร'},
+      {'id': 11, 'name': 'สาขาเคมีประยุกต์'},
+      {'id': 12, 'name': 'สาขาเทคโนโลยีและการจัดการสิ่งแวดล้อม'},
+      {'id': 13, 'name': 'สาขาเทคโนโลยีชีวภาพทางการเกษตร'},
+      {'id': 14, 'name': 'สาขาการออกแบบภูมิทัศน์และการจัดสวน'},
+      {'id': 15, 'name': 'สาขาเทคโนโลยีสิ่งทอและการออกแบบแฟชั่น'},
+      {'id': 16, 'name': 'สาขาวิศวกรรมเครื่องจักรกลเกษตร'},
+      {'id': 17, 'name': 'สาขาวิศวกรรมไฟฟ้า'},
+      {'id': 18, 'name': 'สาขาวิศวกรรมเครื่องกล'},
+      {'id': 19, 'name': 'สาขาวิศวกรรมโยธา'},
+      {'id': 20, 'name': 'สาขาวิศวกรรมยานยนต์'},
+      {'id': 21, 'name': 'สาขาสถาปัตยกรรมภายใน'},
+      {'id': 22, 'name': 'สาขาเทคโนโลยีไฟฟ้า'},
+    ],
+    1: [
+      {'id': 23, 'name': 'สาขาการจัดการสมัยใหม่'},
+      {'id': 24, 'name': 'สาขาการตลาด'},
+      {'id': 25, 'name': 'สาขาการบัญชี'},
+      {'id': 26, 'name': 'สาขาคอมพิวเตอร์ธุรกิจ'},
+      {'id': 27, 'name': 'สาขาเทคโนโลยีการตลาดสมัยใหม่'},
+      {'id': 28, 'name': 'สาขาเทคโนโลยีธุรกิจดิจิทัล'},
+      {'id': 29, 'name': 'สาขาการท่องเที่ยวและการโรงแรม'},
+      {'id': 30, 'name': 'สาขาภาษาอังกฤษเพื่อการสื่อสาร'},
+      {'id': 31, 'name': 'สาขาเทคโนโลยีมัลติมีเดีย'},
+      {'id': 32, 'name': 'สาขาเทคโนโลยีในธุรกิจดิจิทัล'},
+    ]
+  };
+
+  final List<Map<String, dynamic>> _rolesData = [
+    {'id': 1, 'name': 'student', 'display_name': 'นักศึกษา'},
+    {'id': 2, 'name': 'teacher', 'display_name': 'อาจารย์'},
   ];
 
+  Future<void> _registerUser() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
-  final List<Map<String, dynamic>> _roles = [
-    {'id': 1, 'name': 'student'},
-    {'id': 2, 'name': 'teacher'},
-  ];
+    if (_selectedFacultyId == null ||
+        _selectedDepartmentId == null ||
+        _selectedRoleId == null) {
+      setState(() {
+        _errorMessage = 'กรุณาเลือกคณะ, สาขา และสถานะของคุณ';
+        _isLoading = false;
+      });
+      return;
+    }
 
-  
-  void _registerUser() {
-
-    if (_selectedRole == 'teacher') {
-      Navigator.of(context).pushNamedAndRemoveUntil('/home_teacher', (route) => false);
-    } else if (_selectedRole == 'student') {
-      Navigator.of(context).pushNamedAndRemoveUntil('/home_student', (route) => false);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('กรุณาเลือกสถานะของคุณ (นักศึกษา/อาจารย์)')),
+    final Map<String, dynamic> args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    const String apiUrl = 'http://127.0.0.1:8000/api/register';
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'name': args['name'],
+          'lastname': args['lastname'],
+          'email': args['email'],
+          'phone': args['phone'],
+          'password': args['password'],
+          'password_confirmation': args['password_confirmation'],
+          'faculty_id': _selectedFacultyId,
+          'department_id': _selectedDepartmentId,
+          'role_id': _selectedRoleId,
+        }),
       );
+
+      print('Backend Response Status: ${response.statusCode}');
+      print('Backend Response Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/login', (route) => false);
+      } else {
+        final errorResponse = jsonDecode(response.body);
+        String message = errorResponse['message'] ?? 'การลงทะเบียนล้มเหลว';
+
+        if (errorResponse['errors'] != null) {
+          Map<String, dynamic> errors = errorResponse['errors'];
+          message = '';
+          errors.forEach((key, value) {
+            message += '${value[0]}\n';
+          });
+        }
+
+        setState(() {
+          _errorMessage = message;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'เกิดข้อผิดพลาดในการเชื่อมต่อ: โปรดลองอีกครั้ง ($e)';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   void _cancel() {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/login',
-      (Route<dynamic> route) => false,
-    );
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
   }
 
   @override
   Widget build(BuildContext context) {
-    // รับค่า arguments ที่ส่งมาจาก Register01 (ถ้ามี)
-    // final Map<String, dynamic>? args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-
     return Scaffold(
       body: Container(
-        // ใช้ LinearGradient สำหรับพื้นหลังทั้งหมด ให้ตรงกับรูปภาพ
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF00C853), // สีเขียวสดใส (ด้านบน)
-              Color(0xFF00BCD4), // สีฟ้าสดใส (ด้านล่าง)
+              Color(0xFF00C853),
+              Color(0xFF00BCD4),
             ],
           ),
         ),
@@ -86,55 +167,65 @@ class _Register02State extends State<Register02> {
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       shadows: [
-                        Shadow(offset: Offset(2, 2), blurRadius: 4, color: Colors.black38)
+                        Shadow(
+                            offset: Offset(2, 2),
+                            blurRadius: 4,
+                            color: Colors.black38)
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Dropdown สำหรับคณะ
                   _buildDropdown(
-                    value: _selectedFaculty,
+                    value: _selectedFacultyId,
                     hint: 'คณะ',
-                    items: faculties,
+                    items: _facultiesData,
                     onChanged: (value) {
                       setState(() {
-                        _selectedFaculty = value;
+                        _selectedFacultyId = value;
+                        _selectedDepartmentId = null;
                       });
                     },
                   ),
-                  // Dropdown สำหรับสาขาวิชา
                   _buildDropdown(
-                    value: _selectedDepartment,
-                    hint: 'สาขา', // เปลี่ยนเป็น 'สาขา' ตามรูปภาพ
-                    items: departments,
+                    value: _selectedDepartmentId,
+                    hint: 'สาขา',
+                    items: _departmentDataMap[_selectedFacultyId] ?? [],
                     onChanged: (value) {
                       setState(() {
-                        _selectedDepartment = value;
+                        _selectedDepartmentId = value;
                       });
                     },
                   ),
-                  // Dropdown สำหรับสถานะ
                   _buildDropdown(
-                    value: _selectedRole,
+                    value: _selectedRoleId,
                     hint: 'สถานะ',
-                    items: _roles.map<String>((role) => role['name'].toString()).toList(),
+                    items: _rolesData,
                     onChanged: (value) {
                       setState(() {
-                        _selectedRole = value;
+                        _selectedRoleId = value;
                       });
                     },
-                    // เพิ่ม builder สำหรับแสดงข้อความที่เหมาะสม (นักศึกษา/อาจารย์)
-                    itemBuilder: (context, item) {
-                      return Text(item == 'student' ? 'นักศึกษา' : 'อาจารย์');
-                    },
+                    labelKey: 'display_name',
                   ),
                   const SizedBox(height: 20),
-                  // ปุ่ม "ลงทะเบียน"
+                  if (_errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 15.0),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   Container(
                     width: double.infinity,
                     height: 50,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25), // ขอบโค้งมนตามรูปภาพ
+                      borderRadius: BorderRadius.circular(25),
                       boxShadow: const [
                         BoxShadow(
                           color: Colors.black38,
@@ -145,29 +236,30 @@ class _Register02State extends State<Register02> {
                     ),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black, // ปุ่มสีดำตามรูปภาพ
+                        backgroundColor: Colors.black,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25), // ขอบโค้งมนตามรูปภาพ
+                          borderRadius: BorderRadius.circular(25),
                         ),
                       ),
-                      onPressed: _registerUser, // เรียกใช้ฟังก์ชันลงทะเบียน
-                      child: const Text(
-                        'ลงทะเบียน',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      onPressed: _isLoading ? null : _registerUser,
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'ลงทะเบียน',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // ปุ่ม "ยกเลิก"
                   Container(
                     width: double.infinity,
                     height: 50,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25), // ขอบโค้งมนตามรูปภาพ
+                      borderRadius: BorderRadius.circular(25),
                       boxShadow: const [
                         BoxShadow(
                           color: Colors.black38,
@@ -178,12 +270,12 @@ class _Register02State extends State<Register02> {
                     ),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red, // ปุ่มสีแดงตามรูปภาพ
+                        backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25), // ขอบโค้งมนตามรูปภาพ
+                          borderRadius: BorderRadius.circular(25),
                         ),
                       ),
-                      onPressed: _cancel, // เรียกใช้ฟังก์ชันยกเลิก
+                      onPressed: _cancel,
                       child: const Text(
                         'ยกเลิก',
                         style: TextStyle(
@@ -203,46 +295,47 @@ class _Register02State extends State<Register02> {
     );
   }
 
-  // Helper widget สำหรับสร้าง DropdownButtonFormField ที่มีสไตล์เหมือนกัน
   Widget _buildDropdown({
-    required String? value,
+    required int? value,
     required String hint,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-    Widget Function(BuildContext, String)? itemBuilder, // เพิ่ม itemBuilder
+    required List<Map<String, dynamic>> items,
+    required ValueChanged<int?> onChanged,
+    String? labelKey,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(25), // ขอบโค้งมนตามรูปภาพ
+          borderRadius: BorderRadius.circular(25),
           boxShadow: const [
             BoxShadow(
-              color: Colors.black12, // เงาเล็กน้อยเพื่อให้ดูมีมิติ
+              color: Colors.black12,
               blurRadius: 4,
               offset: Offset(0, 2),
             ),
           ],
         ),
-        child: DropdownButtonFormField<String>(
+        child: DropdownButtonFormField<int>(
           value: value,
-          icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF221B64)), // ไอคอนลูกศร
+          icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF221B64)),
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25),
-              borderSide: BorderSide.none, // ไม่มีเส้นขอบ
+              borderSide: BorderSide.none,
             ),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.bold),
+            hintStyle:
+                TextStyle(color: Colors.grey[500], fontWeight: FontWeight.bold),
           ),
-          items: items.map<DropdownMenuItem<String>>((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: itemBuilder != null ? itemBuilder(context, item) : Text(item),
+          items: items.map<DropdownMenuItem<int>>((Map<String, dynamic> item) {
+            return DropdownMenuItem<int>(
+              value: item['id'] as int,
+              child: Text(item[labelKey ?? 'name'].toString()),
             );
           }).toList(),
           onChanged: onChanged,

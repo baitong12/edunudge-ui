@@ -1,16 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 import '../providers/profile_provider.dart';
 
 class CustomAppBar extends StatelessWidget {
   final VoidCallback onProfileTap;
-  final VoidCallback onLogoutTap;
+  final VoidCallback? onLogoutTap;
 
   const CustomAppBar({
     super.key,
     required this.onProfileTap,
-    required this.onLogoutTap,
+    this.onLogoutTap,
   });
+
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('api_token');
+
+    if (token != null) {
+      try {
+        final response = await http.post(
+          Uri.parse("http://127.0.0.1:8000/api/logout"),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        );
+        final data = jsonDecode(response.body);
+        debugPrint("Logout Response: $data");
+      } catch (e) {
+        debugPrint("Logout Error: $e");
+      }
+    }
+
+    await prefs.clear();
+
+    if (onLogoutTap != null) {
+      onLogoutTap!();
+    } else {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +72,6 @@ class CustomAppBar extends StatelessWidget {
                 GestureDetector(
                   onTap: onProfileTap,
                   child: Container(
-                    
                     width: 40,
                     height: 40,
                     decoration: const BoxDecoration(
@@ -61,7 +93,7 @@ class CustomAppBar extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 GestureDetector(
-                  onTap: onLogoutTap,
+                  onTap: () => _logout(context),
                   child: const Text(
                     'ออกจากระบบ',
                     style: TextStyle(

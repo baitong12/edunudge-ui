@@ -421,7 +421,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
     return Scaffold(
       backgroundColor: Colors.transparent, 
       appBar: AppBar(
-        backgroundColor: Color(0xFF080045), 
+        backgroundColor: Color(0xFF00C853), 
         elevation: 0,
         automaticallyImplyLeading: false,
         toolbarHeight: 60,
@@ -448,7 +448,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                 onPressed: () => Navigator.pop(context),
                 child: Text('เสร็จสิ้น',
                     style:
-                        TextStyle(color: Color(0xFF3F8FAF), fontSize: 16)),
+                        TextStyle(color: Color.fromARGB(255, 12, 12, 12), fontSize: 16)),
               ),
             ),
           ],
