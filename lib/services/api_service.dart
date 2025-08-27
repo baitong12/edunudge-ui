@@ -20,11 +20,10 @@ class ApiService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      _registerDeviceToken();
-
       // เก็บ token และ user info ใน SharedPreferences
       final token = data['token'];
       final user = data['user'];
+      _registerDeviceToken();
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('api_token', token ?? '');
@@ -287,19 +286,21 @@ class ApiService {
   static Future<void> _registerDeviceToken() async {
     // ✅ ขอ device token จาก Firebase
     FirebaseMessaging messaging = FirebaseMessaging.instance;
-    String? token = await messaging.getToken();
+    String? device_token = await messaging.getToken();
+    String? token = await getToken();
+    print("FCM Device Token: $device_token");
 
-    print("FCM Device Token: $token");
-
-    if (token != null) {
+    if (device_token != null) {
       // ✅ ส่ง token ไปเก็บที่ Laravel API
       final response = await http.post(
         Uri.parse(
             "http://127.0.0.1:8000/api/save-device-token"), // เปลี่ยน URL ให้ตรงกับ backend
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': 'Bearer $token',
+        },
         body: json.encode({
-          "user_id": 53, // ส่ง user_id ของนักศึกษา/อาจารย์
-          "device_token": token, // ✅ token ที่ได้จาก Firebase
+          "device_token": device_token, // ✅ token ที่ได้จาก Firebase
           "platform": "android" // หรือ "ios"
         }),
       );
@@ -315,167 +316,170 @@ class ApiService {
   // =======================
 // ✅ ดึงรายละเอียดห้องเรียน (Teacher version)
 // =======================
-static Future<Map<String, dynamic>> getClassroomDetailTeacher(int classroomId) async {
-  final token = await getToken();
-  if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
+  static Future<Map<String, dynamic>> getClassroomDetailTeacher(
+      int classroomId) async {
+    final token = await getToken();
+    if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
 
-  final response = await http.get(
-    Uri.parse('$baseUrl/teacher/classrooms/$classroomId/detail'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token'
-    },
-  );
+    final response = await http.get(
+      Uri.parse('$baseUrl/teacher/classrooms/$classroomId/detail'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token'
+      },
+    );
 
-  final data = jsonDecode(response.body);
-  if (response.statusCode == 200) {
-    return data;
-  } else {
-    throw Exception(data['message'] ?? 'ไม่สามารถดึงข้อมูลห้องเรียนอาจารย์ได้');
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(
+          data['message'] ?? 'ไม่สามารถดึงข้อมูลห้องเรียนอาจารย์ได้');
+    }
   }
-}
 
 // =======================
 // ✅ ลบนักศึกษาออกจากห้องเรียน
 // =======================
-static Future<void> removeStudent(int classroomId, int userId) async {
-  final token = await getToken();
-  if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
+  static Future<void> removeStudent(int classroomId, int userId) async {
+    final token = await getToken();
+    if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
 
-  final response = await http.delete(
-    Uri.parse('$baseUrl/teacher/classrooms/$classroomId/remove-student/$userId'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token'
-    },
-  );
+    final response = await http.delete(
+      Uri.parse(
+          '$baseUrl/teacher/classrooms/$classroomId/remove-student/$userId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token'
+      },
+    );
 
-  final data = jsonDecode(response.body);
-  if (response.statusCode != 200) {
-    throw Exception(data['message'] ?? 'ไม่สามารถลบนักศึกษาได้');
+    final data = jsonDecode(response.body);
+    if (response.statusCode != 200) {
+      throw Exception(data['message'] ?? 'ไม่สามารถลบนักศึกษาได้');
+    }
   }
-}
 
 // =======================
 // ✅ เช็คชื่อ (Mark Attendance)
 // =======================
-static Future<Map<String, dynamic>> markAttendance({
-  required int userId,
-  required int classroomId,
-  required String status, // "present" | "late" | "leave" | "absent"
-}) async {
-  final token = await getToken();
-  if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
+  static Future<Map<String, dynamic>> markAttendance({
+    required int userId,
+    required int classroomId,
+    required String status, // "present" | "late" | "leave" | "absent"
+  }) async {
+    final token = await getToken();
+    if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
 
-  final response = await http.post(
-    Uri.parse('$baseUrl/teacher/classrooms/attendance'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token'
-    },
-    body: jsonEncode({
-      'user_id': userId,
-      'classroom_id': classroomId,
-      'status': status,
-    }),
-  );
+    final response = await http.post(
+      Uri.parse('$baseUrl/teacher/classrooms/attendance'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token'
+      },
+      body: jsonEncode({
+        'user_id': userId,
+        'classroom_id': classroomId,
+        'status': status,
+      }),
+    );
 
-  final data = jsonDecode(response.body);
-  if (response.statusCode == 200) {
-    return data;
-  } else {
-    throw Exception(data['message'] ?? 'เช็คชื่อไม่สำเร็จ');
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'เช็คชื่อไม่สำเร็จ');
+    }
   }
-}
 
-static Future<Map<String, dynamic>> updateWarnTimes(
+  static Future<Map<String, dynamic>> updateWarnTimes(
     int classroomId, {
     String? warnGreen,
     String? warnYellow,
     String? warnRed,
   }) async {
-  final token = await getToken();
-  if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
+    final token = await getToken();
+    if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
 
-  final response = await http.put(
-    Uri.parse('$baseUrl/teacher/classrooms/$classroomId/warn-times'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-    body: jsonEncode({
-      'warn_green': warnGreen,
-      'warn_yellow': warnYellow,
-      'warn_red': warnRed,
-    }),
-  );
+    final response = await http.put(
+      Uri.parse('$baseUrl/teacher/classrooms/$classroomId/warn-times'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'warn_green': warnGreen,
+        'warn_yellow': warnYellow,
+        'warn_red': warnRed,
+      }),
+    );
 
-  final data = jsonDecode(response.body);
-  if (response.statusCode == 200) {
-    return data;
-  } else {
-    throw Exception(data['message'] ?? 'ไม่สามารถอัปเดตเวลาการแจ้งเตือนได้');
-  }
-}
-
-static Future<int> updateClassroomStatus(int classroomId, int status) async {
-  final token = await getToken();
-  if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
-
-  final response = await http.put(
-    Uri.parse('$baseUrl/teacher/classrooms/$classroomId/status'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-    body: jsonEncode({'status': status}),
-  );
-
-  final data = jsonDecode(response.body);
-  if (response.statusCode == 200) {
-    return data['status'];
-  } else {
-    throw Exception(data['message'] ?? 'ไม่สามารถอัปเดตสถานะห้องเรียนได้');
-  }
-}
-
-static Future<List<dynamic>> updateHolidays(int classroomId, List<String> holidays) async {
-  final token = await getToken();
-  if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
-
-  final response = await http.put(
-    Uri.parse('$baseUrl/teacher/classrooms/$classroomId/holidays'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-    body: jsonEncode({'holidays': holidays}),
-  );
-
-  final data = jsonDecode(response.body);
-  if (response.statusCode == 200) {
-    return List<String>.from(data['holidays'] ?? []);
-  } else {
-    throw Exception(data['message'] ?? 'ไม่สามารถอัปเดตวันหยุดได้');
-  }
-}
-
-static Future<void> deleteClassroom(int classroomId) async {
-  final token = await getToken();
-  if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
-
-  final response = await http.delete(
-    Uri.parse('$baseUrl/teacher/classrooms/$classroomId'),
-    headers: {
-      'Content-Type': 'applicationุ/json',
-      'Authorization': 'Bearer $token',
-    },
-  );
-
-  if (response.statusCode != 200) {
     final data = jsonDecode(response.body);
-    throw Exception(data['message'] ?? 'ไม่สามารถลบห้องเรียนได้');
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'ไม่สามารถอัปเดตเวลาการแจ้งเตือนได้');
+    }
   }
-}
 
+  static Future<int> updateClassroomStatus(int classroomId, int status) async {
+    final token = await getToken();
+    if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/teacher/classrooms/$classroomId/status'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'status': status}),
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return data['status'];
+    } else {
+      throw Exception(data['message'] ?? 'ไม่สามารถอัปเดตสถานะห้องเรียนได้');
+    }
+  }
+
+  static Future<List<dynamic>> updateHolidays(
+      int classroomId, List<String> holidays) async {
+    final token = await getToken();
+    if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/teacher/classrooms/$classroomId/holidays'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'holidays': holidays}),
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return List<String>.from(data['holidays'] ?? []);
+    } else {
+      throw Exception(data['message'] ?? 'ไม่สามารถอัปเดตวันหยุดได้');
+    }
+  }
+
+  static Future<void> deleteClassroom(int classroomId) async {
+    final token = await getToken();
+    if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/teacher/classrooms/$classroomId'),
+      headers: {
+        'Content-Type': 'applicationุ/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      final data = jsonDecode(response.body);
+      throw Exception(data['message'] ?? 'ไม่สามารถลบห้องเรียนได้');
+    }
+  }
 }
