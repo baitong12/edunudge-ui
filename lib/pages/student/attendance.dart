@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:edunudge/services/api_service.dart'; // import ApiService
+import 'package:edunudge/pages/student/custombottomnav.dart';
+import 'package:edunudge/services/api_service.dart';
 
 class Attendance extends StatefulWidget {
   const Attendance({super.key});
@@ -9,72 +10,83 @@ class Attendance extends StatefulWidget {
 }
 
 class _AttendanceState extends State<Attendance> {
-  int? selectedClassroomId;
-  String selectedSubject = '';
-  List<Map<String, dynamic>> subjects = [];
-  Map<String, dynamic> selectedSubjectDetail = {};
-  Map<String, dynamic> attendanceSummary = {};
+  List<Map<String, dynamic>> attendanceData = [];
+  bool isLoadingTable = true;
 
-  bool isLoading = true;
+  String selectedSubject = '';
+  Map<String, int> subjectIds = {}; // name_subject => classroomId
+
+  Map<String, dynamic> selectedSubjectDetail = {};
+  bool isLoadingDetail = false;
 
   @override
   void initState() {
     super.initState();
-    loadStudentHome();
+    fetchAttendanceData();
   }
 
-  // โหลดรายการห้องเรียนและสรุปการเข้าเรียน
-  Future<void> loadStudentHome() async {
+  Future<void> fetchAttendanceData() async {
     setState(() {
-      isLoading = true;
+      isLoadingTable = true;
+      isLoadingDetail = false;
+      selectedSubjectDetail = {};
     });
-    try {
-      // ดึงรายการห้องเรียน
-      final classroomList = await ApiService.getStudentClassrooms();
-      subjects = classroomList
-          .map((e) => {
-                'id': e['id'], // classroom id
-                'name': e['name_subject'],
-              })
-          .toList();
 
-      if (subjects.isNotEmpty) {
-        selectedClassroomId = subjects.first['id'];
-        selectedSubject = subjects.first['name'];
-        await loadSubjectDetail(selectedClassroomId!);
-        await loadAttendanceSummary(selectedClassroomId!);
+    try {
+      final data = await ApiService.homeAttendanceSummary();
+      final classrooms = List<Map<String, dynamic>>.from(data['classrooms']);
+
+      subjectIds = {
+        for (var cls in classrooms)
+          cls['name_subject'] as String: cls['classroom_id'] as int
+      };
+
+      setState(() {
+        attendanceData = classrooms;
+        // ตั้งค่า selectedSubject เป็นวิชาแรกเสมอ
+        selectedSubject = subjectIds.isNotEmpty ? subjectIds.keys.first : '';
+        isLoadingTable = false;
+      });
+
+      // โหลดรายละเอียดวิชาแรกทันทีถ้ามี
+      if (selectedSubject.isNotEmpty) {
+        await fetchSubjectDetail(selectedSubject);
+      } else {
+        setState(() {
+          selectedSubjectDetail = {};
+          isLoadingDetail = false;
+        });
       }
     } catch (e) {
-      print('Error loading student home: $e');
-    } finally {
+      print('Error fetching attendance: $e');
       setState(() {
-        isLoading = false;
+        isLoadingTable = false;
+        isLoadingDetail = false;
       });
     }
   }
 
-  // โหลดรายละเอียดรายวิชาที่เลือก
-  Future<void> loadSubjectDetail(int classroomId) async {
-    try {
-      final detail = await ApiService.getSubjectDetail(classroomId);
-      setState(() {
-        selectedSubjectDetail = detail;
-      });
-    } catch (e) {
-      print('Error loading subject detail: $e');
-    }
-  }
+  Future<void> fetchSubjectDetail(String subjectName) async {
+    final classroomId = subjectIds[subjectName];
+    if (classroomId == null) return;
 
-  // โหลดสรุปการเข้าเรียนของวิชาที่เลือก
-  Future<void> loadAttendanceSummary(int classroomId) async {
+    setState(() {
+      isLoadingDetail = true;
+      selectedSubjectDetail = {};
+    });
+
     try {
-      // สำหรับตัวอย่างนี้ใช้ API Home (อาจปรับเป็น API เฉพาะวิชาได้)
-      final summary = await ApiService.getStudentHome();
+      final data = await ApiService.homeSubjectDetail(classroomId);
+
       setState(() {
-        attendanceSummary = summary;
+        selectedSubjectDetail = data;
+        isLoadingDetail = false;
       });
     } catch (e) {
-      print('Error loading attendance summary: $e');
+      print('Error fetching subject detail: $e');
+      setState(() {
+        isLoadingDetail = false;
+      });
     }
   }
 
@@ -82,12 +94,6 @@ class _AttendanceState extends State<Attendance> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
-    if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -117,133 +123,172 @@ class _AttendanceState extends State<Attendance> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ตารางสถิติการเข้าเรียน
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF3F8FAF),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Row(
-                        children: const [
-                          Expanded(
-                              flex: 2,
-                              child: Center(
-                                  child: Text('ชื่อวิชา',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white)))),
-                          Expanded(
-                              flex: 1,
-                              child: Center(
-                                  child: Text('มา',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white)))),
-                          Expanded(
-                              flex: 1,
-                              child: Center(
-                                  child: Text('มาสาย',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white)))),
-                          Expanded(
-                              flex: 1,
-                              child: Center(
-                                  child: Text('ขาด',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white)))),
-                          Expanded(
-                              flex: 1,
-                              child: Center(
-                                  child: Text('ลา',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white)))),
-                          Expanded(
-                              flex: 2,
-                              child: Center(
-                                  child: Text('รวมทั้งหมด',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white)))),
+              isLoadingTable
+                  ? const Center(child: CircularProgressIndicator())
+                  : Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
                         ],
                       ),
-                    ),
-                    Container(
-                      color: const Color(0x336D6D6D),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Row(
+                      child: Column(
                         children: [
-                          Expanded(
-                              flex: 2,
-                              child: Center(child: Text(selectedSubject))),
-                          Expanded(
-                              flex: 1,
-                              child: Center(
-                                  child: Text(
-                                      attendanceSummary['present']?.toString() ??
-                                          '0',
-                                      style: const TextStyle(
-                                          color: Colors.green)))),
-                          Expanded(
-                              flex: 1,
-                              child: Center(
-                                  child: Text(
-                                      attendanceSummary['late']?.toString() ??
-                                          '0',
-                                      style: const TextStyle(
-                                          color: Colors.orange)))),
-                          Expanded(
-                              flex: 1,
-                              child: Center(
-                                  child: Text(
-                                      attendanceSummary['absent']?.toString() ??
-                                          '0',
-                                      style: const TextStyle(
-                                          color: Colors.red)))),
-                          Expanded(
-                              flex: 1,
-                              child: Center(
-                                  child: Text(
-                                      attendanceSummary['leave']?.toString() ??
-                                          '0',
-                                      style: const TextStyle(
-                                          color: Colors.blue)))),
-                          Expanded(
-                              flex: 2,
-                              child: Center(
-                                  child: Text(
-                                      '${(attendanceSummary['present'] ?? 0)}%'))),
+                          Container(
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF3F8FAF),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                topRight: Radius.circular(16),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              children: const [
+                                Expanded(
+                                    flex: 2,
+                                    child: Center(
+                                        child: Text('ชื่อวิชา',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white)))),
+                                Expanded(
+                                    flex: 1,
+                                    child: Center(
+                                        child: Text('มา',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white)))),
+                                Expanded(
+                                    flex: 1,
+                                    child: Center(
+                                        child: Text('มาสาย',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white)))),
+                                Expanded(
+                                    flex: 1,
+                                    child: Center(
+                                        child: Text('ขาด',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white)))),
+                                Expanded(
+                                    flex: 1,
+                                    child: Center(
+                                        child: Text('ลา',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white)))),
+                                Expanded(
+                                    flex: 2,
+                                    child: Center(
+                                        child: Text('รวมทั้งหมด',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white)))),
+                              ],
+                            ),
+                          ),
+                          ...attendanceData.asMap().entries.map((entry) {
+                            int idx = entry.key;
+                            final val = entry.value;
+                            final bool isLast = idx == attendanceData.length - 1;
+                            final Color rowColor = idx % 2 == 0
+                                ? const Color(0x336D6D6D)
+                                : const Color(0x6E3F8FAF);
+
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: rowColor,
+                                border: const Border(
+                                  left: BorderSide(color: Colors.black),
+                                  right: BorderSide(color: Colors.black),
+                                  bottom: BorderSide(color: Colors.black),
+                                ),
+                                borderRadius: isLast
+                                    ? const BorderRadius.only(
+                                        bottomLeft: Radius.circular(16),
+                                        bottomRight: Radius.circular(16),
+                                      )
+                                    : null,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: Center(
+                                      child: Text(
+                                        val['name_subject'] ?? '',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        val['present']?.toString() ?? '0',
+                                        style:
+                                            const TextStyle(color: Colors.green),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        val['late']?.toString() ?? '0',
+                                        style: const TextStyle(
+                                            color: Colors.orange),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        val['absent']?.toString() ?? '0',
+                                        style:
+                                            const TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        val['leave_count']?.toString() ?? '0',
+                                        style: const TextStyle(
+                                            color: Colors.blue),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Center(
+                                      child: Text(
+                                        '${val['percent']?.toString() ?? '0'}%',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
 
               const SizedBox(height: 16),
 
-              // Dropdown เลือกวิชา
               Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
@@ -255,35 +300,24 @@ class _AttendanceState extends State<Attendance> {
                     border: Border.all(color: Colors.white, width: 1.5),
                   ),
                   child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: selectedClassroomId,
+                    child: DropdownButton<String>(
+                      value: selectedSubject.isNotEmpty ? selectedSubject : null,
                       icon: const Icon(Icons.arrow_drop_down),
                       dropdownColor: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       style:
                           const TextStyle(color: Colors.black, fontSize: 16),
-                      onChanged: (int? newId) async {
-                        if (newId != null) {
-                          final newSubject = subjects
-                              .firstWhere((e) => e['id'] == newId)['name'];
-                          setState(() {
-                            selectedClassroomId = newId;
-                            selectedSubject = newSubject;
-                            isLoading = true;
-                          });
-
-                          await loadSubjectDetail(newId);
-                          await loadAttendanceSummary(newId);
-
-                          setState(() {
-                            isLoading = false;
-                          });
-                        }
+                      onChanged: (String? newValue) {
+                        if (newValue == null) return;
+                        setState(() {
+                          selectedSubject = newValue;
+                        });
+                        fetchSubjectDetail(newValue);
                       },
-                      items: subjects.map((e) {
-                        return DropdownMenuItem<int>(
-                          value: e['id'],
-                          child: Text(e['name']),
+                      items: subjectIds.keys.map((value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value, textAlign: TextAlign.center),
                         );
                       }).toList(),
                     ),
@@ -291,7 +325,8 @@ class _AttendanceState extends State<Attendance> {
                 ),
               ),
 
-              // รายละเอียดรายวิชา
+              const SizedBox(height: 8),
+
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.only(top: 8),
@@ -299,9 +334,7 @@ class _AttendanceState extends State<Attendance> {
                 decoration: BoxDecoration(
                   color: Colors.lightBlue.shade50.withOpacity(0.9),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: const Color.fromARGB(255, 255, 255, 255),
-                      width: 1.5),
+                  border: Border.all(color: Colors.white, width: 1.5),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -310,37 +343,23 @@ class _AttendanceState extends State<Attendance> {
                     ),
                   ],
                 ),
-                child: Text(
-                  selectedSubjectDetail.isNotEmpty
-                      ? 'ชื่อวิชา: ${selectedSubjectDetail['name_subject']}\n'
-                          'อาคารเรียน: ${selectedSubjectDetail['room_number']}\n'
-                          'อาจารย์ผู้สอน: ${selectedSubjectDetail['teacher_name']}\n'
-                          'ภาควิชา: ${selectedSubjectDetail['department']}\n'
-                          'เบอร์ติดต่อ: ${selectedSubjectDetail['contact']}'
-                      : 'ไม่มีข้อมูล',
-                  style: const TextStyle(fontSize: 16, color: Colors.black87),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 1, 150, 63),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                  ),
-                  child: const Text('ดาวน์โหลดเอกสาร (pdf.)'),
-                ),
+                child: isLoadingDetail
+                    ? const Center(child: CircularProgressIndicator())
+                    : Text(
+                        'ชื่อวิชา: ${selectedSubjectDetail['name_subject'] ?? '-'}\n'
+                        'อาคารเรียน: ${selectedSubjectDetail['room_number'] ?? '-'}\n'
+                        'อาจารย์ผู้สอน: ${selectedSubjectDetail['teacher_name'] ?? '-'}\n'
+                        'คณะ: ${selectedSubjectDetail['department'] ?? '-'}\n'
+                        'เบอร์ติดต่อ: ${selectedSubjectDetail['contact'] ?? '-'}',
+                        style: const TextStyle(
+                            fontSize: 16, color: Colors.black87),
+                      ),
               ),
             ],
           ),
         ),
       ),
+      bottomNavigationBar: CustomBottomNav(currentIndex: 0, context: context),
     );
   }
 }

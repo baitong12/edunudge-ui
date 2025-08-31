@@ -146,11 +146,11 @@ class Home extends StatelessWidget {
                                   _buildPieSection(
                                       'มาเรียน', come, const Color(0xFF1de9b6)),
                                   _buildPieSection(
-                                      'มาสาย', late, const Color(0xFFe040fb)),
+                                      'มาสาย', late, const Color(0xFFffab400)),
                                   _buildPieSection(
                                       'ขาด', absent, const Color(0xFFff4081)),
                                   _buildPieSection(
-                                      'ลา', leave, const Color(0xFFffab40)),
+                                      'ลา', leave, const Color.fromARGB(255, 72, 188, 255)),
                                 ],
                               ),
                             ),
@@ -179,13 +179,13 @@ class Home extends StatelessWidget {
                                   context, 'มาเรียน', come, const Color(0xFF1de9b6)),
                               const SizedBox(height: 16),
                               _buildProgressBar(
-                                  context, 'มาสาย', late, const Color(0xFFe040fb)),
+                                  context, 'มาสาย', late, const Color(0xFFffab400)),
                               const SizedBox(height: 16),
                               _buildProgressBar(
                                   context, 'ขาด', absent, const Color(0xFFff4081)),
                               const SizedBox(height: 16),
                               _buildProgressBar(
-                                  context, 'ลา', leave, const Color(0xFFffab40)),
+                                  context, 'ลา', leave, const Color.fromARGB(255, 72, 188, 255)),
                             ],
                           ),
                         ),

@@ -5,7 +5,7 @@ import 'package:edunudge/services/api_service.dart';
 class Student {
   final int id;
   final String name;
-  int score;
+  double score;
 
   Student({required this.id, required this.name, this.score = 0});
 }
@@ -36,22 +36,24 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
 
   Future<void> fetchClassroomData() async {
     try {
-      final data = await ApiService.getTeacherClassroomDetail(widget.classroomId);
-
+      final data = await ApiService.getTeacherClassroomDetail(widget.classroomId).catchError((e) {
+        throw Exception('Failed to load classroom data: $e');
+      });
+      print('Classroom Data: $data');
       setState(() {
         subjectName = data['name_subject'] ?? '';
         roomNumber = data['room_number'] ?? '';
-        classroomCode = data['code'] ?? '';
+        print('students: $subjectName');
 
         // แปลง students
         students = (data['students'] as List<dynamic>?)
         ?.map((e) => Student(
-              id: e['name'].hashCode, // ใช้ hash ของชื่อแทน id ถ้าไม่มี id จริง
+              id: e['user_id'], // ใช้ hash ของชื่อแทน id ถ้าไม่มี id จริง
               name: '${e['name']} ${e['lastname']}',
               score: e['point_percent'] ?? 0,
             ))
         .toList() ?? [];
-
+        print('students: $students');
 
         // ถ้ามีพิกัดห้องเรียนจริงจาก backend
         if (data['latitude'] != null && data['longitude'] != null) {

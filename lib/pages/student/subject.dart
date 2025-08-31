@@ -74,10 +74,7 @@ class _SubjectPageState extends State<Subject> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF00C853),
-              Color(0xFF00BCD4)
-            ],
+            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -149,21 +146,21 @@ class _SubjectPageState extends State<Subject> {
             children: [
               _ScoreCard(
                 icon: Icons.close,
-                count: summary['absent'] ?? 0,
+                count: int.tryParse(summary['absent'].toString()) ?? 0,
                 label: 'ขาดเรียน',
                 color: Colors.red,
               ),
               Container(height: 40, width: 1, color: Colors.grey.shade300),
               _ScoreCard(
                 icon: Icons.access_time,
-                count: summary['late'] ?? 0,
+                count: int.tryParse(summary['late'].toString()) ?? 0,
                 label: 'มาเรียนสาย',
                 color: Colors.orange,
               ),
               Container(height: 40, width: 1, color: Colors.grey.shade300),
               _ScoreCard(
                 icon: Icons.star,
-                count: summary['earned_points'] ?? 0,
+                count: int.tryParse(summary['earned_points'].toString()) ?? 0,
                 label: 'คะแนนสะสม',
                 color: Colors.amber,
               ),
@@ -180,7 +177,9 @@ class _SubjectPageState extends State<Subject> {
               classroom['name_subject'] ?? '-',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
             Text(
               classroom['room_number'] ?? '-',
@@ -300,8 +299,8 @@ class _SubjectPageState extends State<Subject> {
     );
   }
 
-  Widget _buildGradeCriteriaRow(
-      BuildContext context, String label1, String value1, String label2, String value2) {
+  Widget _buildGradeCriteriaRow(BuildContext context, String label1,
+      String value1, String label2, String value2) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -345,7 +344,8 @@ class _ScoreCard extends StatelessWidget {
         Text('$count',
             style: TextStyle(
                 fontWeight: FontWeight.bold, color: color, fontSize: 18)),
-        Text(label, style: const TextStyle(color: Colors.black87, fontSize: 14)),
+        Text(label,
+            style: const TextStyle(color: Colors.black87, fontSize: 14)),
       ],
     );
   }

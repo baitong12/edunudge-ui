@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:edunudge/shared/customappbar.dart';
 import 'package:edunudge/pages/teacher/custombottomnav.dart';
 
 class CreateClassroom03 extends StatefulWidget {
@@ -16,11 +15,20 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
   final List<String> _itemCountOptions = ['1', '2', '3', '4', '5'];
 
   final List<String> _cumulativeScoreOptions = [
-    '100 %', '90% ขึ้นไป', '80 % ขึ้นไป', '70 % ขึ้นไป', '60% ขึ้นไป',
-    '50 % ขึ้นไป', '40 % ขึ้นไป', '30 % ขึ้นไป', '20 % ขึ้นไป', '10 % ขึ้นไป',
+    '100 %',
+    '90% ขึ้นไป',
+    '80 % ขึ้นไป',
+    '70 % ขึ้นไป',
+    '60% ขึ้นไป',
+    '50 % ขึ้นไป',
+    '40 % ขึ้นไป',
+    '30 % ขึ้นไป',
+    '20 % ขึ้นไป',
+    '10 % ขึ้นไป',
   ];
 
-  final List<String> _bonusScoreOptions = List.generate(10, (index) => (index + 1).toString());
+  final List<String> _bonusScoreOptions =
+      List.generate(10, (index) => (index + 1).toString());
 
   List<String?> _selectedCumulativeScores = List.filled(1, null);
   List<String?> _selectedBonusScores = List.filled(1, null);
@@ -67,7 +75,8 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
 
     // ตรวจสอบ dropdown
     for (int i = 0; i < _selectedItemCount; i++) {
-      if (_selectedCumulativeScores[i] == null || _selectedBonusScores[i] == null) {
+      if (_selectedCumulativeScores[i] == null ||
+          _selectedBonusScores[i] == null) {
         hasError = true;
         break;
       }
@@ -82,9 +91,9 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
 
     // สร้าง points (criteria เดิม)
     final points = List.generate(_selectedItemCount, (i) => {
-      "point_percent": parsePercent(_selectedCumulativeScores[i]),
-      "point_extra": int.tryParse(_selectedBonusScores[i] ?? '0') ?? 0,
-    });
+          "point_percent": parsePercent(_selectedCumulativeScores[i]),
+          "point_extra": int.tryParse(_selectedBonusScores[i] ?? '0') ?? 0,
+        });
 
     // ส่งข้อมูลไปหน้า 4
     Navigator.pushNamed(context, '/classroom_create04', arguments: {
@@ -166,14 +175,6 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF00C853),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
-        child: CustomAppBar(
-          onProfileTap: () => Navigator.pushNamed(context, '/profile'),
-          onLogoutTap: () => Navigator.pushNamedAndRemoveUntil(
-              context, '/login', (r) => false),
-        ),
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -296,8 +297,7 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                                     _buildDropdownField(
                                       hint: 'คะแนนสะสม',
                                       options: _cumulativeScoreOptions,
-                                      selectedValue:
-                                          _selectedCumulativeScores[i],
+                                      selectedValue: _selectedCumulativeScores[i],
                                       onChanged: (String? newValue) {
                                         setState(() {
                                           _selectedCumulativeScores[i] =
@@ -336,61 +336,56 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                             ],
                           ),
                         ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                                  context, '/classroom_create01', (r) => false),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                child: Text(
+                                  'ยกเลิก',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: validateAndSave,
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                child: Text(
+                                  'ถัดไป',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
           ),
-          bottomNavigationBar: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red, 
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text(
-                            'ยกเลิก',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black, 
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: validateAndSave,
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text(
-                            'ถัดไป',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              CustomBottomNav(currentIndex: 1, context: context),
-            ],
-          ),
+          bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
         ),
       ),
     );

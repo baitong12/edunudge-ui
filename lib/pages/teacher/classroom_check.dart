@@ -11,15 +11,18 @@ class AttendancePage extends StatefulWidget {
 }
 
 class _AttendancePageState extends State<AttendancePage> {
-  String formattedDate = DateFormat('dd MMMM yyyy', 'th').format(DateTime.now()).replaceAllMapped(RegExp(r'\d{4}'), (match) {
-  int year = int.parse(match.group(0)!);
-  return (year + 543).toString();
-});
+  String formattedDate = DateFormat('dd MMMM yyyy', 'th')
+      .format(DateTime.now())
+      .replaceAllMapped(RegExp(r'\d{4}'), (match) {
+    int year = int.parse(match.group(0)!);
+    return (year + 543).toString();
+  });
+
   bool isLoading = true;
   bool isSubmitting = false;
 
   List<Map<String, dynamic>> students = [];
-  List<String> statusList = [];
+  List<Map<String, String>> statusList = [];
 
   @override
   void initState() {
@@ -29,16 +32,36 @@ class _AttendancePageState extends State<AttendancePage> {
 
   Future<void> _loadStudents() async {
     try {
-      final classroomDetail = await ApiService.getTeacherClassroomDetail(widget.classroomId);
+      final classroomDetail =
+          await ApiService.getTeacherClassroomDetail(widget.classroomId);
       final studentData = classroomDetail['students'] as List<dynamic>? ?? [];
 
       setState(() {
-        students = studentData.map((s) => {
-          'id': s['id'], 
-          'name': s['name'],
-          'lastname': s['lastname'],
-        }).toList();
-        statusList = List.filled(students.length, '');
+        students = studentData
+            .where((s) => s['user_id'] != null)
+            .map((s) {
+              int? userId;
+              if (s['user_id'] is int) {
+                userId = s['user_id'];
+              } else if (s['user_id'] is String) {
+                userId = int.tryParse(s['user_id']);
+              }
+              if (userId == null) {
+                print('พบ user_id ที่แปลงเป็น int ไม่ได้: ${s['user_id']}');
+              }
+              return {
+                'id': userId,
+                'name': s['name'],
+                'lastname': s['lastname'],
+              };
+            })
+            .where((s) => s['id'] != null)
+            .toList();
+
+        // statusList เก็บเป็น object {value: "", label: ""}
+        statusList =
+            List.filled(students.length, {"value": "", "label": ""}, growable: true);
+
         isLoading = false;
       });
     } catch (e) {
@@ -51,12 +74,8 @@ class _AttendancePageState extends State<AttendancePage> {
 
   String getInitials(String name, String? lastname) {
     String initials = '';
-    if (name.isNotEmpty) {
-      initials += name[0];
-    }
-    if (lastname != null && lastname.isNotEmpty) {
-      initials += lastname[0];
-    }
+    if (name.isNotEmpty) initials += name[0];
+    if (lastname != null && lastname.isNotEmpty) initials += lastname[0];
     return initials.toUpperCase();
   }
 
@@ -67,20 +86,16 @@ class _AttendancePageState extends State<AttendancePage> {
 
     try {
       await Future.wait(List.generate(students.length, (i) async {
-        if (statusList[i].isEmpty) return;
-
-        String status = switch (statusList[i]) {
-          'มา' => 'present',
-          'สาย' => 'late',
-          'ลา' => 'leave',
-          'ขาด' => 'absent',
-          _ => throw Exception('กรุณาเลือกสถานะ'),
-        };
+        final userId = students[i]['id'];
+        if (userId == null) {
+          print('พบ student ที่ user_id เป็น null: ${students[i]}');
+          return;
+        }
 
         await ApiService.markAttendance(
-          userId: students[i]['id'],
+          userId: userId,
           classroomId: widget.classroomId,
-          status: status,
+          status: statusList[i]["value"] ?? "", // ส่ง value อังกฤษ
         );
       }));
 
@@ -89,10 +104,6 @@ class _AttendancePageState extends State<AttendancePage> {
       );
 
       Navigator.pushReplacementNamed(context, '/classroom_subject');
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เช็คชื่อบางคนล้มเหลว: $e')),
-      );
     } finally {
       setState(() => isSubmitting = false);
     }
@@ -136,11 +147,17 @@ class _AttendancePageState extends State<AttendancePage> {
                   children: [
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 20),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
+                        boxShadow: const [
+                          BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 4,
+                              offset: Offset(0, 2))
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,7 +186,9 @@ class _AttendancePageState extends State<AttendancePage> {
                               SizedBox(width: 8),
                               Text(
                                 'รายชื่อนักเรียน',
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black),
                               ),
                             ],
                           ),
@@ -193,12 +212,22 @@ class _AttendancePageState extends State<AttendancePage> {
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.red,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
                                   ),
-                                  onPressed: () => Navigator.pushReplacementNamed(context, '/classroom_subject'),
+                                  onPressed: () {
+                                    Navigator.pushReplacementNamed(
+                                      context,
+                                      '/classroom_subject',
+                                      arguments: widget.classroomId,
+                                    );
+                                  },
                                   child: const Padding(
                                     padding: EdgeInsets.symmetric(vertical: 14),
-                                    child: Text('ยกเลิก', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                    child: Text('ยกเลิก',
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 16)),
                                   ),
                                 ),
                               ),
@@ -207,18 +236,26 @@ class _AttendancePageState extends State<AttendancePage> {
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.black,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
                                   ),
                                   onPressed: markAllAttendance,
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
                                     child: isSubmitting
                                         ? const SizedBox(
                                             width: 20,
                                             height: 20,
-                                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                            child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2),
                                           )
-                                        : const Text('เสร็จสิ้น', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                        : const Text('เสร็จสิ้น',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16)),
                                   ),
                                 ),
                               ),
@@ -265,7 +302,7 @@ class _AttendancePageState extends State<AttendancePage> {
               ),
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             flex: 2,
             child: Text(
@@ -274,23 +311,26 @@ class _AttendancePageState extends State<AttendancePage> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          SizedBox(width: 4),
-          Expanded(child: _buildStatusButton(index, 'ขาด', 'FF1800', buttonFontSize)),
-          SizedBox(width: 4),
-          Expanded(child: _buildStatusButton(index, 'สาย', 'FFAB40', buttonFontSize)),
-          SizedBox(width: 4),
-          Expanded(child: _buildStatusButton(index, 'มา', '00C853', buttonFontSize)),
-          SizedBox(width: 4),
-          Expanded(child: _buildStatusButton(index, 'ลา', '2979FF', buttonFontSize)),
+          const SizedBox(width: 4),
+          Expanded(child: _buildStatusButton(index, "absent", "ขาด", "FF1800", buttonFontSize)),
+          const SizedBox(width: 4),
+          Expanded(child: _buildStatusButton(index, "late", "สาย", "FFAB40", buttonFontSize)),
+          const SizedBox(width: 4),
+          Expanded(child: _buildStatusButton(index, "present", "มา", "00C853", buttonFontSize)),
+          const SizedBox(width: 4),
+          Expanded(child: _buildStatusButton(index, "leave", "ลา", "2979FF", buttonFontSize)),
         ],
       ),
     );
   }
 
-  Widget _buildStatusButton(int index, String text, String hexColor, double fontSize) {
-    final isSelected = statusList[index] == text;
+  Widget _buildStatusButton(
+      int index, String value, String label, String hexColor, double fontSize) {
+    final isSelected = statusList[index]["value"] == value;
     return GestureDetector(
-      onTap: () => setState(() => statusList[index] = text),
+      onTap: () => setState(() {
+        statusList[index] = {"value": value, "label": label};
+      }),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
@@ -300,7 +340,7 @@ class _AttendancePageState extends State<AttendancePage> {
         ),
         alignment: Alignment.center,
         child: Text(
-          text,
+          label,
           style: TextStyle(
             color: isSelected ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,

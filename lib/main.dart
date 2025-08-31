@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:edunudge/services/firebase_messaging.dart';
 
 // ✅ Providers
 import 'providers/profile_provider.dart';
@@ -47,6 +48,8 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  final notificationService = NotificationService();
+  await notificationService.init();
   runApp(
     MultiProvider(
       providers: [
@@ -95,6 +98,7 @@ class EduNudgeApp extends StatelessWidget {
         '/home_student': (context) => const Home(),
         '/join-classroom': (context) => const ClassroomJoin(),
         '/classroom': (context) => const Classroom(),
+        '/attendance': (context) => const Attendance(),
 
         // 👩‍🏫 Teacher
         '/home_teacher': (context) => const HomePage(),
@@ -103,10 +107,11 @@ class EduNudgeApp extends StatelessWidget {
         '/classroom_create03': (context) => const CreateClassroom03(),
         '/classroom_create04': (context) => const CreateClassroom04(),
         '/classroom_settings': (context) => ClassroomSettingsPage(),
-        '/classroom_report': (context) => const ReportMenuPage(),
-        '/classroom_report_student': (context) => const StudentReportPage(),
-        '/classroom_report_becareful': (context) => const ReportBecarefulPage(),
-        '/classroom_report_summarize': (context) => const ReportBsummarizePage(),
+
+
+        
+        '/classroom_report_summarize': (context) =>
+            const ReportBsummarizePage(),
       },
       onGenerateRoute: (settings) {
         // สำหรับหน้าที่ต้องรับ arguments
@@ -123,15 +128,7 @@ class EduNudgeApp extends StatelessWidget {
         if (settings.name == '/classroom_subject') {
           final classroomId = settings.arguments as int; // รับเป็น int
           return MaterialPageRoute(
-            builder: (context) =>
-                ClassroomSubject(classroomId: classroomId),
-          );
-        }
-
-        if (settings.name == '/attendance') {
-          final classroomId = settings.arguments as int; // รับ classroomId
-          return MaterialPageRoute(
-            builder: (context) => AttendancePage(classroomId: classroomId),
+            builder: (context) => ClassroomSubject(classroomId: classroomId),
           );
         }
 
@@ -142,6 +139,24 @@ class EduNudgeApp extends StatelessWidget {
           );
         }
 
+        if (settings.name == '/classroom_report') {
+          final classroomId = settings.arguments as int;
+          return MaterialPageRoute(
+            builder: (context) => ReportMenuPage(classroomId: classroomId),
+          );
+        }
+        if (settings.name == '/classroom_report_student') {
+          final classroomId = settings.arguments as int;
+          return MaterialPageRoute(
+            builder: (context) => StudentReportPage(classroomId: classroomId),
+          );
+        }
+        if (settings.name == '/classroom_report_becareful') {
+          final classroomId = settings.arguments as int;
+          return MaterialPageRoute(
+            builder: (context) => ReportBecarefulPage(classroomId: classroomId),
+          );
+        }
         return null;
       },
     );

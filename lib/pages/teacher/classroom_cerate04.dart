@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:edunudge/shared/customappbar.dart';
 import 'package:edunudge/pages/teacher/custombottomnav.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -174,9 +173,7 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('สร้างห้องเรียนสำเร็จ')),
       );
-      Navigator.pop(context);
-      // หรือถ้าต้องการส่งต่อข้อมูลไปหน้าสรุป
-      // Navigator.pushNamed(context, '/classroom_summary', arguments: classroomInfo);
+      Navigator.pushNamedAndRemoveUntil(context, '/home_teacher', (r) => false);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
@@ -192,14 +189,6 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF00C853),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
-        child: CustomAppBar(
-          onProfileTap: () => Navigator.pushNamed(context, '/profile'),
-          onLogoutTap: () =>
-              Navigator.pushNamedAndRemoveUntil(context, '/login', (r) => false),
-        ),
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -249,56 +238,49 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                       _buildLocationPicker(),
                       const SizedBox(height: 24),
                       if (isLoading) const LinearProgressIndicator(),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                                  context, '/classroom_create01', (r) => false),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                child: Text('ยกเลิก',
+                                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: submitClassroom,
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                child: Text('ตกลง',
+                                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
           ),
-          bottomNavigationBar: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text('ยกเลิก',
-                              style: TextStyle(color: Colors.white, fontSize: 16)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: submitClassroom,
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text('ตกลง',
-                              style: TextStyle(color: Colors.white, fontSize: 16)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              CustomBottomNav(currentIndex: 1, context: context),
-            ],
-          ),
+          bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
         ),
       ),
     );

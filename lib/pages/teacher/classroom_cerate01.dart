@@ -80,7 +80,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
 
         Navigator.pushReplacementNamed(
           context,
-          '/home_teacher',
+          '/classroom_create02',
           arguments: {
             'name_subject': subjectController.text,
             'room_number': roomNumberController.text,
@@ -159,7 +159,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                       _buildSemesterDropdownField(error: semesterError),
                       const SizedBox(height: 16),
                       buildLabeledField('ปีการศึกษา', academicYearController,
-                          'กรุณากรอกปีการศึกษา (พ.ศ.)',
+                          'กรุณากรอกปีการศึกษา',
                           keyboardType: TextInputType.number),
                       const SizedBox(height: 16),
                       const Text('วันแรกของเทอม',
@@ -192,7 +192,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12)),
                               ),
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () => Navigator.pushReplacementNamed(context, '/home_teacher'),
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 14),
                                 child: Text(
