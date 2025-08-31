@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:edunudge/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';//NOTE
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ReportBsummarizePage extends StatefulWidget {
   final int classroomId;
@@ -16,6 +17,7 @@ class ReportBsummarizePage extends StatefulWidget {
 
 class _ReportBsummarizePageState extends State<ReportBsummarizePage>
     with SingleTickerProviderStateMixin {
+        final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
   List<double> weeklyData = [];
   List<Map<String, dynamic>> studentData = [];
   Set<int> selectedWeeks = {};
@@ -598,7 +600,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                               final token = await ApiService
                                   .getToken(); // ✅ เรียก async ได้
                               final url =
-                                  'http://127.0.0.1:8000/classrooms/${widget.classroomId}/weekly-pdf/$token';
+                                  '$baseUrl/classrooms/${widget.classroomId}/weekly-pdf/$token';
                               Uri uri = Uri.parse(url);
 
                               if (await canLaunchUrl(uri)) {

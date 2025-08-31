@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
-
+  static final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
+  static final String apiKey = dotenv.env['API_KEY'] ?? "";
   // =======================
   // ✅ ดึง token จาก SharedPreferences
   // =======================
@@ -27,16 +28,19 @@ static Future<Map<String, dynamic>> updateData(Map<String, dynamic> body) async 
     },
     body: jsonEncode(body),
   );
-
+  print('Response status: ${jsonDecode(response.body)}');
   if (response.statusCode == 200) {
-
     print(response.body);
     return {
       'status': 'success',
-      'data': jsonDecode(response.body)
+      'message': jsonDecode(response.body)
     };
   } else {
-    throw Exception('Error: ${response.statusCode}');
+    print('Error: ${jsonDecode(response.body)['error']}');
+    return {
+      'status': 'error',
+      'message': jsonDecode(response.body)['message']
+    };
   }
 }
 
@@ -75,9 +79,8 @@ static Future<Map<String, dynamic>> confirmOtp(Map<String, dynamic> body) async 
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'password': password}),
     );
-
+    print('Response status: ${jsonDecode(response.body)}');
     final data = jsonDecode(response.body);
-
     if (response.statusCode == 200) {
       // เก็บ token และ user info ใน SharedPreferences
       final token = data['token'];

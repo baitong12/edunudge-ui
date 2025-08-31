@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ForgotPassword extends StatefulWidget {
+  
   const ForgotPassword({super.key});
 
   @override
@@ -10,6 +12,7 @@ class ForgotPassword extends StatefulWidget {
 }
 
 class _ForgotPasswordState extends State<ForgotPassword> {
+  static final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
   // Controller สำหรับ TextField ของอีเมล
   final TextEditingController _emailController = TextEditingController();
   // สถานะเพื่อแสดง CircularProgressIndicator เมื่อกำลังโหลด
@@ -44,7 +47,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       // ทำการเรียก API POST ไปยัง Laravel backend
       final response = await http.post(
         // URL ของ Laravel API สำหรับการลืมรหัสผ่าน (ควรเปลี่ยนเป็น Production URL เมื่อ Deploy)
-        Uri.parse("http://127.0.0.1:8000/api/forgot-password"), 
+        Uri.parse("$baseUrl/forgot-password"),
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
@@ -52,7 +55,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
         // ส่งข้อมูลอีเมลในรูปแบบ JSON
         body: jsonEncode({"email": email}),
       );
-
+      
       // เมื่อได้รับ response แล้ว ให้ตั้งค่าสถานะเป็นไม่กำลังโหลด
       setState(() => _isLoading = false);
 

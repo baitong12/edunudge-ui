@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:edunudge/services/api_service.dart'; // import ApiService
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class StudentReportPage extends StatefulWidget {
   final int classroomId;
@@ -12,6 +13,7 @@ class StudentReportPage extends StatefulWidget {
 }
 
 class _StudentReportPageState extends State<StudentReportPage> {
+    final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
   List<Map<String, dynamic>> students = [];
   String searchQuery = '';
   bool isLoading = true;
@@ -314,7 +316,7 @@ class _StudentReportPageState extends State<StudentReportPage> {
                               final token = await ApiService
                                   .getToken();
                               final url =
-                                  'http://127.0.0.1:8000/classrooms/${widget.classroomId}/attendance-pdf/$token';
+                                  '$baseUrl/classrooms/${widget.classroomId}/attendance-pdf/$token';
                               Uri uri = Uri.parse(url);
 
                               if (await canLaunchUrl(uri)) {

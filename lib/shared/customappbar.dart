@@ -3,10 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../providers/profile_provider.dart';
 
 class CustomAppBar extends StatelessWidget {
+
+  static final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
   final VoidCallback onProfileTap;
   final VoidCallback? onLogoutTap;
 
@@ -23,7 +25,7 @@ class CustomAppBar extends StatelessWidget {
     if (token != null) {
       try {
         final response = await http.post(
-          Uri.parse("http://127.0.0.1:8000/api/logout"),
+          Uri.parse("$baseUrl/logout"),
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',

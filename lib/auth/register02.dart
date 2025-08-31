@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Register02 extends StatefulWidget {
   @override
@@ -8,6 +9,7 @@ class Register02 extends StatefulWidget {
 }
 
 class _Register02State extends State<Register02> {
+  static final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
   int? _selectedFacultyId;
   int? _selectedDepartmentId;
   int? _selectedRoleId;
@@ -82,7 +84,7 @@ class _Register02State extends State<Register02> {
 
     final Map<String, dynamic> args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    const String apiUrl = 'http://127.0.0.1:8000/api/register';
+    final String apiUrl = '$baseUrl/register';
     try {
       final response = await http.post(
         Uri.parse(apiUrl),

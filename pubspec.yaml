@@ -2,7 +2,7 @@ name: edunudge
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.4.3 <4.0.0'
+  sdk: ">=3.4.3 <4.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -34,10 +34,10 @@ dependencies:
   geolocator: ^12.0.0
   carousel_slider: ^4.2.1
   url_launcher: ^6.1.12
-  image_picker: ^1.0.4 
+  image_picker: ^1.0.4
   flutter_localizations:
     sdk: flutter
-  intl: ^0.20.2 
+  intl: ^0.20.2
   pdf: ^3.11.3
   printing: ^5.14.2
   google_maps_flutter: ^2.2.3
@@ -54,7 +54,7 @@ dependencies:
   firebase_core: ^3.0.0
   firebase_messaging: ^15.0.0
   http: ^1.2.0
-    
+
   firebase_auth: ^5.0.0
   cloud_firestore: ^5.0.0
   # The following adds the Cupertino Icons font to your application.
@@ -63,19 +63,17 @@ dependencies:
   permission_handler: ^11.0.0
   location: ^5.0.3
   workmanager: ^0.5.2
-  
-
-  
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.13.1  # ตรวจสอบเวอร์ชันล่าสุดที่ pub.dev
+  flutter_launcher_icons: ^0.13.1 # ตรวจสอบเวอร์ชันล่าสุดที่ pub.dev
 
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/app_icon.png"  # เปลี่ยนเป็นตำแหน่งไฟล์โลโก้ของคุณ
+  image_path: "assets/app_icon.png" # เปลี่ยนเป็นตำแหน่งไฟล์โลโก้ของคุณ
 
   flutter:
   fonts:
@@ -84,7 +82,6 @@ flutter_icons:
         - asset: fonts/Kanit-Regular.ttf
         - asset: fonts/Kanit-Bold.ttf
           weight: 700
-    
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -98,7 +95,6 @@ flutter_icons:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -106,9 +102,8 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-   - images/logo_notname.png
-
-
+    - images/logo_notname.png
+    - assets/.env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:edunudge/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Attendance extends StatefulWidget {
   const Attendance({super.key});
@@ -11,6 +12,8 @@ class Attendance extends StatefulWidget {
 
 
 class _AttendanceState extends State<Attendance> {
+
+  final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
   List<Map<String, dynamic>> attendanceData = [];
   bool isLoadingTable = true;
 
@@ -366,8 +369,7 @@ class _AttendanceState extends State<Attendance> {
                     try {
                       final token =
                           await ApiService.getToken();
-                      final url =
-                          'http://127.0.0.1:8000/student/home-attendance-pdf/$token';
+                      final url = '$baseUrl/student/home-attendance-pdf/$token';
                       Uri uri = Uri.parse(url);
 
                       if (await canLaunchUrl(uri)) {

@@ -45,11 +45,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // 💡 Import FirebaseAuth
 import 'package:edunudge/firebase_options.dart';
 import 'location_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('th');
+    await dotenv.load(fileName: ".env");
+    
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );

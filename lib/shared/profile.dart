@@ -71,7 +71,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Widget _buildTextField(TextEditingController controller, String hintText,  
+  Widget _buildTextField(TextEditingController controller, String hintText,
       {bool obscureText = false,
       TextInputType keyboardType = TextInputType.text,
       bool autofocus = false}) {
@@ -305,7 +305,7 @@ class _ProfilePageState extends State<ProfilePage> {
             }
             Navigator.pop(context); // ปิด dialog
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('อัปเดตชื่อ–นามสกุลสำเร็จ')),
+              SnackBar(content: Text(response['data'])),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(

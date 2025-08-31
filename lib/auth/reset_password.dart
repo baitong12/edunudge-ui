@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ResetPassword extends StatefulWidget {
   const ResetPassword({super.key});
 
@@ -10,6 +10,7 @@ class ResetPassword extends StatefulWidget {
 }
 
 class _ResetPasswordState extends State<ResetPassword> {
+  final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController otpController = TextEditingController();
@@ -35,7 +36,7 @@ class _ResetPasswordState extends State<ResetPassword> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/reset-password"), // แก้เป็น endpoint จริง
+        Uri.parse("$baseUrl/reset-password"), // แก้เป็น endpoint จริง
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "otp": otp,
