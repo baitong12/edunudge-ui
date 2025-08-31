@@ -1,4 +1,5 @@
 // main.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -17,6 +18,7 @@ import 'auth/reset_password.dart';
 
 // ✅ Shared
 import 'shared/profile.dart';
+import 'shared/splash_screen.dart'; // 💡 Import หน้า Splash Screen
 
 // ✅ Student Pages
 import 'pages/student/home.dart';
@@ -40,7 +42,10 @@ import 'pages/teacher/classroom_report_becareful.dart';
 import 'pages/teacher/classroom_report_summarize.dart';
 
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // 💡 Import FirebaseAuth
+import 'package:edunudge/firebase_options.dart';
+import 'location_service.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,8 +53,10 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
   final notificationService = NotificationService();
   await notificationService.init();
+
   runApp(
     MultiProvider(
       providers: [
@@ -82,40 +89,29 @@ class EduNudgeApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      initialRoute: '/login',
+      initialRoute: '/',
       routes: {
-        // 🔐 Authentication
+        '/': (context) => const SplashScreenWrapper(), // 💡 ใช้ wrapper สำหรับหน้าแรก
         '/login': (context) => const Login(),
         '/register01': (context) => Register01(),
         '/register02': (context) => Register02(),
         '/forgot_password': (context) => const ForgotPassword(),
         '/reset_password': (context) => const ResetPassword(),
-
-        // 👤 Shared
         '/profile': (context) => const ProfilePage(),
 
-        // 👨‍🎓 Student
         '/home_student': (context) => const Home(),
         '/join-classroom': (context) => const ClassroomJoin(),
         '/classroom': (context) => const Classroom(),
         '/attendance': (context) => const Attendance(),
 
-        // 👩‍🏫 Teacher
         '/home_teacher': (context) => const HomePage(),
         '/classroom_create01': (context) => const CreateClassroom01(),
         '/classroom_create02': (context) => const CreateClassroom02(),
         '/classroom_create03': (context) => const CreateClassroom03(),
         '/classroom_create04': (context) => const CreateClassroom04(),
-        '/classroom_settings': (context) => ClassroomSettingsPage(),
-
-
         
-        '/classroom_report_summarize': (context) =>
-            const ReportBsummarizePage(),
       },
       onGenerateRoute: (settings) {
-        // สำหรับหน้าที่ต้องรับ arguments
-
         if (settings.name == '/subject') {
           final args = settings.arguments as Map<String, String>;
           return MaterialPageRoute(
@@ -124,31 +120,33 @@ class EduNudgeApp extends StatelessWidget {
             ),
           );
         }
-
         if (settings.name == '/classroom_subject') {
-          final classroomId = settings.arguments as int; // รับเป็น int
+          final classroomId = settings.arguments as int;
           return MaterialPageRoute(
             builder: (context) => ClassroomSubject(classroomId: classroomId),
           );
         }
-
         if (settings.name == '/classroom_check') {
-          final classroomId = settings.arguments as int; // รับ classroomId
+          final classroomId = settings.arguments as int;
           return MaterialPageRoute(
             builder: (context) => AttendancePage(classroomId: classroomId),
           );
         }
-
         if (settings.name == '/classroom_report') {
           final classroomId = settings.arguments as int;
           return MaterialPageRoute(
             builder: (context) => ReportMenuPage(classroomId: classroomId),
           );
         }
-        if (settings.name == '/classroom_report_student') {
-          final classroomId = settings.arguments as int;
+        if (settings.name == '/classroom_report_summarize') {
+          final args = settings.arguments as Map<String, dynamic>;
+          final classroomId = args['classroomId'] as int;
+          final atRiskList = args['atRiskList'] as List<String>;
           return MaterialPageRoute(
-            builder: (context) => StudentReportPage(classroomId: classroomId),
+            builder: (context) => ReportBsummarizePage(
+              classroomId: classroomId,
+              atRiskList: atRiskList,
+            ),
           );
         }
         if (settings.name == '/classroom_report_becareful') {
@@ -157,8 +155,65 @@ class EduNudgeApp extends StatelessWidget {
             builder: (context) => ReportBecarefulPage(classroomId: classroomId),
           );
         }
+        if (settings.name == '/classroom_report_student') {
+          final classroomId = settings.arguments as int;
+          return MaterialPageRoute(
+            builder: (context) => StudentReportPage(classroomId: classroomId),
+          );
+        }
+        if (settings.name == '/classroom_settings') {
+          final classroomId = settings.arguments as int;
+          return MaterialPageRoute(
+            builder: (context) => ClassroomSettingsPage(classroomId: classroomId),
+          );
+        }
         return null;
       },
     );
   }
 }
+
+// สร้าง Widget สำหรับ Splash Screen ที่จะตรวจสอบสถานะผู้ใช้
+class SplashScreenWrapper extends StatefulWidget {
+  const SplashScreenWrapper({super.key});
+
+  @override
+  _SplashScreenWrapperState createState() => _SplashScreenWrapperState();
+}
+
+class _SplashScreenWrapperState extends State<SplashScreenWrapper> {
+  late LocationService locationService;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // ใช้ LocationService แบบดึงจาก API
+    locationService = LocationService();
+    locationService.startTracking();
+
+    // 3 วินาที splash แล้วไปหน้าหลัก
+    Timer(const Duration(seconds: 3), () {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        Navigator.of(context).pushReplacementNamed('/home_teacher'); 
+      } else {
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    locationService.stopTracking();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const SplashScreen();
+  }
+}
+
+
+

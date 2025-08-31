@@ -1,40 +1,87 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:edunudge/shared/customappbar.dart';
-import 'package:edunudge/pages/teacher/custombottomnav.dart';
-import 'package:pie_chart/pie_chart.dart' as pc; 
+import 'package:edunudge/services/api_service.dart';
+import 'package:url_launcher/url_launcher.dart';//NOTE
 
 class ReportBsummarizePage extends StatefulWidget {
-  const ReportBsummarizePage({super.key});
+  final int classroomId;
+  final List<String> atRiskList; // เปลี่ยนจาก int เป็น List<String>
+  // ต้องส่ง classroomId
+  const ReportBsummarizePage(
+      {super.key, required this.classroomId, required this.atRiskList});
 
   @override
   State<ReportBsummarizePage> createState() => _ReportBsummarizePageState();
 }
 
-class _ReportBsummarizePageState extends State<ReportBsummarizePage> {
-  
-  final Color primaryColor = const Color(0xFF3F8FAF);
-
-  final List<double> weeklyData = [
-    4, 6, 5, 8, 7, 3, 9, 4, 6, 5, 7, 6, 5, 4, 6, 8
-  ];
+class _ReportBsummarizePageState extends State<ReportBsummarizePage>
+    with SingleTickerProviderStateMixin {
+  List<double> weeklyData = [];
+  List<Map<String, dynamic>> studentData = [];
   Set<int> selectedWeeks = {};
   final ScrollController _chipScrollController = ScrollController();
 
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 800));
+    _animation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+    _controller.forward();
+
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => isLoading = true);
+    try {
+      // เรียก API
+      final weeklySummary = await ApiService.getWeeklyAttendanceSummary(
+        classroomId: widget.classroomId,
+      );
+
+      setState(() {
+        // แปลง weeklySummary ให้เป็น weeklyData สำหรับกราฟ
+        weeklyData = weeklySummary
+            .map<double>((e) => (e['percent_present'] ?? 0).toDouble())
+            .toList();
+
+        // studentData สำหรับตาราง
+        studentData = weeklySummary
+            .map<Map<String, dynamic>>((e) => {
+                  "week": e['week_number'] ?? 0,
+                  "present": e['present'] ?? 0,
+                  "absent": e['absent'] ?? 0,
+                  "late": e['late'] ?? 0,
+                  "leave": e['leave_count'] ?? 0,
+                  "watchful": widget.atRiskList.length,
+                })
+            .toList();
+
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('โหลดข้อมูลล้มเหลว: $e')));
+    }
+  }
+
   void _scrollToCenter(int index) {
-    
-    const chipWidth = 80.0; 
+    const chipWidth = 100.0;
     const spacing = 8.0;
     final totalChipWidth = chipWidth + spacing;
-
-    
     final containerWidth = 950.0 - 16.0;
-
-    
-    final targetOffset = (index * totalChipWidth) - (containerWidth / 2) + (chipWidth / 2);
-
-    
-    final totalWidth = (16 * totalChipWidth); 
+    final targetOffset =
+        (index * totalChipWidth) - (containerWidth / 2) + (chipWidth / 2);
+    final totalWidth = (16 * totalChipWidth);
     if (totalWidth > containerWidth) {
       _chipScrollController.animateTo(
         targetOffset.clamp(
@@ -49,633 +96,548 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage> {
 
   @override
   void dispose() {
+    _controller.dispose();
     _chipScrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        Navigator.pushReplacementNamed(context, '/classroom_report');
-        return false;
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFF00C853),
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(80),
-          child: CustomAppBar(
-            onProfileTap: () {
-              Navigator.pushNamed(context, '/profile');
-            },
-            onLogoutTap: () {
-              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-            },
-          ),
-        ),
-        body: Container(
-          
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return Scaffold(
+      backgroundColor: const Color(0xFF00C853),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
-          ),
-          child: Scaffold(
-            backgroundColor: Colors.transparent, 
-            body: Padding(
-              padding: const EdgeInsets.all(16),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  
-                  final chartWidth = (selectedWeeks.isEmpty ? 16 : selectedWeeks.length) * 70.0;
-                  final availableWidthForChips = constraints.maxWidth - 32; 
-
-                  return SingleChildScrollView(
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white, 
-                        borderRadius: BorderRadius.circular(16), 
-                        boxShadow: const [ 
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 4,
-                            spreadRadius: 1,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Text(
-                                  'รายงานสรุปรวม(สัปดาห์)',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            const Divider(height: 1, color: Colors.grey, thickness: 1.0), 
-                            const SizedBox(height: 12),
-                            
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF3F8FAF), 
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  elevation: 2,
-                                ),
-                                onPressed: () {
-                                
-                                },
-                                icon: const Icon(Icons.picture_as_pdf, color: Colors.white, size: 20),
-                                label: const Text(
-                                  'ดาวน์โหลดเอกสาร (pdf.)',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            
-                            SizedBox(
-                              height: 320, 
-                              child: Center(
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Container(
-                                    width: chartWidth.clamp(constraints.maxWidth - 32, double.infinity), 
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black12,
-                                          blurRadius: 2,
-                                          spreadRadius: 1,
-                                          offset: Offset(0, 1),
-                                        ),
-                                      ],
-                                    ),
-                                    padding: const EdgeInsets.symmetric(vertical: 8),
-                                    child: BarChart(
-                                      BarChartData(
-                                        maxY: 12,
-                                        barTouchData: BarTouchData(
-                                          enabled: false,
-                                        ),
-                                        barGroups: selectedWeeks.isEmpty
-                                            ? List.generate(16, (index) => BarChartGroupData(
-                                                x: index,
-                                                barRods: [
-                                                  BarChartRodData(
-                                                    toY: weeklyData[index],
-                                                    gradient: const LinearGradient(
-                                                      colors: [Color(0xFF3F8FAF), Color(0xFF62B7C7)],
-                                                      begin: Alignment.bottomCenter,
-                                                      end: Alignment.topCenter,
-                                                    ),
-                                                    width: 38,
-                                                    borderRadius: BorderRadius.circular(6),
-                                                  ),
-                                                ],
-                                              ))
-                                            : selectedWeeks.map((week) => BarChartGroupData(
-                                                x: week,
-                                                barRods: [
-                                                  BarChartRodData(
-                                                    toY: weeklyData[week],
-                                                    gradient: const LinearGradient(
-                                                      colors: [Color(0xFF3F8FAF), Color(0xFF62B7C7)],
-                                                      begin: Alignment.bottomCenter,
-                                                      end: Alignment.topCenter,
-                                                    ),
-                                                    width: 38,
-                                                    borderRadius: BorderRadius.circular(6),
-                                                  ),
-                                                ],
-                                              )).toList(),
-                                        titlesData: FlTitlesData(
-                                          bottomTitles: AxisTitles(
-                                            sideTitles: SideTitles(
-                                              showTitles: true,
-                                              getTitlesWidget: (value, meta) {
-                                                if (selectedWeeks.isEmpty || selectedWeeks.contains(value.toInt())) {
-                                                  return Padding(
-                                                    padding: const EdgeInsets.only(top: 8),
-                                                    child: Transform.rotate(
-                                                      angle: -1.57, 
-                                                      child: Text(
-                                                        'สัปดาห์ ${value.toInt() + 1}',
-                                                        style: const TextStyle(fontSize: 12),
-                                                      ),
-                                                    ),
-                                                  );
-                                                } else {
-                                                  return const SizedBox.shrink();
-                                                }
-                                              },
-                                              reservedSize: 60,
-                                              interval: 1,
-                                            ),
-                                          ),
-                                          leftTitles: AxisTitles(
-                                            sideTitles: SideTitles(showTitles: false),
-                                          ),
-                                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                        ),
-                                        gridData: FlGridData(show: false),
-                                        borderData: FlBorderData(show: false),
-                                        alignment: BarChartAlignment.center,
-                                        groupsSpace: 16, 
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 8, left: 8),
-                                child: SizedBox(
-                                  height: 40,
-                                  width: availableWidthForChips, 
-                                  child: ListView.separated(
-                                    controller: _chipScrollController,
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: 17,
-                                    separatorBuilder: (context, index) => const SizedBox(width: 8),
-                                    itemBuilder: (context, index) {
-                                      if (index == 0) {
-                                        
-                                        return FilterChip(
-                                          label: const Text(
-                                            'ทั้งหมด',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          selected: selectedWeeks.isEmpty,
-                                          onSelected: (selected) {
-                                            setState(() {
-                                              selectedWeeks.clear();
-                                              _scrollToCenter(0);
-                                            });
-                                          },
-                                          selectedColor: const Color(0xFF3F8FAF),
-                                          backgroundColor: Colors.grey.shade400,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                            side: BorderSide(
-                                              color: selectedWeeks.isEmpty
-                                                  ? const Color(0xFF3F8FAF)
-                                                  : Colors.grey.shade300,
-                                              width: 1.5,
-                                            ),
-                                          ),
-                                          elevation: selectedWeeks.isEmpty ? 4 : 1,
-                                          showCheckmark: false,
-                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                          visualDensity: VisualDensity.compact,
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                        );
-                                      } else {
-                                        final weekIndex = index - 1;
-                                        return FilterChip(
-                                          label: Text(
-                                            'สัปดาห์ ${weekIndex + 1}',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                              color: selectedWeeks.contains(weekIndex) ? Colors.white : const Color(0xFF3F8FAF),
-                                            ),
-                                          ),
-                                          selected: selectedWeeks.contains(weekIndex),
-                                          onSelected: (selected) {
-                                            setState(() {
-                                              if (selected) {
-                                                selectedWeeks.add(weekIndex);
-                                                _scrollToCenter(index);
-                                              } else {
-                                                selectedWeeks.remove(weekIndex);
-                                              }
-                                            });
-                                          },
-                                          selectedColor: const Color(0xFF3F8FAF),
-                                          backgroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                            side: BorderSide(
-                                              color: selectedWeeks.contains(weekIndex)
-                                                  ? const Color(0xFF3F8FAF)
-                                                  : Colors.grey.shade300,
-                                              width: 1.5,
-                                            ),
-                                          ),
-                                          elevation: selectedWeeks.contains(weekIndex) ? 4 : 1,
-                                          showCheckmark: false,
-                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                          visualDensity: VisualDensity.compact,
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-                            
-                            if (selectedWeeks.isEmpty)
-                              ...List.generate(16, (week) => Padding(
-                                padding: const EdgeInsets.only(top: 16.0),
-                                child: buildWeekReport(week),
-                              ))
-                            else
-                              ...selectedWeeks.map((week) => Padding(
-                                padding: const EdgeInsets.only(top: 16.0),
-                                child: buildWeekReport(week),
-                              ))
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
+            const SizedBox(width: 4),
+            const Text(
+              'รายงานสรุปรวมรายสัปดาห์',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
               ),
             ),
-            bottomNavigationBar: CustomBottomNav(currentIndex: 0, context: context),
-          ),
+          ],
         ),
       ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          : _buildContent(),
     );
   }
 
-  Widget buildWeekReport(int week) {
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start, 
-      children: [
-        Text(
-          'สัปดาห์ที่ ${week + 1}',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF3F8FAF),
-          ),
+  Widget _buildContent() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'รายงานนักศึกษาที่เฝ้าระวัง',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-          
-        ),
-        const SizedBox(height: 16),
-        
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start, 
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: const [
-            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
-            SizedBox(width: 8),
-            Text(
-              'รายชื่อนักศึกษาที่เฝ้าระวัง จำนวน ',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              '10',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              ' คน',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        
-        Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              top: BorderSide(color: Colors.black),
-              left: BorderSide(color: Colors.black),
-              right: BorderSide(color: Colors.black),
-              bottom: BorderSide(color: Colors.black),
-            ),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            children: const [
-              Expanded(
-                flex: 3,
-                child: Center(
-                  child: Text('ชื่อ - นามสกุล', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
-              SizedBox(
-                width: 1,
-                height: 20,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(color: Colors.black),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text('ขาด',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
-              SizedBox(
-                width: 1,
-                height: 20,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(color: Colors.black),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text('สาย',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        
-        ...[
-          {'name': 'สมชาย ใจดี',  'absent': '2', 'late': '1'},
-          {'name': 'สมหญิง แสนสุข', 'absent': '4', 'late': '0'},
-          {'name': 'สมปอง สมใจ',  'absent': '0', 'late': '1'},
-          {'name': 'สมทรง แก้วดี',  'absent': '3', 'late': '2'},
-          {'name': 'สมฤดี เพียรดี',  'absent': '1', 'late': '1'},
-          {'name': 'สมใจ วิเศษ',  'absent': '0', 'late': '0'},
-          {'name': 'สมศักดิ์ ศรีสุข',  'absent': '2', 'late': '3'},
-          {'name': 'สมบัติ รุ่งเรือง',  'absent': '1', 'late': '2'},
-          {'name': 'สมจิตร ใจงาม',  'absent': '3', 'late': '1'},
-          {'name': 'สมหมาย มั่งมี',  'absent': '2', 'late': '0'},
-        ].asMap().entries.map((entry) {
-          int idx = entry.key;
-          Map<String, String> student = entry.value;
-          final bool isLast = idx == 9;
-          final Color rowColor = idx % 2 == 0
-              ? const Color(0x336D6D6D) 
-              : const Color(0x6E3F8FAF); 
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final displayWeeks = selectedWeeks.isEmpty
+                ? List.generate(weeklyData.length, (i) => i)
+                : selectedWeeks.toList()
+              ..sort();
 
-          return Container(
-            decoration: BoxDecoration(
-              color: rowColor,
-              border: const Border(
-                left: BorderSide(color: Colors.black),
-                right: BorderSide(color: Colors.black),
-                bottom: BorderSide(color: Colors.black),
+            final Map<int, int> weekXMap = {};
+            for (int i = 0; i < displayWeeks.length; i++) {
+              weekXMap[displayWeeks[i]] = i;
+            }
+
+            final chartWidth = displayWeeks.length * 40.0;
+            final availableWidthForChips = constraints.maxWidth - 32;
+
+            // กรอง studentData ตามสัปดาห์ที่เลือก
+            final filteredStudentData = selectedWeeks.isEmpty
+                ? studentData
+                : studentData
+                    .where((student) =>
+                        selectedWeeks.contains(student["week"] - 1))
+                    .toList();
+
+            return SingleChildScrollView(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+
+                      // กราฟแท่ง
+                      SizedBox(
+                        height: 320,
+                        child: Center(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: AnimatedBuilder(
+                              animation: _animation,
+                              builder: (context, child) {
+                                final barGroups = displayWeeks.map((weekIndex) {
+                                  final xPos = weekXMap[weekIndex]!;
+                                  return BarChartGroupData(
+                                    x: xPos,
+                                    barRods: [
+                                      BarChartRodData(
+                                        toY: weeklyData[weekIndex] *
+                                            _animation.value,
+                                        width: 28,
+                                        borderRadius: BorderRadius.circular(6),
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFF3F8FAF),
+                                            Color(0xFF62B7C7)
+                                          ],
+                                          begin: Alignment.bottomCenter,
+                                          end: Alignment.topCenter,
+                                        ),
+                                        backDrawRodData:
+                                            BackgroundBarChartRodData(
+                                          show: true,
+                                          toY: 100,
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList();
+
+                                return Container(
+                                  width: chartWidth.clamp(
+                                      constraints.maxWidth - 32,
+                                      double.infinity),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Colors.black12,
+                                        blurRadius: 2,
+                                        spreadRadius: 1,
+                                        offset: Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                  child: BarChart(
+                                    BarChartData(
+                                      maxY: 100,
+                                      barGroups: barGroups,
+                                      alignment: BarChartAlignment.center,
+                                      groupsSpace: 6,
+                                      barTouchData: BarTouchData(
+                                        enabled: true,
+                                        touchTooltipData: BarTouchTooltipData(
+                                          tooltipBgColor: Colors.black87,
+                                          getTooltipItem: (group, groupIndex,
+                                              rod, rodIndex) {
+                                            final week = displayWeeks[group.x];
+                                            return BarTooltipItem(
+                                              'สัปดาห์ ${week + 1}\n${rod.toY.toInt()}%',
+                                              const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      gridData: FlGridData(
+                                        show: true,
+                                        drawHorizontalLine: true,
+                                        horizontalInterval: 20,
+                                        getDrawingHorizontalLine: (value) =>
+                                            FlLine(
+                                          color: Colors.grey.shade300,
+                                          strokeWidth: 1,
+                                        ),
+                                      ),
+                                      titlesData: FlTitlesData(
+                                        bottomTitles: AxisTitles(
+                                          sideTitles: SideTitles(
+                                            showTitles: true,
+                                            getTitlesWidget: (value, meta) {
+                                              int i = value.toInt();
+                                              if (i >= displayWeeks.length)
+                                                return const SizedBox();
+                                              final week = displayWeeks[i];
+                                              return Transform.rotate(
+                                                angle: -1.57,
+                                                child: Text(
+                                                  'สัปดาห์ ${week + 1}',
+                                                  style: const TextStyle(
+                                                      fontSize: 12),
+                                                ),
+                                              );
+                                            },
+                                            reservedSize: 60,
+                                            interval: 1,
+                                          ),
+                                        ),
+                                        leftTitles: AxisTitles(
+                                          sideTitles: SideTitles(
+                                            showTitles: true,
+                                            getTitlesWidget: (value, meta) =>
+                                                Text('${value.toInt()}%'),
+                                            interval: 20,
+                                            reservedSize: 40,
+                                          ),
+                                        ),
+                                        topTitles: AxisTitles(
+                                            sideTitles:
+                                                SideTitles(showTitles: false)),
+                                        rightTitles: AxisTitles(
+                                            sideTitles:
+                                                SideTitles(showTitles: false)),
+                                      ),
+                                      borderData: FlBorderData(show: false),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // FilterChip
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8, left: 8),
+                          child: SizedBox(
+                            height: 40,
+                            width: availableWidthForChips,
+                            child: ListView.separated(
+                              controller: _chipScrollController,
+                              scrollDirection: Axis.horizontal,
+                              itemCount: weeklyData.length + 1,
+                              separatorBuilder: (context, index) =>
+                                  const SizedBox(width: 8),
+                              itemBuilder: (context, index) {
+                                if (index == 0) {
+                                  return FilterChip(
+                                    label: const Text(
+                                      'ทั้งหมด',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    selected: selectedWeeks.isEmpty,
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        selectedWeeks.clear();
+                                        _scrollToCenter(0);
+                                      });
+                                    },
+                                    selectedColor: const Color(0xFF3F8FAF),
+                                    backgroundColor: Colors.grey.shade400,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      side: BorderSide(
+                                        color: selectedWeeks.isEmpty
+                                            ? const Color(0xFF3F8FAF)
+                                            : Colors.grey.shade300,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    elevation: selectedWeeks.isEmpty ? 4 : 1,
+                                    showCheckmark: false,
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 4),
+                                  );
+                                } else {
+                                  final weekIndex = index - 1;
+                                  return FilterChip(
+                                    label: Text(
+                                      'สัปดาห์ ${weekIndex + 1}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: selectedWeeks.contains(weekIndex)
+                                            ? Colors.white
+                                            : const Color(0xFF3F8FAF),
+                                      ),
+                                    ),
+                                    selected: selectedWeeks.contains(weekIndex),
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        if (selected) {
+                                          selectedWeeks.add(weekIndex);
+                                          _scrollToCenter(index);
+                                        } else {
+                                          selectedWeeks.remove(weekIndex);
+                                        }
+                                      });
+                                    },
+                                    selectedColor: const Color(0xFF3F8FAF),
+                                    backgroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      side: BorderSide(
+                                        color: selectedWeeks.contains(weekIndex)
+                                            ? const Color(0xFF3F8FAF)
+                                            : Colors.grey.shade300,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    elevation: selectedWeeks.contains(weekIndex)
+                                        ? 4
+                                        : 1,
+                                    showCheckmark: false,
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 4),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // ตารางสรุปนักศึกษา
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            // header ตาราง
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 14, horizontal: 8),
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color(0xFF3F8FAF),
+                                    Color(0xFF62B7C7)
+                                  ],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(16)),
+                              ),
+                              child: Row(
+                                children: const [
+                                  Expanded(
+                                      flex: 1,
+                                      child: Center(
+                                          child: Text("สัปดาห์ที่",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white)))),
+                                  Expanded(
+                                      flex: 1,
+                                      child: Center(
+                                          child: Text("มา",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white)))),
+                                  Expanded(
+                                      flex: 1,
+                                      child: Center(
+                                          child: Text("ขาด",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white)))),
+                                  Expanded(
+                                      flex: 1,
+                                      child: Center(
+                                          child: Text("สาย",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white)))),
+                                  Expanded(
+                                      flex: 1,
+                                      child: Center(
+                                          child: Text("ลา",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white)))),
+                                  Expanded(
+                                      flex: 1,
+                                      child: Center(
+                                          child: Text("เฝ้าระวัง",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white)))),
+                                ],
+                              ),
+                            ),
+
+                            // แถวข้อมูลนักศึกษา
+                            ...filteredStudentData.asMap().entries.map((entry) {
+                              int index = entry.key;
+                              var student = entry.value;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  color: index.isEven
+                                      ? Colors.white
+                                      : const Color(0xFFF4F9FA),
+                                  border: Border(
+                                    bottom: BorderSide(
+                                        color: Colors.grey.shade300,
+                                        width: 0.8),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                        flex: 1,
+                                        child: Center(
+                                            child: Text("${student["week"]}"))),
+                                    Expanded(
+                                        flex: 1,
+                                        child: Center(
+                                            child: Text("${student["present"]}",
+                                                style: const TextStyle(
+                                                    color: Colors.green)))),
+                                    Expanded(
+                                        flex: 1,
+                                        child: Center(
+                                            child: Text("${student["absent"]}",
+                                                style: const TextStyle(
+                                                    color: Colors.red)))),
+                                    Expanded(
+                                        flex: 1,
+                                        child: Center(
+                                            child: Text("${student["late"]}",
+                                                style: const TextStyle(
+                                                    color: Colors.orange)))),
+                                    Expanded(
+                                        flex: 1,
+                                        child: Center(
+                                            child: Text("${student["leave"]}",
+                                                style: const TextStyle(
+                                                    color: Colors.blue)))),
+                                    Expanded(
+                                        flex: 1,
+                                        child: Center(
+                                            child: Text(
+                                                "${student["watchful"]}",
+                                                style: const TextStyle(
+                                                    color: Colors.purple)))),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // ✅ ปุ่มดาวน์โหลด PDF ย้ายมาที่นี่ (ตรงกลางล่างหลังตาราง)
+                      Align(
+                        alignment: Alignment.center,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3F8FAF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            elevation: 3,
+                          ),
+                      
+                          onPressed: () async {
+                            try {
+                              final token = await ApiService
+                                  .getToken(); // ✅ เรียก async ได้
+                              final url =
+                                  'http://127.0.0.1:8000/classrooms/${widget.classroomId}/weekly-pdf/$token';
+                              Uri uri = Uri.parse(url);
+
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri,
+                                    mode: LaunchMode.externalApplication);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('ไม่สามารถเปิดลิงก์ได้')),
+                                );
+                              }
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.picture_as_pdf,
+                              color: Colors.white, size: 22),
+                          label: const Text(
+                            'ดาวน์โหลดเอกสาร (pdf.)',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
               ),
-              borderRadius: isLast
-                  ? const BorderRadius.only(
-                      bottomLeft: Radius.circular(12),
-                      bottomRight: Radius.circular(12),
-                    )
-                  : null,
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Center(
-                    child: Text(student['name']!,
-                        style: const TextStyle(color: Colors.black)),
-                  ),
-                ),
-                SizedBox(
-                  width: 1,
-                  height: 20,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(color: Colors.black),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Center(
-                    child: Text(student['absent']!,
-                        style: const TextStyle(color: Color(0xFFF18D00))),
-                  ),
-                ),
-                SizedBox(
-                  width: 1,
-                  height: 20,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(color: Colors.black),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Center(
-                    child: Text(student['late']!,
-                        style: const TextStyle(color: Color(0xFFFF0000))),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-        const SizedBox(height: 12),
-        
-        const Text(
-          'รายงานสรุปนักศึกษา',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Colors.black,
-          ),
-        ),
-        const SizedBox(height: 16),
-        
-        pc.PieChart(
-          dataMap: const {
-            "มาเรียน": 50,
-            "ขาด": 20,
-            "สาย": 15,
-            "ลา": 15,
+            );
           },
-          animationDuration: const Duration(milliseconds: 1000),
-          chartRadius: 180, 
-          colorList: const [
-            Color(0xFF81C784),
-            Color(0xFFFFB74D),
-            Color(0xFFE57373), 
-            Color(0xFFBA68C8), 
-          ],
-          chartType: pc.ChartType.disc,
-          ringStrokeWidth: 32,
-          chartValuesOptions: const pc.ChartValuesOptions(
-            showChartValuesInPercentage: true,
-            showChartValueBackground: false,
-            chartValueStyle: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Colors.white,
-            ),
-          ),
-          legendOptions: const pc.LegendOptions(
-            showLegends: false, 
-          ),
         ),
-        const SizedBox(height: 16),
-        
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            
-            Row(
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF81C784), 
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Text('มาเรียน', style: TextStyle(fontSize: 15)),
-              ],
-            ),
-            const SizedBox(width: 18),
-            
-            Row(
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFFB74D), 
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Text('ขาด', style: TextStyle(fontSize: 15)),
-              ],
-            ),
-            const SizedBox(width: 18),
-            
-            Row(
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE57373), 
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Text('สาย', style: TextStyle(fontSize: 15)),
-              ],
-            ),
-            const SizedBox(width: 18),
-            
-            Row(
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFBA68C8), 
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Text('ลา', style: TextStyle(fontSize: 15)),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-      ],
+      ),
     );
   }
 }

@@ -49,7 +49,9 @@ app.*.map.json
 **/ios/DerivedData/
 **/ios/.DS_Store
 **/ios/*.plist
-
+./ios/Runner
+./flutter01.log
+pubspec.lock
 # VS Code related
 .vscode/
 

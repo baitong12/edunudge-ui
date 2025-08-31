@@ -86,7 +86,9 @@ class CustomAppBar extends StatelessWidget {
                       child: Text(
                         profile.initials,
                         style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                          color: Colors.white, 
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -94,12 +96,10 @@ class CustomAppBar extends StatelessWidget {
                 const SizedBox(width: 12),
                 GestureDetector(
                   onTap: () => _logout(context),
-                  child: const Text(
-                    'ออกจากระบบ',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+                  child: const Icon(
+                    Icons.power_settings_new,
+                    color: Colors.red,
+                    size: 28,
                   ),
                 ),
               ],

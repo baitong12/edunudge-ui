@@ -40,8 +40,6 @@ class _LoginState extends State<Login> {
     }
   }
 
-  
-  // ✅ ฟังก์ชัน login
   Future<void> _login() async {
     setState(() {
       _isLoading = true;
@@ -97,23 +95,6 @@ class _LoginState extends State<Login> {
         _isLoading = false;
       });
     }
-  }
-
-  // ✅ ฟังก์ชัน logout
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('api_token');
-
-    if (token != null) {
-      try {
-        await ApiService.logout(token);
-      } catch (e) {
-        debugPrint('Logout error: $e');
-      }
-    }
-
-    await prefs.clear();
-    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override

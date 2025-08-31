@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:edunudge/services/api_service.dart'; // import ApiService
+import 'package:url_launcher/url_launcher.dart';
 
 class StudentReportPage extends StatefulWidget {
   final int classroomId;
@@ -70,6 +71,7 @@ class _StudentReportPageState extends State<StudentReportPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF00C853),
         elevation: 0,
+        foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -155,31 +157,6 @@ class _StudentReportPageState extends State<StudentReportPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3F8FAF),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                          ),
-                          onPressed: () {
-                            // TODO: เพิ่มฟังก์ชันดาวน์โหลด PDF
-                          },
-                          icon: const Icon(Icons.picture_as_pdf,
-                              color: Colors.white, size: 20),
-                          label: const Text(
-                            'ดาวน์โหลดเอกสาร (pdf.)',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                       Container(
                         decoration: const BoxDecoration(
                           color: Colors.white,
@@ -236,8 +213,8 @@ class _StudentReportPageState extends State<StudentReportPage> {
                       ),
                       const SizedBox(height: 4),
                       if (isLoading)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 32),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 32),
                           child: Center(child: CircularProgressIndicator()),
                         )
                       else if (filteredStudents.isEmpty)
@@ -298,7 +275,7 @@ class _StudentReportPageState extends State<StudentReportPage> {
                                           child: Text(
                                               student['absent']?.toString() ?? '0',
                                               style: const TextStyle(
-                                                  color: Color(0xFFFF00000))))),
+                                                  color: Color(0xFFFF0000))))),
                                   Container(width: 1, height: 20, color: Colors.black),
                                   Expanded(
                                       flex: 1,
@@ -321,7 +298,51 @@ class _StudentReportPageState extends State<StudentReportPage> {
                             );
                           }).toList(),
                         ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 20), // เพิ่มระยะห่าง
+                      Align(
+                        alignment: Alignment.center, // จัดให้อยู่กึ่งกลาง
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3F8FAF),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                          ),
+                          onPressed: () async {
+                            try {
+                              final token = await ApiService
+                                  .getToken();
+                              final url =
+                                  'http://127.0.0.1:8000/classrooms/${widget.classroomId}/attendance-pdf/$token';
+                              Uri uri = Uri.parse(url);
+
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri,
+                                    mode: LaunchMode.externalApplication);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('ไม่สามารถเปิดลิงก์ได้')),
+                                );
+                              }
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.picture_as_pdf,
+                              color: Colors.white, size: 20),
+                          label: const Text(
+                            'ดาวน์โหลดเอกสาร (pdf.)',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

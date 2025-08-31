@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:edunudge/pages/student/custombottomnav.dart';
-import 'package:edunudge/pages/student/subject.dart';
 import 'package:edunudge/services/api_service.dart';
 
 class Classroom extends StatefulWidget {

@@ -1,7 +1,8 @@
+import 'package:edunudge/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edunudge/providers/profile_provider.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -11,60 +12,84 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  
-  bool _isLoading = false;
+  bool _isPageLoading = false;
 
   @override
   void initState() {
     super.initState();
-    
     _setInitialProfileData();
   }
 
-  
-  void _setInitialProfileData() {
-    if (mounted) {
-      Provider.of<ProfileProvider>(context, listen: false).setProfileData(
-        name: 'ชื่อผู้ใช้',
-        lastname: 'นามสกุล',
-        email: 'user@example.com',
-        phone: '0987654321',
-      );
-    }
-  }
+  void _setInitialProfileData() async {
+    if (!mounted) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final name = prefs.getString('user_name') ?? '';
+      final lastname = prefs.getString('user_lastname') ?? '';
+      final email = prefs.getString('user_email') ?? '';
+      final phone = prefs.getString('user_phone') ?? '';
 
-  
-  void _doneAndNavigateBack() {
-    if (mounted) {
-      Navigator.pop(context);
-    }
-  }
-
-  
-  void _updateProfile(Map<String, String?> updatedFields) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('อัปเดตข้อมูลโปรไฟล์สำเร็จ')),
-      );
-      
       final profileProvider =
           Provider.of<ProfileProvider>(context, listen: false);
       profileProvider.setProfileData(
-        name: updatedFields['name'] ?? profileProvider.name,
-        lastname: updatedFields['lastname'] ?? profileProvider.lastname,
-        email: updatedFields['email'] ?? profileProvider.email,
-        phone: updatedFields['phone'] ?? profileProvider.phone,
+        name: name,
+        lastname: lastname,
+        email: email,
+        phone: phone,
       );
+    } catch (e) {
+      debugPrint('Failed to set initial profile data: $e');
     }
   }
 
-  
-  void _changePassword(String currentPassword, String newPassword) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('เปลี่ยนรหัสผ่านสำเร็จ')),
-      );
+  Future<void> _saveAndUpdateProfile(Map<String, String?> fields) async {
+    if (!mounted) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final profileProvider =
+          Provider.of<ProfileProvider>(context, listen: false);
+
+      if (fields.containsKey('name')) {
+        await prefs.setString('user_name', fields['name']!);
+        profileProvider.name = fields['name']!;
+      }
+      if (fields.containsKey('lastname')) {
+        await prefs.setString('user_lastname', fields['lastname']!);
+        profileProvider.lastname = fields['lastname']!;
+      }
+      if (fields.containsKey('email')) {
+        await prefs.setString('user_email', fields['email']!);
+        profileProvider.email = fields['email']!;
+      }
+      if (fields.containsKey('phone')) {
+        await prefs.setString('user_phone', fields['phone']!);
+        profileProvider.phone = fields['phone']!;
+      }
+      profileProvider.notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to save/update profile: $e');
     }
+  }
+
+  Widget _buildTextField(TextEditingController controller, String hintText,  
+      {bool obscureText = false,
+      TextInputType keyboardType = TextInputType.text,
+      bool autofocus = false}) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      autofocus: autofocus,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: const TextStyle(color: Color.fromARGB(150, 255, 255, 255)),
+        enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white)),
+        focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white)),
+      ),
+    );
   }
 
   @override
@@ -73,7 +98,6 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context, profileProvider, child) {
         return Scaffold(
           body: Container(
-            
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
@@ -92,16 +116,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: TextStyle(color: Colors.white)),
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                actions: [
-                  TextButton(
-                    onPressed: _doneAndNavigateBack,
-                    child: const Text('เสร็จสิ้น',
-                        style: TextStyle(
-                            color: Color.fromARGB(255, 255, 255, 255))),
-                  ),
-                ],
               ),
-              body: _isLoading
+              body: _isPageLoading
                   ? const Center(
                       child: CircularProgressIndicator(color: Colors.white))
                   : SingleChildScrollView(
@@ -111,41 +127,38 @@ class _ProfilePageState extends State<ProfilePage> {
                           Center(
                             child: CircleAvatar(
                               radius: 60,
-                              backgroundColor: Colors.white.withOpacity(0.2), 
-                              child: Text(
-                                profileProvider.initials,
-                                style: const TextStyle(
-                                    fontSize: 40,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
+                              backgroundColor: Colors.white.withOpacity(0.2),
+                              child: Text(profileProvider.initials,
+                                  style: const TextStyle(
+                                      fontSize: 40,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold)),
                             ),
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            '${profileProvider.name} ${profileProvider.lastname}',
-                            style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          ),
+                              '${profileProvider.name} ${profileProvider.lastname}',
+                              style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white)),
                           const SizedBox(height: 30),
                           _sectionTitle('ข้อมูลส่วนตัว'),
                           _infoTile(
-                            'ชื่อ–นามสกุล',
-                            '${profileProvider.name} ${profileProvider.lastname}',
-                            () => _editProfileNameDialog(context, profileProvider),
-                          ),
+                              'ชื่อ–นามสกุล',
+                              '${profileProvider.name} ${profileProvider.lastname}',
+                              () => _editProfileNameDialog(
+                                  context, profileProvider)),
                           _infoTile(
-                            'อีเมล',
-                            profileProvider.email, 
-                            () => _editEmailDialog(context, profileProvider),
-                          ),
+                              'อีเมล',
+                              profileProvider.email,
+                              () => _showEmailUpdateDialog(
+                                  context, profileProvider)),
                           _infoTile(
-                            'เบอร์โทรศัพท์',
-                            profileProvider.phone, 
-                            () => _editPhoneDialog(context, profileProvider),
-                          ),
+                              'เบอร์โทรศัพท์',
+                              profileProvider.phone,
+                              () => _showPhoneUpdateDialog(
+                                  context, profileProvider)),
                           const SizedBox(height: 20),
                           _sectionTitle('รหัสผ่าน'),
                           _infoTile('เปลี่ยนรหัสผ่าน', '',
@@ -163,14 +176,14 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _infoTile(String title, String? value, VoidCallback onTap) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 0, 
-      color: Colors.white.withOpacity(0.9), 
+      elevation: 0,
+      color: Colors.white.withOpacity(0.9),
       child: ListTile(
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: value != null && value.isNotEmpty
             ? Text(value, style: TextStyle(color: Colors.grey[600]))
             : null,
-        trailing: const Icon(Icons.edit, color: Color(0xFF00C853)), 
+        trailing: const Icon(Icons.edit, color: Color(0xFF00C853)),
         onTap: onTap,
       ),
     );
@@ -190,97 +203,55 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  
-
-  Widget _buildTextField(TextEditingController controller, String hintText,
-      {bool obscureText = false}) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: const TextStyle(color: Color.fromARGB(150, 255, 255, 255)),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.white),
-        ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.white),
-        ),
-      ),
-    );
-  }
-
-  void _editProfileNameDialog(
-      BuildContext context, ProfileProvider profileProvider) {
-    TextEditingController nameController =
-        TextEditingController(text: profileProvider.name);
-    TextEditingController lastnameController =
-        TextEditingController(text: profileProvider.lastname);
-
-    showDialog(
+  Future<void> _buildProfileDialog({
+    required BuildContext context,
+    required String title,
+    required List<Widget> children,
+    required String actionButtonText,
+    required VoidCallback onSave,
+  }) {
+    return showDialog(
       context: context,
       builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        child: SingleChildScrollView(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'แก้ไขชื่อ-นามสกุล',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text(title,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold)),
                 const SizedBox(height: 20),
-                _buildTextField(nameController, 'ชื่อ'),
-                const SizedBox(height: 10),
-                _buildTextField(lastnameController, 'นามสกุล'),
+                ...children,
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'ยกเลิก',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('ยกเลิก',
+                            style: TextStyle(color: Colors.white))),
                     const SizedBox(width: 10),
                     ElevatedButton(
-                      onPressed: () {
-                        _updateProfile({
-                          'name': nameController.text,
-                          'lastname': lastnameController.text,
-                        });
-                        Navigator.pop(context);
-                      },
+                      onPressed: onSave,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                            borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: const Text(
-                        'บันทึก',
-                        style: TextStyle(color: Color(0xFF221B64)),
-                      ),
+                      child: Text(actionButtonText,
+                          style: const TextStyle(color: Color(0xFF221B64))),
                     ),
                   ],
                 ),
@@ -292,272 +263,75 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _editEmailDialog(BuildContext context, ProfileProvider profileProvider) {
-    TextEditingController emailController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('แก้ไขอีเมล',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  _buildTextField(emailController, 'กรอกอีเมลใหม่'),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('ยกเลิก',
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          _showPasswordConfirmDialog(
-                              context, emailController.text);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('ต่อไป',
-                            style: TextStyle(color: Color(0xFF221B64))),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showPasswordConfirmDialog(BuildContext context, String newEmail) {
-    TextEditingController passwordController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('แก้ไขอีเมล',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  _buildTextField(passwordController, 'กรุณาใส่รหัสผ่าน',
-                      obscureText: true),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('ยกเลิก',
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          _showOtpDialog(context, newEmail);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('ยืนยัน',
-                            style: TextStyle(color: Color(0xFF221B64))),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showOtpDialog(BuildContext context, String newEmail) {
-    TextEditingController otpController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('แก้ไขอีเมล',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  _buildTextField(otpController, 'กรุณากรอก OTP'),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('ยกเลิก',
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          _updateProfile({'email': newEmail});
-                          Navigator.pop(dialogContext);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('ยืนยัน',
-                            style: TextStyle(color: Color(0xFF221B64))),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _editPhoneDialog(BuildContext context, ProfileProvider profileProvider) {
-    TextEditingController passwordController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('แก้ไขเบอร์โทรศัพท์',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  _buildTextField(passwordController, 'กรุณากรอกรหัสผ่าน',
-                      obscureText: true),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('ยกเลิก',
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          _showPhoneConfirmDialog(context, profileProvider);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('ต่อไป',
-                            style: TextStyle(color: Color(0xFF221B64))),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showPhoneConfirmDialog(
+  // =================== Name Update ===================
+  void _editProfileNameDialog(
       BuildContext context, ProfileProvider profileProvider) {
-    TextEditingController newPhoneController =
-        TextEditingController(text: profileProvider.phone);
-    showDialog(
+    final nameController = TextEditingController(text: profileProvider.name);
+    final lastnameController =
+        TextEditingController(text: profileProvider.lastname);
+
+    _buildProfileDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
+      title: 'แก้ไขชื่อ–นามสกุล',
+      actionButtonText: 'บันทึก',
+      children: [
+        _buildTextField(nameController, 'ชื่อ'),
+        const SizedBox(height: 10),
+        _buildTextField(lastnameController, 'นามสกุล'),
+      ],
+      onSave: () async {
+        final name = nameController.text.trim();
+        final lastname = lastnameController.text.trim();
+
+        if (name.isEmpty || lastname.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('กรุณากรอกชื่อและนามสกุล')),
+          );
+          return;
+        }
+
+        try {
+          final response = await ApiService.updateData({
+            'field': 'name',
+            'data': {'name': name, 'lastname': lastname}
+          });
+
+          if (response['status'] == 'success') {
+            // ✅ อัปเดตค่าใน provider โดยตรง
+            profileProvider.name = name;
+            profileProvider.lastname = lastname;
+            if (!context.mounted) {
+              return;
+            }
+            Navigator.pop(context); // ปิด dialog
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('อัปเดตชื่อ–นามสกุลสำเร็จ')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response['message'] ?? 'เกิดข้อผิดพลาด')),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+          );
+        }
+      },
+    );
+  }
+
+  // =================== OTP Dialog ===================
+  Future<void> _showOtpDialog({
+    required BuildContext context,
+    required String title,
+    required Function(String otp) onConfirm,
+  }) {
+    final otpController = TextEditingController();
+
+    return showDialog(
+      context: context,
+      builder: (context) {
         return Dialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -566,38 +340,54 @@ class _ProfilePageState extends State<ProfilePage> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               gradient: const LinearGradient(
-                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+                  colors: [Color(0xFF00C853), Color(0xFF00BCD4)]),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('แก้ไขเบอร์โทรศัพท์',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  _buildTextField(
-                      newPhoneController, 'กรุณากรอกเบอร์โทรศัพท์ใหม่'),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: otpController,
+                  keyboardType: TextInputType.number,
+                  autofocus: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    hintText: 'กรอก OTP',
+                    hintStyle:
+                        TextStyle(color: Color.fromARGB(150, 255, 255, 255)),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(context),
                         child: const Text('ยกเลิก',
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
+                            style: TextStyle(color: Colors.white))),
+                    const SizedBox(width: 10),
+                    ElevatedButton(
                         onPressed: () {
-                          Navigator.pop(dialogContext);
-                          _showPhoneOtpDialog(context, newPhoneController.text);
+                          final otp = otpController.text.trim();
+                          if (otp.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('กรุณากรอก OTP')));
+                            return;
+                          }
+                          Navigator.pop(context);
+                          onConfirm(otp);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
@@ -605,12 +395,10 @@ class _ProfilePageState extends State<ProfilePage> {
                               borderRadius: BorderRadius.circular(10)),
                         ),
                         child: const Text('ยืนยัน',
-                            style: TextStyle(color: Color(0xFF221B64))),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                            style: TextStyle(color: Color(0xFF221B64)))),
+                  ],
+                ),
+              ],
             ),
           ),
         );
@@ -618,273 +406,181 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showPhoneOtpDialog(BuildContext context, String newPhone) {
-    TextEditingController otpController = TextEditingController();
-    showDialog(
+  // =================== Email Update ===================
+  void _showEmailUpdateDialog(
+      BuildContext context, ProfileProvider profileProvider) {
+    final emailController = TextEditingController(text: profileProvider.email);
+    final passwordController = TextEditingController();
+
+    _buildProfileDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('แก้ไขเบอร์โทรศัพท์',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  _buildTextField(otpController, 'กรุณากรอกรหัส OTP'),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('ยกเลิก',
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          _updateProfile({'phone': newPhone});
-                          Navigator.pop(dialogContext);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('ยืนยัน',
-                            style: TextStyle(color: Color(0xFF221B64))),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+      title: 'แก้ไขอีเมล',
+      actionButtonText: 'ต่อไป',
+      children: [
+        _buildTextField(emailController, 'กรอกอีเมลใหม่',
+            keyboardType: TextInputType.emailAddress),
+        const SizedBox(height: 10),
+        _buildTextField(passwordController, 'กรอกรหัสผ่าน', obscureText: true),
+      ],
+      onSave: () async {
+        final email = emailController.text.trim();
+        final password = passwordController.text.trim();
+
+        if (email.isEmpty || !email.contains('@') || password.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('กรอกข้อมูลให้ครบถ้วน')));
+          return;
+        }
+
+        try {
+          final response = await ApiService.updateData({
+            'field': 'email',
+            'data': {
+              'newEmail': email,
+              'password': password
+            } // ⚡ key ตรง backend
+          });
+
+          if (response['status'] == 'success') {
+            Navigator.of(context, rootNavigator: true).pop();
+            _showOtpDialog(
+              context: context,
+              title: 'ยืนยัน OTP อีเมล',
+              onConfirm: (otp) async {
+                final result =
+                    await ApiService.confirmOtp({'otp': otp, 'field': 'email'});
+                if (result['status'] == 'success') {
+                  await _saveAndUpdateProfile({'email': email});
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('ยืนยัน OTP สำเร็จ')));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('OTP ไม่ถูกต้องหรือหมดอายุ')));
+                }
+              },
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('เกิดข้อผิดพลาด: $e')));
+        }
       },
     );
   }
 
+  // =================== Phone Update ===================
+  void _showPhoneUpdateDialog(
+      BuildContext context, ProfileProvider profileProvider) {
+    final phoneController = TextEditingController(text: profileProvider.phone);
+    final passwordController = TextEditingController();
+
+    _buildProfileDialog(
+      context: context,
+      title: 'แก้ไขเบอร์โทรศัพท์',
+      actionButtonText: 'ต่อไป',
+      children: [
+        _buildTextField(phoneController, 'กรุณากรอกเบอร์โทร',
+            keyboardType: TextInputType.phone),
+        const SizedBox(height: 10),
+        _buildTextField(passwordController, 'กรอกรหัสผ่าน', obscureText: true),
+      ],
+      onSave: () async {
+        final phone = phoneController.text.trim();
+        final password = passwordController.text.trim();
+        if (phone.isEmpty || password.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')));
+          return;
+        }
+
+        try {
+          // Navigator.pop(context);
+
+          final response = await ApiService.updateData({
+            'field': 'phone',
+            'data': {'phone': phone, 'password': password}
+          });
+          if (response['status'] == 'success') {
+            Navigator.of(context, rootNavigator: true).pop();
+            _showOtpDialog(
+              context: context,
+              title: 'ยืนยัน OTP เบอร์โทรศัพท์',
+              onConfirm: (otp) async {
+                final result =
+                    await ApiService.confirmOtp({'otp': otp, 'field': 'phone'});
+                if (result['status'] == 'success') {
+                  await _saveAndUpdateProfile({'phone': phone});
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('ยืนยัน OTP สำเร็จ')));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('OTP ไม่ถูกต้องหรือหมดอายุ')));
+                }
+              },
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('เกิดข้อผิดพลาด: $e')));
+        }
+      },
+    );
+  }
+
+  // =================== Password Update ===================
   void _changePasswordDialog(BuildContext context) {
-    TextEditingController passwordController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('แก้ไขรหัสผ่าน',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  _buildTextField(passwordController, 'กรุณากรอกรหัสผ่าน',
-                      obscureText: true),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('ยกเลิก',
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          _showPasswordConfirmEmailDialog(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('ต่อไป',
-                            style: TextStyle(color: Color(0xFF221B64))),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+    final oldPassController = TextEditingController();
+    final newPassController = TextEditingController();
+    final confirmPassController = TextEditingController();
 
-  void _showPasswordConfirmEmailDialog(BuildContext context) {
-    TextEditingController emailController = TextEditingController();
-    showDialog(
+    _buildProfileDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('แก้ไขรหัสผ่าน',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  _buildTextField(emailController, 'กรุณากรอกอีเมล'),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('ยกเลิก',
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          _showPasswordOtpDialog(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('ยืนยัน',
-                            style: TextStyle(color: Color(0xFF221B64))),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+      title: 'เปลี่ยนรหัสผ่าน',
+      actionButtonText: 'บันทึก',
+      children: [
+        _buildTextField(oldPassController, 'รหัสผ่านเก่า', obscureText: true),
+        const SizedBox(height: 10),
+        _buildTextField(newPassController, 'รหัสผ่านใหม่', obscureText: true),
+        const SizedBox(height: 10),
+        _buildTextField(confirmPassController, 'ยืนยันรหัสผ่านใหม่',
+            obscureText: true),
+      ],
+      onSave: () async {
+        final oldPass = oldPassController.text.trim();
+        final newPass = newPassController.text.trim();
+        final confirmPass = confirmPassController.text.trim();
 
-  void _showPasswordOtpDialog(BuildContext context) {
-    TextEditingController newPasswordController = TextEditingController();
-    TextEditingController confirmNewPasswordController =
-        TextEditingController();
-    TextEditingController otpController = TextEditingController();
+        if (oldPass.isEmpty || newPass.isEmpty || confirmPass.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')));
+          return;
+        }
+        if (newPass != confirmPass) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('รหัสผ่านใหม่ไม่ตรงกัน')));
+          return;
+        }
 
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('แก้ไขรหัสผ่าน',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  _buildTextField(newPasswordController, 'รหัสผ่านใหม่',
-                      obscureText: true),
-                  const SizedBox(height: 10),
-                  _buildTextField(
-                      confirmNewPasswordController, 'ยืนยันรหัสผ่านใหม่',
-                      obscureText: true),
-                  const SizedBox(height: 10),
-                  _buildTextField(otpController, 'รหัส OTP'),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('ยกเลิก',
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          _changePassword(
-                            newPasswordController.text,
-                            confirmNewPasswordController.text,
-                          );
-                          Navigator.pop(dialogContext);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('บันทึก',
-                            style: TextStyle(color: Color(0xFF221B64))),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+        try {
+          final response = await ApiService.updateData({
+            'field': 'newPassword',
+            'data': {'password': oldPass, 'newPassword': newPass}
+          });
+          if (response['status'] == 'success') {
+            oldPassController.text = '';
+            newPassController.text = '';
+            confirmPassController.text = '';
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('เปลี่ยนรหัสผ่านสำเร็จ')));
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(response['message'] ?? 'เกิดข้อผิดพลาด')));
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('เกิดข้อผิดพลาด: $e')));
+        }
+        Navigator.pop(context);
       },
     );
   }

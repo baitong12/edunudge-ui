@@ -2,26 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:edunudge/services/api_service.dart';
 
 class ClassroomSettingsPage extends StatefulWidget {
+  final int classroomId;
+
+  const ClassroomSettingsPage({super.key, required this.classroomId});
+
   @override
   _ClassroomSettingsPageState createState() => _ClassroomSettingsPageState();
 }
 
 class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
-  TimeOfDay greenTime = TimeOfDay(hour: 8, minute: 0);
-  TimeOfDay yellowTime = TimeOfDay(hour: 8, minute: 0);
-  TimeOfDay redTime = TimeOfDay(hour: 8, minute: 0);
+  TimeOfDay greenTime = TimeOfDay(hour: 0, minute: 1);
+  TimeOfDay redTime = TimeOfDay(hour: 0, minute: 1);
   bool isOpen = true;
   List<DateTime> selectedHolidays = [];
 
   Future<void> _selectTime(String level, TimeOfDay current) async {
-    TimeOfDay? pickedTime = current;
+    int tempMinute = current.minute;
 
     await showDialog(
       context: context,
       builder: (context) {
-        TimeOfDay tempPicked = pickedTime;
         return StatefulBuilder(
           builder: (context, setInner) => Dialog(
             shape: RoundedRectangleBorder(
@@ -30,11 +33,11 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
             insetPadding: EdgeInsets.all(20),
             child: Container(
               padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              height: 320,
+              height: 300,
               child: Column(
                 children: [
                   Text(
-                    'เลือกเวลาแจ้งเตือน',
+                    'เลือกนาทีแจ้งเตือน',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -43,23 +46,21 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                   ),
                   SizedBox(height: 10),
                   Expanded(
-                    child: CupertinoTheme(
-                      data: CupertinoThemeData(
-                        brightness: Brightness.light,
-                        primaryColor: Color(0xFF3F8FAF),
-                      ),
-                      child: CupertinoDatePicker(
-                        mode: CupertinoDatePickerMode.time,
-                        initialDateTime: DateTime(
-                            2022, 1, 1, current.hour, current.minute),
-                        use24hFormat: true,
-                        onDateTimeChanged: (DateTime newDateTime) {
-                          setInner(() {
-                            tempPicked = TimeOfDay(
-                                hour: newDateTime.hour,
-                                minute: newDateTime.minute);
-                          });
-                        },
+                    child: CupertinoPicker(
+                      scrollController: FixedExtentScrollController(
+                          initialItem: tempMinute - 1),
+                      itemExtent: 40,
+                      onSelectedItemChanged: (index) {
+                        setInner(() {
+                          tempMinute = index + 1;
+                        });
+                      },
+                      children: List<Widget>.generate(
+                        60,
+                        (index) => Center(
+                          child: Text('${index + 1} นาที',
+                              style: TextStyle(fontSize: 16)),
+                        ),
                       ),
                     ),
                   ),
@@ -100,9 +101,12 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                           ),
                           onPressed: () {
                             setState(() {
-                              if (level == 'green') greenTime = tempPicked;
-                              if (level == 'yellow') yellowTime = tempPicked;
-                              if (level == 'red') redTime = tempPicked;
+                              if (level == 'green')
+                                greenTime =
+                                    TimeOfDay(hour: 0, minute: tempMinute);
+                              if (level == 'red')
+                                redTime =
+                                    TimeOfDay(hour: 0, minute: tempMinute);
                             });
                             Navigator.pop(context);
                           },
@@ -331,7 +335,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                     ),
                     SizedBox(width: 16),
                     Expanded(
-                      child: ElevatedButton( 
+                      child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF3F8FAF),
                           foregroundColor: Colors.white,
@@ -367,61 +371,103 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
     );
   }
 
-  void _confirmDeleteClassroom() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('ยืนยันการลบห้องเรียน', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(
-            'คุณแน่ใจหรือไม่ว่าต้องการลบห้องเรียนนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('ยกเลิก', style: TextStyle(color: Color(0xFF3F8FAF))),
+  /// ✅ ฟังก์ชันลบห้องเรียน
+void _confirmDeleteClassroom() {
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: Text('ยืนยันการลบห้องเรียน',
+          style: TextStyle(fontWeight: FontWeight.bold)),
+      content: Text(
+          'คุณแน่ใจหรือไม่ว่าต้องการลบห้องเรียนนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้'),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('ยกเลิก', style: TextStyle(color: Color(0xFF3F8FAF))),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.redAccent,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
+          onPressed: () async {
+            Navigator.pop(context); // ปิด dialog ก่อน
+            try {
+              await ApiService.deleteClassroom(widget.classroomId);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('ลบห้องเรียนเรียบร้อยแล้ว')),
               );
-              Navigator.pop(context); 
-            },
-            child: Text('ลบ', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/home_teacher',
+                (route) => false,
+              );
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+              );
+            }
+          },
+          child: Text('ลบ', style: TextStyle(color: Colors.white)),
+        ),
+      ],
+    ),
+  );
+}
 
   String formatTime(TimeOfDay t) {
-    final now = DateTime.now();
-    final dt = DateTime(now.year, now.month, now.day, t.hour, t.minute);
-    return DateFormat('HH:mm').format(dt);
+    return '${t.minute} นาที';
   }
 
   String holidaysText() {
     if (selectedHolidays.isEmpty) {
       return 'แตะเพื่อเลือก';
     } else {
-      
-      final formattedDates = selectedHolidays.map((d) => DateFormat('d MMM', 'th').format(d)).join(', ');
+      final formattedDates = selectedHolidays
+          .map((d) => DateFormat('d MMM', 'th').format(d))
+          .join(', ');
       return formattedDates;
+    }
+  }
+
+  Future<void> _saveSettings() async {
+    try {
+      await Future.wait([
+        ApiService.updateWarnTimes(
+          widget.classroomId,
+          warnGreen: greenTime.minute.toString(),
+          warnRed: redTime.minute.toString(),
+        ),
+        ApiService.updateClassroomStatus(
+          widget.classroomId,
+          isOpen ? 1 : 0,
+        ),
+        ApiService.updateHolidays(
+          widget.classroomId,
+          selectedHolidays,
+        ),
+      ]);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('บันทึกการตั้งค่าห้องเรียนเรียบร้อยแล้ว')),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent, 
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Color(0xFF00C853), 
+        backgroundColor: Color(0xFF00C853),
         elevation: 0,
         automaticallyImplyLeading: false,
         toolbarHeight: 60,
@@ -445,17 +491,16 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: _saveSettings,
                 child: Text('เสร็จสิ้น',
-                    style:
-                        TextStyle(color: Color.fromARGB(255, 12, 12, 12), fontSize: 16)),
+                    style: TextStyle(
+                        color: Color.fromARGB(255, 12, 12, 12), fontSize: 16)),
               ),
             ),
           ],
         ),
       ),
       body: Container(
-        
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
@@ -464,7 +509,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
           ),
         ),
         child: Scaffold(
-          backgroundColor: Colors.transparent, 
+          backgroundColor: Colors.transparent,
           body: SafeArea(
             child: Padding(
               padding: EdgeInsets.all(20),
@@ -478,10 +523,10 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                             color: Colors.grey[300],
                             fontSize: 16)),
                     SizedBox(height: 10),
-                    _buildSettingTile('🟢 แจ้งเตือนระดับสีเขียว',
-                        formatTime(greenTime), () => _selectTime('green', greenTime)),
-                    _buildSettingTile('🟡 แจ้งเตือนระดับสีเหลือง',
-                        formatTime(yellowTime), () => _selectTime('yellow', yellowTime)),
+                    _buildSettingTile(
+                        '🟢 แจ้งเตือนระดับสีเขียว',
+                        formatTime(greenTime),
+                        () => _selectTime('green', greenTime)),
                     _buildSettingTile('🔴 แจ้งเตือนระดับสีแดง',
                         formatTime(redTime), () => _selectTime('red', redTime)),
                     SizedBox(height: 30),
@@ -491,8 +536,8 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                             color: Colors.grey[300],
                             fontSize: 16)),
                     SizedBox(height: 10),
-                    _buildSettingTile(
-                        'สถานะห้องเรียน', isOpen ? 'เปิด' : 'ปิด', _selectStatus),
+                    _buildSettingTile('สถานะห้องเรียน', isOpen ? 'เปิด' : 'ปิด',
+                        _selectStatus),
                     SizedBox(height: 30),
                     Text('วันหยุดแจ้งเตือน',
                         style: TextStyle(

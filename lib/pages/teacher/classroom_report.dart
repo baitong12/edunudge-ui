@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:edunudge/services/api_service.dart';
 
 class ReportMenuPage extends StatelessWidget {
   final int classroomId;
@@ -67,21 +68,21 @@ class ReportMenuPage extends StatelessWidget {
                             children: [
                               _buildReportButton(
                                 context,
-                                label: 'รายงานสรุปรวม',
+                                label: 'รายงานสรุปรวมรายสัปดาห์',
                                 icon: Icons.insert_chart_outlined_rounded,
                                 color: Colors.green.shade700,
                                 route: '/classroom_report_summarize',
                               ),
                               _buildReportButton(
                                 context,
-                                label: 'นักเรียนที่เฝ้าระวัง',
+                                label: 'รายงานนักเรียนที่เฝ้าระวัง',
                                 icon: Icons.warning_amber_rounded,
                                 color: Colors.orange.shade600,
                                 route: '/classroom_report_becareful',
                               ),
                               _buildReportButton(
                                 context,
-                                label: 'สรุปนักเรียนแต่ละคน',
+                                label: 'รายงานสรุปนักเรียนแต่ละคน',
                                 icon: Icons.person_search_rounded,
                                 color: Colors.blue.shade700,
                                 route: '/classroom_report_student',
@@ -107,8 +108,31 @@ class ReportMenuPage extends StatelessWidget {
       required Color color,
       required String route}) {
     return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(context, route, arguments: classroomId);
+      onTap: () async {
+        if (route == '/classroom_report_summarize') {
+          try {
+            // ดึงรายชื่อนักศึกษาที่เฝ้าระวัง
+            final atRiskData = await ApiService.getAtRiskStudents(classroomId);
+            final atRiskList = atRiskData
+                .map<String>((s) => "${s['name']} ${s['lastname']}")
+                .toList();
+
+            Navigator.pushNamed(
+              context,
+              route,
+              arguments: {
+                'classroomId': classroomId,
+                'atRiskList': atRiskList,
+              },
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('โหลดข้อมูลล้มเหลว: $e')),
+            );
+          }
+        } else {
+          Navigator.pushNamed(context, route, arguments: classroomId);
+        }
       },
       child: Container(
         width: double.infinity,
