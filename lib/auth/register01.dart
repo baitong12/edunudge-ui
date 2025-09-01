@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-// Removed http and dart:convert imports as backend call is moved to Register02
-// import 'package:http/http.dart' as http;
-// import 'dart:convert';
 
 class Register01 extends StatefulWidget {
   @override
@@ -38,7 +35,7 @@ class _Register01State extends State<Register01> {
       _errorMessage = null; // Clear previous errors
     });
 
-    // Basic client-side validation for empty fields
+    // Basic validation for empty fields
     if (nameController.text.isEmpty || 
         lastnameController.text.isEmpty ||
         emailController.text.isEmpty ||
@@ -46,20 +43,40 @@ class _Register01State extends State<Register01> {
         passwordController.text.isEmpty ||
         passwordConfirmationController.text.isEmpty) {
       setState(() {
-        _errorMessage = 'กรุณากรอกข้อมูลให้ครบทุกช่อง'; // Please fill in all fields
+        _errorMessage = 'กรุณากรอกข้อมูลให้ครบถ้วน';
       });
       return;
     }
 
-    // Client-side validation for password match
-    if (passwordController.text != passwordConfirmationController.text) {
+    // Validate email format
+    String email = emailController.text.trim();
+    String emailPattern =
+        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+";
+    RegExp regex = RegExp(emailPattern);
+    if (!regex.hasMatch(email)) {
       setState(() {
-        _errorMessage = 'รหัสผ่านไม่ตรงกัน'; // Passwords do not match
+        _errorMessage = 'กรุณากรอกอีเมลให้ถูกต้อง';
       });
-      return; // Stop navigation
+      return;
     }
 
-    // Pass all collected data to Register02
+    // Validate password length
+    if (passwordController.text.length < 8) {
+      setState(() {
+        _errorMessage = 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร';
+      });
+      return;
+    }
+
+    // Validate password match
+    if (passwordController.text != passwordConfirmationController.text) {
+      setState(() {
+        _errorMessage = 'รหัสผ่านไม่ตรงกัน';
+      });
+      return;
+    }
+
+    // Navigate to Register02 with collected data
     Navigator.pushNamed(
       context,
       '/register02',
@@ -118,7 +135,6 @@ class _Register01State extends State<Register01> {
                   _buildTextField('รหัสผ่าน', obscureText: true, controller: passwordController),
                   _buildTextField('ยืนยันรหัสผ่าน', obscureText: true, controller: passwordConfirmationController),
                   const SizedBox(height: 20),
-                  // Display error message if any
                   if (_errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 15.0),
@@ -152,7 +168,6 @@ class _Register01State extends State<Register01> {
                           borderRadius: BorderRadius.circular(25),
                         ),
                       ),
-                      // Only navigate, actual registration happens in Register02
                       onPressed: _navigateToRegister02,
                       child: const Text(
                         'ถัดไป',
@@ -198,7 +213,7 @@ class _Register01State extends State<Register01> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25),
-            borderSide: const BorderSide(color: Color(0xFF221B64), width: 2), // Highlight when focused
+            borderSide: const BorderSide(color: Color(0xFF221B64), width: 2),
           ),
         ),
       ),

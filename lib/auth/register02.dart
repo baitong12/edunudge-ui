@@ -76,7 +76,7 @@ class _Register02State extends State<Register02> {
         _selectedDepartmentId == null ||
         _selectedRoleId == null) {
       setState(() {
-        _errorMessage = 'กรุณาเลือกคณะ, สาขา และสถานะของคุณ';
+        _errorMessage = 'กรุณากรอกข้อมูลให้ครบถ้วน';
         _isLoading = false;
       });
       return;
