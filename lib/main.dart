@@ -51,11 +51,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('th');
-    await dotenv.load(fileName: ".env");
-    
+  await dotenv.load(fileName: ".env");
+    print("Dotenv loaded!");
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  print(" Firebase initialized");
+
 
   final notificationService = NotificationService();
   await notificationService.init();
