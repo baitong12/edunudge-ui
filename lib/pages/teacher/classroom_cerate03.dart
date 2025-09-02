@@ -36,6 +36,12 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
   final TextEditingController _visitDaysController = TextEditingController();
   final TextEditingController _scoreXController = TextEditingController();
 
+  // ตัวแปร error
+  bool visitDaysError = false;
+  bool scoreXError = false;
+  List<bool> cumulativeError = List.filled(1, false);
+  List<bool> bonusError = List.filled(1, false);
+
   // ตัวแปรสำหรับรับ arguments
   late String nameSubject;
   late String roomNumber;
@@ -68,34 +74,43 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
   void validateAndSave() {
     bool hasError = false;
 
-    // ตรวจสอบ TextField
-    if (_visitDaysController.text.isEmpty || _scoreXController.text.isEmpty) {
-      hasError = true;
-    }
+    setState(() {
+      visitDaysError = _visitDaysController.text.isEmpty;
+      scoreXError = _scoreXController.text.isEmpty;
 
-    // ตรวจสอบ dropdown
-    for (int i = 0; i < _selectedItemCount; i++) {
-      if (_selectedCumulativeScores[i] == null ||
-          _selectedBonusScores[i] == null) {
-        hasError = true;
-        break;
+      cumulativeError = List.filled(_selectedItemCount, false);
+      bonusError = List.filled(_selectedItemCount, false);
+
+      for (int i = 0; i < _selectedItemCount; i++) {
+        if (_selectedCumulativeScores[i] == null) {
+          cumulativeError[i] = true;
+          hasError = true;
+        }
+        if (_selectedBonusScores[i] == null) {
+          bonusError[i] = true;
+          hasError = true;
+        }
       }
-    }
+
+      if (visitDaysError || scoreXError) hasError = true;
+    });
 
     if (hasError) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
+        const SnackBar(
+          content: Text('กรุณากรอกข้อมูลให้ครบถ้วน'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
       );
       return;
     }
 
-    // สร้าง points (criteria เดิม)
     final points = List.generate(_selectedItemCount, (i) => {
           "point_percent": parsePercent(_selectedCumulativeScores[i]),
           "point_extra": int.tryParse(_selectedBonusScores[i] ?? '0') ?? 0,
         });
 
-    // ส่งข้อมูลไปหน้า 4
     Navigator.pushNamed(context, '/classroom_create04', arguments: {
       'name_subject': nameSubject,
       'room_number': roomNumber,
@@ -110,24 +125,37 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
     });
   }
 
-  Widget _buildTextField(String hint, TextEditingController controller) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8E8E8),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: controller,
-        textAlign: TextAlign.center,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          hintText: hint,
-          border: InputBorder.none,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+  Widget _buildTextField(
+      String hint, TextEditingController controller, bool error) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8E8E8),
+            borderRadius: BorderRadius.circular(12),
+            border: error ? Border.all(color: Colors.red, width: 2) : null,
+          ),
+          child: TextField(
+            controller: controller,
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              hintText: hint,
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+          ),
         ),
-      ),
+        if (error)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 8),
+            child: Text('กรุณากรอกข้อมูลให้ครบถ้วน',
+                style: TextStyle(color: Colors.red[700], fontSize: 12)),
+          ),
+      ],
     );
   }
 
@@ -136,30 +164,43 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
     required List<String> options,
     required String? selectedValue,
     required ValueChanged<String?> onChanged,
+    bool error = false,
   }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8E8E8),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: DropdownButtonFormField<String>(
-        value: selectedValue,
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          hintText: hint,
-          border: InputBorder.none,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8E8E8),
+            borderRadius: BorderRadius.circular(12),
+            border: error ? Border.all(color: Colors.red, width: 2) : null,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: DropdownButtonFormField<String>(
+            value: selectedValue,
+            onChanged: onChanged,
+            decoration: InputDecoration(
+              hintText: hint,
+              border: InputBorder.none,
+            ),
+            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+            isExpanded: true,
+            items: options.map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+          ),
         ),
-        icon: const Icon(Icons.keyboard_arrow_down_rounded),
-        isExpanded: true,
-        items: options.map((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          );
-        }).toList(),
-      ),
+        if (error)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 8),
+            child: Text('กรุณาเลือกข้อมูล',
+                style: TextStyle(color: Colors.red[700], fontSize: 12)),
+          ),
+      ],
     );
   }
 
@@ -233,7 +274,9 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                                 ),
                                 const SizedBox(height: 8),
                                 _buildTextField(
-                                    'กรุณากรอกข้อมูล', _visitDaysController),
+                                    'กรุณากรอกข้อมูล',
+                                    _visitDaysController,
+                                    visitDaysError),
                               ],
                             ),
                           ),
@@ -250,7 +293,9 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                                 ),
                                 const SizedBox(height: 8),
                                 _buildTextField(
-                                    'กรุณากรอกข้อมูล', _scoreXController),
+                                    'กรุณากรอกข้อมูล',
+                                    _scoreXController,
+                                    scoreXError),
                               ],
                             ),
                           ),
@@ -274,6 +319,8 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                                 List.filled(_selectedItemCount, null);
                             _selectedBonusScores =
                                 List.filled(_selectedItemCount, null);
+                            cumulativeError = List.filled(_selectedItemCount, false);
+                            bonusError = List.filled(_selectedItemCount, false);
                           });
                         },
                       ),
@@ -302,8 +349,10 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                                         setState(() {
                                           _selectedCumulativeScores[i] =
                                               newValue;
+                                          cumulativeError[i] = false;
                                         });
                                       },
+                                      error: cumulativeError[i],
                                     ),
                                   ],
                                 ),
@@ -327,8 +376,10 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                                       onChanged: (String? newValue) {
                                         setState(() {
                                           _selectedBonusScores[i] = newValue;
+                                          bonusError[i] = false;
                                         });
                                       },
+                                      error: bonusError[i],
                                     ),
                                   ],
                                 ),

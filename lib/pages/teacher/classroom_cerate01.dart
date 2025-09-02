@@ -59,39 +59,50 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
       semesterError = selectedSemester == null;
     });
 
-    if (!subjectError &&
-        !roomError &&
-        !startDateError &&
-        !endDateError &&
-        !semesterError) {
-      if (selectedStartDate != null &&
-          selectedEndDate != null &&
-          selectedEndDate!.isBefore(selectedStartDate!)) {
-        _showInvalidDateAlert();
-        setState(() {
-          endDateError = true;
-        });
-      } else {
-        // แปลงปี พ.ศ. → ค.ศ.
-        int year = int.tryParse(academicYearController.text) ?? DateTime.now().year;
-        if (year > 2100) {
-          year -= 543; // พ.ศ. → ค.ศ.
-        }
-
-        Navigator.pushReplacementNamed(
-          context,
-          '/classroom_create02',
-          arguments: {
-            'name_subject': subjectController.text,
-            'room_number': roomNumberController.text,
-            'year': year.toString(), // ส่งเป็น ค.ศ.
-            'semester': mapSemesterToBackend(selectedSemester),
-            'start_date': selectedStartDate,
-            'end_date': selectedEndDate,
-          },
-        );
-      }
+    // ถ้ามีช่องไหนว่าง
+    if (subjectError || roomError || startDateError || endDateError || semesterError) {
+      _showSnackBar('กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
     }
+
+    if (selectedStartDate != null &&
+        selectedEndDate != null &&
+        selectedEndDate!.isBefore(selectedStartDate!)) {
+      _showSnackBar('วันสุดท้ายของเทอมต้องไม่อยู่ก่อนวันแรกของเทอม');
+      setState(() {
+        endDateError = true;
+      });
+      return;
+    }
+
+    // แปลงปี พ.ศ. → ค.ศ.
+    int year = int.tryParse(academicYearController.text) ?? DateTime.now().year;
+    if (year > 2100) {
+      year -= 543; // พ.ศ. → ค.ศ.
+    }
+
+    Navigator.pushReplacementNamed(
+      context,
+      '/classroom_create02',
+      arguments: {
+        'name_subject': subjectController.text,
+        'room_number': roomNumberController.text,
+        'year': year.toString(), // ส่งเป็น ค.ศ.
+        'semester': mapSemesterToBackend(selectedSemester),
+        'start_date': selectedStartDate,
+        'end_date': selectedEndDate,
+      },
+    );
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -182,7 +193,6 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                           'เลือกวันสุดท้ายของเทอม', selectedEndDate, false,
                           error: endDateError),
                       const SizedBox(height: 24),
-
                       Row(
                         children: [
                           Expanded(
@@ -323,7 +333,6 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
         setState(() {
           selectedSemester = newValue;
           semesterError = false;
-          // *** ลบโค้ด auto update selectedEndDate ออก ***
         });
       },
       icon: Icon(Icons.arrow_drop_down, color: Colors.grey[600], size: 28),
@@ -465,9 +474,10 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                         Navigator.pop(context);
                         setState(() {
                           if (isStartDate) {
-                            // เพิ่มเงื่อนไขนี้
-                            if (temp != null && selectedEndDate != null && temp!.isAfter(selectedEndDate!)) {
-                              _showInvalidStartDateAlert();
+                            if (temp != null &&
+                                selectedEndDate != null &&
+                                temp!.isAfter(selectedEndDate!)) {
+                              _showSnackBar('วันแรกของเทอมต้องไม่มากกว่าวันสุดท้ายของเทอม');
                             } else {
                               selectedStartDate = temp;
                               startDateError = false;
@@ -475,14 +485,11 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                           } else {
                             if (temp != null &&
                                 selectedStartDate != null &&
-                                temp!.isAfter(selectedStartDate!)) {
-                              selectedEndDate = temp;
-                              endDateError = false;
-                            } else if (temp != null && selectedStartDate == null) {
-                              selectedEndDate = temp;
-                              endDateError = false;
+                                temp!.isBefore(selectedStartDate!)) {
+                              _showSnackBar('วันสุดท้ายของเทอมต้องไม่อยู่ก่อนวันแรกของเทอม');
                             } else {
-                              _showInvalidDateAlert();
+                              selectedEndDate = temp;
+                              endDateError = false;
                             }
                           }
                         });
@@ -506,38 +513,6 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
           }),
         );
       },
-    );
-  }
-
-  void _showInvalidDateAlert() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('วันไม่ถูกต้อง'),
-        content: const Text('วันสุดท้ายของเทอมต้องไม่อยู่ก่อนวันแรกของเทอม'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('ตกลง', style: TextStyle(color: Colors.black)),
-          )
-        ],
-      ),
-    );
-  }
-
-  void _showInvalidStartDateAlert() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('วันไม่ถูกต้อง'),
-        content: const Text('วันแรกของเทอมต้องไม่มากกว่าวันสุดท้ายของเทอม'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('ตกลง', style: TextStyle(color: Colors.black)),
-          )
-        ],
-      ),
     );
   }
 }

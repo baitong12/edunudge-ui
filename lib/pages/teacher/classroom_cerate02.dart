@@ -137,6 +137,12 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                           }).toList(),
                         ),
                       ),
+                      if (daysError)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4, left: 8),
+                          child: Text('กรุณาเลือกจำนวนวัน',
+                              style: TextStyle(color: Colors.red[700], fontSize: 12)),
+                        ),
                       const SizedBox(height: 16),
                       if (selectedDays != null)
                         for (int i = 0; i < selectedDays!; i++)
@@ -153,60 +159,84 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                                   const Text('วันที่เรียน: '),
                                   const SizedBox(width: 12),
                                   Expanded(
-                                    child: Container(
-                                      decoration: weekDayError[i]
-                                          ? BoxDecoration(
-                                              border: Border.all(
-                                                  color: Colors.red, width: 2),
-                                              borderRadius:
-                                                  BorderRadius.circular(8))
-                                          : null,
-                                      child: DropdownButton<String>(
-                                        isExpanded: true,
-                                        hint: const Text('เลือกวัน'),
-                                        value: selectedWeekDays[i],
-                                        items: weekDays.map((day) {
-                                          return DropdownMenuItem(
-                                            value: day,
-                                            child: Text(day,
-                                                style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontWeight:
-                                                        FontWeight.w500)),
-                                          );
-                                        }).toList(),
-                                        onChanged: (value) {
-                                          if (selectedWeekDays
-                                              .sublist(0, selectedDays!)
-                                              .contains(value)) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                  content: Text(
-                                                      'ไม่สามารถเลือกวันซ้ำกันได้')),
-                                            );
-                                          } else {
-                                            setState(() {
-                                              selectedWeekDays[i] = value;
-                                              weekDayError[i] = false;
-                                            });
-                                          }
-                                        },
-                                      ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          decoration: weekDayError[i]
+                                              ? BoxDecoration(
+                                                  border: Border.all(
+                                                      color: Colors.red, width: 2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8))
+                                              : null,
+                                          child: DropdownButton<String>(
+                                            isExpanded: true,
+                                            hint: const Text('เลือกวัน'),
+                                            value: selectedWeekDays[i],
+                                            items: weekDays.map((day) {
+                                              return DropdownMenuItem(
+                                                value: day,
+                                                child: Text(day,
+                                                    style: const TextStyle(
+                                                        color: Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.w500)),
+                                              );
+                                            }).toList(),
+                                            onChanged: (value) {
+                                              if (selectedWeekDays
+                                                  .sublist(0, selectedDays!)
+                                                  .contains(value)) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text('ไม่สามารถเลือกวันซ้ำกันได้'),
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                );
+                                              } else {
+                                                setState(() {
+                                                  selectedWeekDays[i] = value;
+                                                  weekDayError[i] = false;
+                                                });
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                        if (weekDayError[i])
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 4, left: 8),
+                                            child: Text('กรุณาเลือกวัน',
+                                                style: TextStyle(
+                                                    color: Colors.red[700],
+                                                    fontSize: 12)),
+                                          ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 12),
                               buildTimePickerButton(
-                                  index: i,
-                                  isStart: true,
-                                  error: startTimeError[i]),
+                                  index: i, isStart: true, error: startTimeError[i]),
+                              if (startTimeError[i])
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4, left: 8),
+                                  child: Text('กรุณาเลือกเวลาเริ่ม',
+                                      style: TextStyle(
+                                          color: Colors.red[700], fontSize: 12)),
+                                ),
                               const SizedBox(height: 12),
                               buildTimePickerButton(
-                                  index: i,
-                                  isStart: false,
-                                  error: endTimeError[i]),
+                                  index: i, isStart: false, error: endTimeError[i]),
+                              if (endTimeError[i])
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4, left: 8),
+                                  child: Text('กรุณาเลือกเวลาจบ',
+                                      style: TextStyle(
+                                          color: Colors.red[700], fontSize: 12)),
+                                ),
                               const SizedBox(height: 24),
                             ],
                           ),
@@ -297,15 +327,19 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
 
       if (startTimes[i] != null && endTimes[i] != null) {
         if (isEndTimeBeforeStartTime(startTimes[i]!, endTimes[i]!)) {
-          _showAlertDialog(
-              'ข้อมูลไม่ถูกต้อง', 'เวลาจบคาบเรียนต้องมากกว่าเวลาเริ่มคาบเรียน');
           hasError = true;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('เวลาจบคาบเรียนต้องมากกว่าเวลาเริ่มคาบเรียน'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+            ),
+          );
         }
       }
     }
 
     if (!hasError) {
-      // แปลง schedules
       List<Map<String, dynamic>> schedules = [];
       for (int i = 0; i < selectedDays!; i++) {
         final day = selectedWeekDays[i]!;
@@ -315,13 +349,12 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
         schedules.add({
           "day_of_week": capitalizeFirstLetter(thaiToEnglishDay(day)),
           "time_start":
-              "${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}", // <-- แก้ตรงนี้
+              "${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}",
           "time_end":
-              "${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}", // <-- แก้ตรงนี้
+              "${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}",
         });
       }
 
-      // แปลง start_date, end_date เป็น string format YYYY-MM-DD
       String startDateStr =
           "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}";
       String endDateStr =
@@ -342,12 +375,16 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง')),
+        const SnackBar(
+          content: Text('กรุณากรอกข้อมูลให้ครบถ้วน'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
 
-  // ฟังก์ชันช่วยแปลงวันไทย -> อังกฤษ
   String thaiToEnglishDay(String day) {
     switch (day) {
       case 'จันทร์':
@@ -384,26 +421,6 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
         }
       });
     }
-  }
-
-  void _showAlertDialog(String title, String content) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(content),
-          actions: [
-            TextButton(
-              child: const Text('ตกลง'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Widget buildTimePickerButton(

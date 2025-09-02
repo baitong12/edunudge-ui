@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class ResetPassword extends StatefulWidget {
   const ResetPassword({super.key});
 
@@ -27,6 +28,11 @@ class _ResetPasswordState extends State<ResetPassword> {
       return;
     }
 
+    if (password.length < 8) {
+      _showMessage("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร");
+      return;
+    }
+
     if (password != confirmPassword) {
       _showMessage("รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน");
       return;
@@ -36,7 +42,7 @@ class _ResetPasswordState extends State<ResetPassword> {
 
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/reset-password"), // แก้เป็น endpoint จริง
+        Uri.parse("$baseUrl/reset-password"), // endpoint จริง
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "otp": otp,
@@ -231,8 +237,7 @@ class _ResetPasswordState extends State<ResetPassword> {
         hintStyle: const TextStyle(color: Colors.grey),
         filled: true,
         fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25),
           borderSide: BorderSide.none,

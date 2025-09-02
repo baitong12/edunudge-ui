@@ -104,12 +104,27 @@ class _Register02State extends State<Register02> {
         }),
       );
 
-      print('Backend Response Status: ${response.statusCode}');
-      print('Backend Response Body: ${response.body}');
-
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil('/login', (route) => false);
+        // แสดง Dialog แจ้งผู้ใช้
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('ลงทะเบียนสำเร็จ'),
+            content: const Text(
+              'ลงทะเบียนเสร็จสิ้น\nกรุณายืนยันตัวตนผ่านอีเมล เพื่อเข้าใช้งานแอปพลิเคชัน',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // ปิด Dialog
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/login', (route) => false);
+                },
+                child: const Text('ตกลง'),
+              ),
+            ],
+          ),
+        );
       } else {
         final errorResponse = jsonDecode(response.body);
         String message = errorResponse['message'] ?? 'การลงทะเบียนล้มเหลว';

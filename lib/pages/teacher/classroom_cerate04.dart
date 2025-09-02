@@ -119,10 +119,16 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
 
   Future<void> submitClassroom() async {
     if (selectedLocation == null) {
+      // SnackBar แจ้งเตือนผู้ใช้เลือกตำแหน่ง
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณาเลือกตำแหน่งห้องเรียน')),
+        const SnackBar(
+          content: Text('กรุณาเลือกตำแหน่งห้องเรียน'),
+          backgroundColor: Colors.red, // พื้นหลังสีแดง
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating, // ให้ลอยเหนือหน้าจอ
+        ),
       );
-      return;
+      return; // ออกจากฟังก์ชันไม่ให้ทำงานต่อ
     }
 
     setState(() => isLoading = true);
@@ -133,8 +139,7 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
       if (classroomInfo['year'] is int) {
         inputYear = classroomInfo['year'];
       } else {
-        inputYear =
-            int.tryParse(classroomInfo['year'].toString());
+        inputYear = int.tryParse(classroomInfo['year'].toString());
       }
       if (inputYear != null) {
         if (inputYear > 2500) inputYear = inputYear - 543;
@@ -171,12 +176,22 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
     try {
       await ApiService.createClassroom(payload);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('สร้างห้องเรียนสำเร็จ')),
+        const SnackBar(
+          content: Text('สร้างห้องเรียนสำเร็จ'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       Navigator.pushNamedAndRemoveUntil(context, '/home_teacher', (r) => false);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+        SnackBar(
+          content: Text('$e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
 
@@ -224,14 +239,16 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('สร้างห้องเรียน',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                          style: TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold)),
                       const Divider(height: 24, thickness: 1, color: Colors.grey),
                       Row(
                         children: const [
                           Icon(Icons.add_location_alt, color: Colors.red),
                           SizedBox(width: 8),
                           Text('ตำแหน่งห้องเรียน',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500)),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -252,7 +269,8 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 14),
                                 child: Text('ยกเลิก',
-                                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 16)),
                               ),
                             ),
                           ),
@@ -268,7 +286,8 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 14),
                                 child: Text('ตกลง',
-                                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 16)),
                               ),
                             ),
                           ),

@@ -60,6 +60,16 @@ class _Register01State extends State<Register01> {
       return;
     }
 
+    // ✅ Validate phone number (must be exactly 10 digits)
+    String phone = phoneController.text.trim();
+    RegExp phoneRegex = RegExp(r'^[0-9]{10}$');
+    if (!phoneRegex.hasMatch(phone)) {
+      setState(() {
+        _errorMessage = 'เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก';
+      });
+      return;
+    }
+
     // Validate password length
     if (passwordController.text.length < 8) {
       setState(() {
