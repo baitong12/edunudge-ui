@@ -39,23 +39,20 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
       final data = await ApiService.getTeacherClassroomDetail(widget.classroomId).catchError((e) {
         throw Exception('Failed to load classroom data: $e');
       });
-      print('Classroom Data: $data');
+
       setState(() {
         subjectName = data['name_subject'] ?? '';
         roomNumber = data['room_number'] ?? '';
-        print('students: $subjectName');
+        classroomCode = data['classroom_code'] ?? '';
 
-        // แปลง students
-        students = (data['students'] as List<dynamic>?)
-        ?.map((e) => Student(
-              id: e['user_id'], // ใช้ hash ของชื่อแทน id ถ้าไม่มี id จริง
-              name: '${e['name']} ${e['lastname']}',
-              score: e['point_percent'] ?? 0,
-            ))
-        .toList() ?? [];
-        print('students: $students');
+        students = (data['students'] as List<dynamic>? )
+            ?.map((e) => Student(
+                  id: e['user_id'],
+                  name: '${e['name']} ${e['lastname']}',
+                  score: e['point_percent'] ?? 0,
+                ))
+            .toList() ?? [];
 
-        // ถ้ามีพิกัดห้องเรียนจริงจาก backend
         if (data['latitude'] != null && data['longitude'] != null) {
           classroomLocation = LatLng(
             double.tryParse(data['latitude'].toString()) ?? classroomLocation.latitude,
@@ -66,7 +63,6 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
         isLoading = false;
       });
     } catch (e) {
-      print('Error fetching classroom data: $e');
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('ไม่สามารถโหลดข้อมูลห้องเรียนได้')));
@@ -79,7 +75,6 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
       await ApiService.removeStudent(widget.classroomId, student.id);
       setState(() => students.removeAt(index));
     } catch (e) {
-      print('Failed to remove student: $e');
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('ลบนักศึกษาไม่สำเร็จ')));
     }
@@ -94,6 +89,11 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final double padding = size.width * 0.04; // responsive padding
+    final double avatarRadius = size.width * 0.06; // responsive avatar
+    final double buttonHeight = size.height * 0.06; // responsive button height
+
     if (isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -107,30 +107,23 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'ห้องเรียน',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              Navigator.pushNamed(context, '/classroom_settings',
-                  arguments: widget.classroomId);
-            },
+            onPressed: () => Navigator.pushNamed(context, '/classroom_settings',
+                arguments: widget.classroomId),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(padding),
         child: Column(
           children: [
             Container(
@@ -138,87 +131,69 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
-                ],
+                boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
               ),
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(padding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ข้อมูลห้องเรียน
                   Center(
                     child: Column(
                       children: [
                         Text(subjectName,
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
+                            style: TextStyle(fontSize: size.width * 0.05, fontWeight: FontWeight.bold)),
+                        SizedBox(height: size.height * 0.005),
                         Text(roomNumber,
-                            style: const TextStyle(fontSize: 14, color: Colors.grey)),
-                        const SizedBox(height: 4),
+                            style: TextStyle(fontSize: size.width * 0.035, color: Colors.grey)),
+                        SizedBox(height: size.height * 0.005),
                         Text(classroomCode,
-                            style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                            style: TextStyle(fontSize: size.width * 0.035, color: Colors.grey)),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-
-                  // ปุ่ม Report / Check
+                  SizedBox(height: size.height * 0.02),
                   Row(
                     children: [
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/classroom_report',
-                                arguments: widget.classroomId);
-                          },
+                          onPressed: () => Navigator.pushNamed(context, '/classroom_report', arguments: widget.classroomId),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF00C853),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: buttonHeight * 0.5),
                             child: Text('ข้อมูลการเข้าชั้นเรียน',
-                                style: TextStyle(color: Colors.white)),
+                                style: TextStyle(color: Colors.white, fontSize: size.width * 0.035)),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: size.width * 0.03),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/classroom_check',
-                                arguments: widget.classroomId);
-                          },
+                          onPressed: () => Navigator.pushNamed(context, '/classroom_check', arguments: widget.classroomId),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF00C853),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: buttonHeight * 0.5),
                             child: Text('การเช็คชื่อเข้าชั้นเรียน',
-                                style: TextStyle(color: Colors.white)),
+                                style: TextStyle(color: Colors.white, fontSize: size.width * 0.035)),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // รายชื่อนักเรียน
-                  const Row(
+                  SizedBox(height: size.height * 0.02),
+                  Row(
                     children: [
-                      Icon(Icons.people, color: Color(0xFF3F8FAF)),
-                      SizedBox(width: 8),
-                      Text('รายชื่อนักเรียน',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Icon(Icons.people, color: const Color(0xFF3F8FAF)),
+                      SizedBox(width: size.width * 0.02),
+                      Text('รายชื่อนักเรียน', style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
-                  const Divider(height: 16, thickness: 1),
+                  Divider(height: size.height * 0.02, thickness: 1),
                   ListView.builder(
                     itemCount: students.length,
                     shrinkWrap: true,
@@ -227,41 +202,33 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                       final student = students[index];
                       final initials = getInitials(student.name);
                       return Container(
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        padding: const EdgeInsets.all(12),
+                        margin: EdgeInsets.symmetric(vertical: size.height * 0.008),
+                        padding: EdgeInsets.all(size.width * 0.03),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: const [
-                            BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 2,
-                                offset: Offset(0, 1)),
+                            BoxShadow(color: Colors.black12, blurRadius: 2, offset: Offset(0, 1)),
                           ],
                         ),
                         child: Row(
                           children: [
                             CircleAvatar(
-                              radius: 18,
+                              radius: avatarRadius,
                               backgroundColor: const Color(0xFF00C853),
                               child: Text(initials,
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold)),
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: size.width * 0.03),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(student.name,
-                                      style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500)),
+                                      style: TextStyle(fontSize: size.width * 0.035, fontWeight: FontWeight.w500)),
                                   Text(
                                     'แต้มสะสม: ${student.score} % | คะแนนพิเศษ: 0 คะแนน',
-                                    style: const TextStyle(
-                                        fontSize: 11, color: Colors.grey),
+                                    style: TextStyle(fontSize: size.width * 0.028, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -275,39 +242,29 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                       );
                     },
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // กรอบตำแหน่งห้องเรียน
+                  SizedBox(height: size.height * 0.02),
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [
-                        BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 4,
-                            offset: Offset(0, 2))
-                      ],
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
                     ),
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(size.width * 0.03),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          children: const [
-                            Icon(Icons.location_pin,
-                                color: Color.fromARGB(255, 255, 21, 0)),
-                            SizedBox(width: 8),
+                          children: [
+                            const Icon(Icons.location_pin, color: Color.fromARGB(255, 255, 21, 0)),
+                            SizedBox(width: size.width * 0.02),
                             Text('ตำแหน่งห้องเรียน',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 14)),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: size.width * 0.04)),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: size.height * 0.01),
                         SizedBox(
-                          height: 200,
+                          height: size.height * 0.25,
                           width: double.infinity,
                           child: GoogleMap(
                             initialCameraPosition: CameraPosition(
@@ -315,9 +272,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                               zoom: 16,
                             ),
                             markers: {
-                              Marker(
-                                  markerId: const MarkerId('classroom'),
-                                  position: classroomLocation)
+                              Marker(markerId: const MarkerId('classroom'), position: classroomLocation)
                             },
                             zoomControlsEnabled: false,
                             scrollGesturesEnabled: false,
