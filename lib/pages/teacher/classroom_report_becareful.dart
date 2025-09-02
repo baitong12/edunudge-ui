@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:edunudge/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 class ReportBecarefulPage extends StatefulWidget {
   final int classroomId;
@@ -13,7 +13,7 @@ class ReportBecarefulPage extends StatefulWidget {
 }
 
 class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
-    final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
+    
   final Color primaryColor = const Color(0xFF3F8FAF);
 
   List<dynamic> students = [];
@@ -327,7 +327,7 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                                       try {
                                         final token = await ApiService.getToken();
                                         final url =
-                                            '$baseUrl/classrooms/${widget.classroomId}/student-atrisk-pdf/$token';
+                                            'http://127.0.0.1:8000/classrooms/${widget.classroomId}/student-atrisk-pdf/$token';
                                         Uri uri = Uri.parse(url);
 
                                         if (await canLaunchUrl(uri)) {

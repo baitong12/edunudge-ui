@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:edunudge/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 class Attendance extends StatefulWidget {
   const Attendance({super.key});
@@ -10,10 +10,7 @@ class Attendance extends StatefulWidget {
   State<Attendance> createState() => _AttendanceState();
 }
 
-
 class _AttendanceState extends State<Attendance> {
-
-  final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
   List<Map<String, dynamic>> attendanceData = [];
   bool isLoadingTable = true;
 
@@ -47,12 +44,10 @@ class _AttendanceState extends State<Attendance> {
 
       setState(() {
         attendanceData = classrooms;
-        // ตั้งค่า selectedSubject เป็นวิชาแรกเสมอ
         selectedSubject = subjectIds.isNotEmpty ? subjectIds.keys.first : '';
         isLoadingTable = false;
       });
 
-      // โหลดรายละเอียดวิชาแรกทันทีถ้ามี
       if (selectedSubject.isNotEmpty) {
         await fetchSubjectDetail(selectedSubject);
       } else {
@@ -100,6 +95,8 @@ class _AttendanceState extends State<Attendance> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      extendBody: true, // ✅ ให้ body กินเต็ม
+      backgroundColor: Colors.transparent, // ✅ ไม่มีพื้นหลังขาว
       appBar: AppBar(
         backgroundColor: const Color(0xFF00C853),
         elevation: 0,
@@ -114,6 +111,8 @@ class _AttendanceState extends State<Attendance> {
         centerTitle: true,
       ),
       body: Container(
+        width: double.infinity,
+        height: double.infinity, // ✅ gradient เต็มจอ
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
@@ -123,16 +122,19 @@ class _AttendanceState extends State<Attendance> {
         ),
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.04, vertical: screenHeight * 0.02),
+            horizontal: screenWidth * 0.04,
+            vertical: screenHeight * 0.02,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ==== ตารางเข้าชั้นเรียน ====
               isLoadingTable
                   ? const Center(child: CircularProgressIndicator())
                   : Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Colors.white.withOpacity(0.85), // ✅ ไม่ขาวทึบ
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
@@ -261,7 +263,8 @@ class _AttendanceState extends State<Attendance> {
                                     child: Center(
                                       child: Text(
                                         val['absent']?.toString() ?? '0',
-                                        style: const TextStyle(color: Colors.red),
+                                        style:
+                                            const TextStyle(color: Colors.red),
                                       ),
                                     ),
                                   ),
@@ -291,6 +294,7 @@ class _AttendanceState extends State<Attendance> {
                       ),
                     ),
               const SizedBox(height: 16),
+              // ==== Dropdown วิชา ====
               Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
@@ -303,8 +307,7 @@ class _AttendanceState extends State<Attendance> {
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
-                      value:
-                          selectedSubject.isNotEmpty ? selectedSubject : null,
+                      value: selectedSubject.isNotEmpty ? selectedSubject : null,
                       icon: const Icon(Icons.arrow_drop_down),
                       dropdownColor: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -327,12 +330,13 @@ class _AttendanceState extends State<Attendance> {
                 ),
               ),
               const SizedBox(height: 8),
+              // ==== รายละเอียดวิชา ====
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.only(top: 8),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.lightBlue.shade50.withOpacity(0.9),
+                  color: Colors.lightBlue.shade50.withOpacity(0.85),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white, width: 1.5),
                   boxShadow: [
@@ -356,20 +360,21 @@ class _AttendanceState extends State<Attendance> {
                       ),
               ),
               const SizedBox(height: 24),
+              // ==== ปุ่มดาวน์โหลด ====
               Center(
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3F8FAF),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
                   ),
                   onPressed: () async {
                     try {
-                      final token =
-                          await ApiService.getToken();
-                      final url = '$baseUrl/student/home-attendance-pdf/$token';
+                      final token = await ApiService.getToken();
+                      final url =
+                          'http://127.0.0.1:8000/student/home-attendance-pdf/$token';
                       Uri uri = Uri.parse(url);
 
                       if (await canLaunchUrl(uri)) {
@@ -377,8 +382,7 @@ class _AttendanceState extends State<Attendance> {
                             mode: LaunchMode.externalApplication);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('ไม่สามารถเปิดลิงก์ได้')),
+                          const SnackBar(content: Text('ไม่สามารถเปิดลิงก์ได้')),
                         );
                       }
                     } catch (e) {
@@ -401,7 +405,7 @@ class _AttendanceState extends State<Attendance> {
             ],
           ),
         ),
-      )
+      ),
     );
   }
 }

@@ -18,6 +18,31 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
   TimeOfDay redTime = TimeOfDay(hour: 0, minute: 1);
   bool isOpen = true;
   List<DateTime> selectedHolidays = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedSettings();
+  }
+
+  Future<void> _loadSavedSettings() async {
+    try {
+      // ดึงค่าจาก API
+      final settings = await ApiService.getClassroomSettings(widget.classroomId);
+      // settings ควรมี keys: greenTimeMinute, redTimeMinute, isOpen, holidays (List<DateTime>)
+      setState(() {
+        greenTime = TimeOfDay(hour: 0, minute: settings['greenTimeMinute'] ?? 1);
+        redTime = TimeOfDay(hour: 0, minute: settings['redTimeMinute'] ?? 1);
+        isOpen = settings['isOpen'] == 1;
+        selectedHolidays = List<DateTime>.from(settings['holidays'] ?? []);
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Load settings failed: $e');
+      setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _selectTime(String level, TimeOfDay current) async {
     int tempMinute = current.minute;
@@ -371,51 +396,50 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
     );
   }
 
-  /// ✅ ฟังก์ชันลบห้องเรียน
-void _confirmDeleteClassroom() {
-  showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: Text('ยืนยันการลบห้องเรียน',
-          style: TextStyle(fontWeight: FontWeight.bold)),
-      content: Text(
-          'คุณแน่ใจหรือไม่ว่าต้องการลบห้องเรียนนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้'),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('ยกเลิก', style: TextStyle(color: Color(0xFF3F8FAF))),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.redAccent,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
+  void _confirmDeleteClassroom() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('ยืนยันการลบห้องเรียน',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(
+            'คุณแน่ใจหรือไม่ว่าต้องการลบห้องเรียนนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('ยกเลิก', style: TextStyle(color: Color(0xFF3F8FAF))),
           ),
-          onPressed: () async {
-            Navigator.pop(context); // ปิด dialog ก่อน
-            try {
-              await ApiService.deleteClassroom(widget.classroomId);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('ลบห้องเรียนเรียบร้อยแล้ว')),
-              );
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/home_teacher',
-                (route) => false,
-              );
-            } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
-              );
-            }
-          },
-          child: Text('ลบ', style: TextStyle(color: Colors.white)),
-        ),
-      ],
-    ),
-  );
-}
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () async {
+              Navigator.pop(context); // ปิด dialog ก่อน
+              try {
+                await ApiService.deleteClassroom(widget.classroomId);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('ลบห้องเรียนเรียบร้อยแล้ว')),
+                );
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/home_teacher',
+                  (route) => false,
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+                );
+              }
+            },
+            child: Text('ลบ', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
 
   String formatTime(TimeOfDay t) {
     return '${t.minute} นาที';
@@ -464,6 +488,12 @@ void _confirmDeleteClassroom() {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(

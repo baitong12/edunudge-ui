@@ -28,21 +28,26 @@ static Future<Map<String, dynamic>> updateData(Map<String, dynamic> body) async 
     },
     body: jsonEncode(body),
   );
-  print('Response status: ${jsonDecode(response.body)}');
+
+  final decoded = jsonDecode(response.body);
+
+  print('Response body: ${decoded.toString()}'); // ✅ ใช้ toString() แทน
+  print('Raw response: ${response.body}');       // ✅ debug แบบ string ดิบก็ได้
+
   if (response.statusCode == 200) {
-    print(response.body);
-    return {
-      'status': 'success',
-      'message': jsonDecode(response.body)
-    };
-  } else {
-    print('Error: ${jsonDecode(response.body)['error']}');
-    return {
-      'status': 'error',
-      'message': jsonDecode(response.body)['message']
-    };
-  }
+  return {
+    'status': 'success',
+    'message': decoded['message'] ?? 'อัปเดตสำเร็จ'  // ✅ ดึงข้อความ string
+  };
+} else {
+  return {
+    'status': 'error',
+    'message': decoded['message'] ?? 'เกิดข้อผิดพลาด' // ✅ แทนที่จะ return ทั้ง Map
+  };
 }
+
+}
+
 
 // ยืนยัน OTP
 static Future<Map<String, dynamic>> confirmOtp(Map<String, dynamic> body) async {
@@ -58,15 +63,26 @@ static Future<Map<String, dynamic>> confirmOtp(Map<String, dynamic> body) async 
     body: jsonEncode(body),
   );
 
-  if (response.statusCode == 200 || response.statusCode == 400) {
+  final decoded = jsonDecode(response.body);
+  print("Confirm OTP Response: $decoded"); // ✅ debug log
+
+  if (response.statusCode == 200) {
+    // สมมติ backend ส่ง {"status":"success","message":"OTP ถูกต้อง"}
     return {
       'status': 'success',
-      'data' : jsonDecode(response.body)
+      'message': decoded['message'] ?? 'ยืนยัน OTP สำเร็จ',
+    };
+  } else if (response.statusCode == 400) {
+    // สมมติ backend ส่ง {"status":"error","message":"OTP ไม่ถูกต้อง"}
+    return {
+      'status': 'error',
+      'message': decoded['message'] ?? 'OTP ไม่ถูกต้องหรือหมดอายุ',
     };
   } else {
-    throw Exception('Error: ${response.statusCode}');
+    throw Exception('Error: ${response.statusCode} - ${response.body}');
   }
 }
+
 
 
   // =======================
@@ -737,6 +753,46 @@ static Future<Map<String, dynamic>> confirmOtp(Map<String, dynamic> body) async 
     };
   } else {
     throw Exception(data['message'] ?? 'ไม่สามารถดึงตำแหน่งห้องเรียนได้');
+  }
+}
+
+
+// =======================
+// ✅ ดึงการตั้งค่าห้องเรียน (Teacher หรือ Student)
+// =======================
+static Future<Map<String, dynamic>> getClassroomSettings(int classroomId) async {
+  final token = await getToken();
+  if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/classrooms/$classroomId/settings'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    // สมมติ backend ส่งข้อมูลแบบนี้:
+    // {
+    //   "warn_green": 5,
+    //   "warn_red": 10,
+    //   "status": 1,
+    //   "holidays": ["2025-09-05", "2025-09-12"]
+    // }
+    return {
+      "warnGreen": data['warn_green'] ?? 0,
+      "warnRed": data['warn_red'] ?? 0,
+      "status": data['status'] ?? 1, // 1 = เปิด, 0 = ปิด
+      "holidays": (data['holidays'] as List<dynamic>?)
+              ?.map((e) => DateTime.parse(e))
+              .toList() ??
+          [],
+    };
+  } else {
+    throw Exception(data['message'] ?? 'ไม่สามารถดึงการตั้งค่าห้องเรียนได้');
   }
 }
 

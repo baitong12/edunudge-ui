@@ -19,10 +19,9 @@ class _AttendancePageState extends State<AttendancePage> {
   });
 
   bool isLoading = true;
-  bool isSubmitting = false;
-
   List<Map<String, dynamic>> students = [];
   List<Map<String, String>> statusList = [];
+  Map<int, String> tempStatusMap = {}; // เก็บสถานะชั่วคราว
 
   @override
   void initState() {
@@ -41,14 +40,14 @@ class _AttendancePageState extends State<AttendancePage> {
             .where((s) => s['user_id'] != null)
             .map((s) {
               int? userId;
-              if (s['user_id'] is int) {
-                userId = s['user_id'];
-              } else if (s['user_id'] is String) {
-                userId = int.tryParse(s['user_id']);
+              if (s['user_id'] is int) userId = s['user_id'];
+              else if (s['user_id'] is String) userId = int.tryParse(s['user_id']);
+
+              // โหลดค่าเดิมจาก API ลง tempStatusMap
+              if (userId != null && s['status'] != null) {
+                tempStatusMap[userId] = s['status'];
               }
-              if (userId == null) {
-                print('พบ user_id ที่แปลงเป็น int ไม่ได้: ${s['user_id']}');
-              }
+
               return {
                 'id': userId,
                 'name': s['name'],
@@ -58,9 +57,15 @@ class _AttendancePageState extends State<AttendancePage> {
             .where((s) => s['id'] != null)
             .toList();
 
-        // statusList เก็บเป็น object {value: "", label: ""}
-        statusList =
-            List.filled(students.length, {"value": "", "label": ""}, growable: true);
+        // สร้าง statusList จาก tempStatusMap
+        statusList = students.map((s) {
+          int uid = s['id'];
+          String val = tempStatusMap[uid] ?? "";
+          return {
+            "value": val,
+            "label": val.isEmpty ? "" : getLabelFromValue(val),
+          };
+        }).toList();
 
         isLoading = false;
       });
@@ -72,41 +77,26 @@ class _AttendancePageState extends State<AttendancePage> {
     }
   }
 
+  String getLabelFromValue(String value) {
+    switch (value) {
+      case "absent":
+        return "ขาด";
+      case "late":
+        return "สาย";
+      case "present":
+        return "มา";
+      case "leave":
+        return "ลา";
+      default:
+        return "";
+    }
+  }
+
   String getInitials(String name, String? lastname) {
     String initials = '';
     if (name.isNotEmpty) initials += name[0];
     if (lastname != null && lastname.isNotEmpty) initials += lastname[0];
     return initials.toUpperCase();
-  }
-
-  Future<void> markAllAttendance() async {
-    if (isSubmitting) return;
-
-    setState(() => isSubmitting = true);
-
-    try {
-      await Future.wait(List.generate(students.length, (i) async {
-        final userId = students[i]['id'];
-        if (userId == null) {
-          print('พบ student ที่ user_id เป็น null: ${students[i]}');
-          return;
-        }
-
-        await ApiService.markAttendance(
-          userId: userId,
-          classroomId: widget.classroomId,
-          status: statusList[i]["value"] ?? "", // ส่ง value อังกฤษ
-        );
-      }));
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เช็คชื่อเสร็จสิ้น ${students.length} คน')),
-      );
-
-      Navigator.pushReplacementNamed(context, '/classroom_subject');
-    } finally {
-      setState(() => isSubmitting = false);
-    }
   }
 
   @override
@@ -216,13 +206,7 @@ class _AttendancePageState extends State<AttendancePage> {
                                         borderRadius:
                                             BorderRadius.circular(12)),
                                   ),
-                                  onPressed: () {
-                                    Navigator.pushReplacementNamed(
-                                      context,
-                                      '/classroom_subject',
-                                      arguments: widget.classroomId,
-                                    );
-                                  },
+                                  onPressed: onCancel,
                                   child: const Padding(
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     child: Text('ยกเลิก',
@@ -240,22 +224,12 @@ class _AttendancePageState extends State<AttendancePage> {
                                         borderRadius:
                                             BorderRadius.circular(12)),
                                   ),
-                                  onPressed: markAllAttendance,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 14),
-                                    child: isSubmitting
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                                color: Colors.white,
-                                                strokeWidth: 2),
-                                          )
-                                        : const Text('เสร็จสิ้น',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16)),
+                                  onPressed: onComplete,
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    child: Text('เสร็จสิ้น',
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 16)),
                                   ),
                                 ),
                               ),
@@ -328,9 +302,25 @@ class _AttendancePageState extends State<AttendancePage> {
       int index, String value, String label, String hexColor, double fontSize) {
     final isSelected = statusList[index]["value"] == value;
     return GestureDetector(
-      onTap: () => setState(() {
-        statusList[index] = {"value": value, "label": label};
-      }),
+      onTap: () async {
+        int uid = students[index]['id'];
+        setState(() {
+          statusList[index] = {"value": value, "label": label};
+          tempStatusMap[uid] = value; // เก็บค่าใน temp map
+        });
+
+        if (uid != null) {
+          try {
+            await ApiService.markAttendance(
+              userId: uid,
+              classroomId: widget.classroomId,
+              status: value,
+            );
+          } catch (e) {
+            // ไม่ต้องแจ้งเตือน
+          }
+        }
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
@@ -348,6 +338,27 @@ class _AttendancePageState extends State<AttendancePage> {
           ),
         ),
       ),
+    );
+  }
+
+  void onCancel() {
+    setState(() {
+      statusList = List.filled(students.length, {"value": "", "label": ""});
+      tempStatusMap.clear();
+    });
+    Navigator.pushReplacementNamed(
+      context,
+      '/classroom_subject',
+      arguments: widget.classroomId,
+    );
+  }
+
+  void onComplete() {
+    tempStatusMap.clear();
+    Navigator.pushReplacementNamed(
+      context,
+      '/classroom_subject',
+      arguments: widget.classroomId,
     );
   }
 }
