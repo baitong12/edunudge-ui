@@ -210,6 +210,47 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
     return match != null ? int.parse(match.group(0)!) : 0;
   }
 
+  // --- Header แบบ Stack ---
+  Widget buildHeader(String title) {
+    return Stack(
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: IconButton(
+            icon: const Icon(Icons.help_outline, color: Colors.black87, size: 28),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('คู่มือการใช้งาน'),
+                  content: const Text(
+                      'นี่คือคำอธิบายการกรอกข้อมูลหรือเกณฑ์คะแนน'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('ปิด'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        Align(
+          alignment: Alignment.center,
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -224,173 +265,188 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  constraints: BoxConstraints(minHeight: screenHeight * 0.71),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 5,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('สร้างห้องเรียน',
-                          style: TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold)),
-                      const Divider(
-                          height: 24, thickness: 1, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      const Text('เกณฑ์คะแนน',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+        child: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 24),
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                constraints: BoxConstraints(
+                  maxHeight: screenHeight * 0.85,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      child: buildHeader('สร้างห้องเรียน'),
+                    ),
+                    const Divider(height: 24, thickness: 1, color: Colors.grey),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               children: [
-                                const Text(
-                                  'มาเรียนกัน : x วัน',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'มาเรียนติดกัน : x วัน',
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      _buildTextField('กรุณากรอกข้อมูล',
+                                          _visitDaysController, visitDaysError),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 8),
-                                _buildTextField(
-                                    'กรุณากรอกข้อมูล',
-                                    _visitDaysController,
-                                    visitDaysError),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'ได้ x คะแนนสะสม',
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      _buildTextField('กรุณากรอกข้อมูล',
+                                          _scoreXController, scoreXError),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'ได้ x คะแนน',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                const SizedBox(height: 8),
-                                _buildTextField(
-                                    'กรุณากรอกข้อมูล',
-                                    _scoreXController,
-                                    scoreXError),
-                              ],
+                            const SizedBox(height: 16),
+                            const Text(
+                              'จำนวนรายการที่ใช้คำนวณคะแนนพิเศษ',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'จำนวนรายการที่ใช้คำนวณคะแนน',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildDropdownField(
-                        hint: 'เลือกจำนวนรายการ',
-                        options: _itemCountOptions,
-                        selectedValue: _selectedItemCount.toString(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedItemCount = int.parse(newValue!);
-                            _selectedCumulativeScores =
-                                List.filled(_selectedItemCount, null);
-                            _selectedBonusScores =
-                                List.filled(_selectedItemCount, null);
-                            cumulativeError = List.filled(_selectedItemCount, false);
-                            bonusError = List.filled(_selectedItemCount, false);
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      for (int i = 0; i < _selectedItemCount; i++)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                            const SizedBox(height: 8),
+                            _buildDropdownField(
+                              hint: 'เลือกจำนวนรายการ',
+                              options: _itemCountOptions,
+                              selectedValue: _selectedItemCount.toString(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _selectedItemCount = int.parse(newValue!);
+                                  _selectedCumulativeScores =
+                                      List.filled(_selectedItemCount, null);
+                                  _selectedBonusScores =
+                                      List.filled(_selectedItemCount, null);
+                                  cumulativeError =
+                                      List.filled(_selectedItemCount, false);
+                                  bonusError =
+                                      List.filled(_selectedItemCount, false);
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            for (int i = 0; i < _selectedItemCount; i++)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Row(
                                   children: [
-                                    const Text(
-                                      'คะแนนสะสม',
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'คะแนนสะสม(ร้อยละ)',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          _buildDropdownField(
+                                            hint: 'คะแนนสะสม',
+                                            options: _cumulativeScoreOptions,
+                                            selectedValue:
+                                                _selectedCumulativeScores[i],
+                                            onChanged: (String? newValue) {
+                                              setState(() {
+                                                _selectedCumulativeScores[i] =
+                                                    newValue;
+                                                cumulativeError[i] = false;
+                                              });
+                                            },
+                                            error: cumulativeError[i],
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    _buildDropdownField(
-                                      hint: 'คะแนนสะสม',
-                                      options: _cumulativeScoreOptions,
-                                      selectedValue: _selectedCumulativeScores[i],
-                                      onChanged: (String? newValue) {
-                                        setState(() {
-                                          _selectedCumulativeScores[i] =
-                                              newValue;
-                                          cumulativeError[i] = false;
-                                        });
-                                      },
-                                      error: cumulativeError[i],
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'ได้คะแนนพิเศษท้ายเทอม',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          _buildDropdownField(
+                                            hint: 'คะแนนพิเศษ',
+                                            options: _bonusScoreOptions,
+                                            selectedValue:
+                                                _selectedBonusScores[i],
+                                            onChanged: (String? newValue) {
+                                              setState(() {
+                                                _selectedBonusScores[i] =
+                                                    newValue;
+                                                bonusError[i] = false;
+                                              });
+                                            },
+                                            error: bonusError[i],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'ได้คะแนนพิเศษ',
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    _buildDropdownField(
-                                      hint: 'คะแนนพิเศษ',
-                                      options: _bonusScoreOptions,
-                                      selectedValue: _selectedBonusScores[i],
-                                      onChanged: (String? newValue) {
-                                        setState(() {
-                                          _selectedBonusScores[i] = newValue;
-                                          bonusError[i] = false;
-                                        });
-                                      },
-                                      error: bonusError[i],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
-                      const SizedBox(height: 16),
-                      Row(
+                      ),
+                    ),
+
+                    // ปุ่มยกเลิกและถัดไป
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
+                          SizedBox(
+                            width: 150,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
@@ -409,8 +465,8 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
+                          SizedBox(
+                            width: 150,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.black,
@@ -430,15 +486,15 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
         ),
       ),
+      bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
     );
   }
 }

@@ -1,33 +1,33 @@
 // main.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:edunudge/services/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:overlay_support/overlay_support.dart';
 
-// ✅ Providers
+import 'firebase_options.dart';
+import 'location_service.dart';
 import 'providers/profile_provider.dart';
-
-// ✅ Auth Pages
+import 'shared/splash_screen.dart';
 import 'auth/login.dart';
 import 'auth/register01.dart';
 import 'auth/register02.dart';
 import 'auth/forgot_password.dart';
 import 'auth/reset_password.dart';
-
-// ✅ Shared
 import 'shared/profile.dart';
-import 'shared/splash_screen.dart'; // 💡 Import หน้า Splash Screen
-
-// ✅ Student Pages
 import 'pages/student/home.dart';
 import 'pages/student/attendance.dart';
 import 'pages/student/classroom.dart';
 import 'pages/student/join_class.dart';
 import 'pages/student/subject.dart';
-
-// ✅ Teacher Pages
 import 'pages/teacher/home.dart';
 import 'pages/teacher/classroom_cerate01.dart';
 import 'pages/teacher/classroom_cerate02.dart';
@@ -40,34 +40,92 @@ import 'pages/teacher/classroom_report.dart';
 import 'pages/teacher/classroom_report_student.dart';
 import 'pages/teacher/classroom_report_becareful.dart';
 import 'pages/teacher/classroom_report_summarize.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:workmanager/workmanager.dart';
 
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // 💡 Import FirebaseAuth
-import 'package:edunudge/firebase_options.dart';
-import 'location_service.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+final locationService = LocationNotificationService();
+final notificationService = NotificationService();
 
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  print("📩 Background message: ${message.notification?.title}");
+}
+
+Future<bool> requestLocationPermissionAtStartup() async {
+  // 1) ตรวจบริการ Location เปิดไหม
+  final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    // เปิดหน้าตั้งค่าให้ผู้ใช้เปิด GPS
+    await Geolocator.openLocationSettings();
+    // ยังให้ไปต่อได้ แต่อาจได้ permission แล้วแต่ GPS ปิดอยู่
+  }
+
+  // 2) เช็คสิทธิ์ปัจจุบัน
+  var permission = await Geolocator.checkPermission();
+
+  // 3) ขอสิทธิ์ถ้าถูกปฏิเสธ
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+  }
+
+  // 4) ถ้า deniedForever ให้พาผู้ใช้ไปเปิดใน Settings
+  if (permission == LocationPermission.deniedForever) {
+    await Geolocator.openAppSettings();
+    return false;
+  }
+
+  // ผ่าน (whileInUse / always อย่างใดอย่างหนึ่ง)
+  return permission == LocationPermission.always ||
+      permission == LocationPermission.whileInUse;
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+  // โหลด locale
   await initializeDateFormatting('th');
+
+  // โหลด dotenv
   await dotenv.load(fileName: ".env");
-    print("Dotenv loaded!");
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  print(" Firebase initialized");
 
+  // Initialize Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  final notificationService = NotificationService();
+  // Register background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // =======================
+  // Init NotificationService
+  // =======================
+  await locationService.init(); // ขอสิทธิ์ location + cache ตำแหน่ง + token FCM
   await notificationService.init();
 
+  // Init FCM + listener
+
+  // ขอ permission location ตอน startup
+  await requestLocationPermissionAtStartup();
+
+  // =======================
+  // Initialize Workmanager
+  // =======================
+  await Workmanager().initialize(
+    lastLocationWorkmanagerDispatcher,
+    isInDebugMode: false, // ตอนดีบักสามารถใช้ true
+  );
+
+  // FCM background
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // =======================
+  // Run App
+  // =======================
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ProfileProvider()),
-      ],
-      child: const EduNudgeApp(),
+    OverlaySupport.global(
+      child: MultiProvider(
+        providers: [ChangeNotifierProvider(create: (_) => ProfileProvider())],
+        child: const EduNudgeApp(),
+      ),
     ),
   );
 }
@@ -80,15 +138,9 @@ class EduNudgeApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'EduNudge',
-      theme: ThemeData(
-        useMaterial3: true,
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(useMaterial3: true, primarySwatch: Colors.blue),
       locale: const Locale('th'),
-      supportedLocales: const [
-        Locale('en'),
-        Locale('th'),
-      ],
+      supportedLocales: const [Locale('en'), Locale('th')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -96,33 +148,29 @@ class EduNudgeApp extends StatelessWidget {
       ],
       initialRoute: '/',
       routes: {
-        '/': (context) => const SplashScreenWrapper(), // 💡 ใช้ wrapper สำหรับหน้าแรก
+        '/': (context) => const SplashScreenWrapper(),
         '/login': (context) => const Login(),
         '/register01': (context) => Register01(),
         '/register02': (context) => Register02(),
         '/forgot_password': (context) => const ForgotPassword(),
         '/reset_password': (context) => const ResetPassword(),
         '/profile': (context) => const ProfilePage(),
-
         '/home_student': (context) => const Home(),
         '/join-classroom': (context) => const ClassroomJoin(),
         '/classroom': (context) => const Classroom(),
         '/attendance': (context) => const Attendance(),
-
         '/home_teacher': (context) => const HomePage(),
         '/classroom_create01': (context) => const CreateClassroom01(),
         '/classroom_create02': (context) => const CreateClassroom02(),
         '/classroom_create03': (context) => const CreateClassroom03(),
         '/classroom_create04': (context) => const CreateClassroom04(),
-        
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/subject') {
           final args = settings.arguments as Map<String, String>;
           return MaterialPageRoute(
-            builder: (context) => Subject(
-              classroomId: int.tryParse(args['id'] ?? '') ?? 0,
-            ),
+            builder: (context) =>
+                Subject(classroomId: int.tryParse(args['id'] ?? '') ?? 0),
           );
         }
         if (settings.name == '/classroom_subject') {
@@ -169,7 +217,8 @@ class EduNudgeApp extends StatelessWidget {
         if (settings.name == '/classroom_settings') {
           final classroomId = settings.arguments as int;
           return MaterialPageRoute(
-            builder: (context) => ClassroomSettingsPage(classroomId: classroomId),
+            builder: (context) =>
+                ClassroomSettingsPage(classroomId: classroomId),
           );
         }
         return null;
@@ -178,7 +227,6 @@ class EduNudgeApp extends StatelessWidget {
   }
 }
 
-// สร้าง Widget สำหรับ Splash Screen ที่จะตรวจสอบสถานะผู้ใช้
 class SplashScreenWrapper extends StatefulWidget {
   const SplashScreenWrapper({super.key});
 
@@ -187,21 +235,30 @@ class SplashScreenWrapper extends StatefulWidget {
 }
 
 class _SplashScreenWrapperState extends State<SplashScreenWrapper> {
-  late LocationService locationService;
+  final LocationNotificationService locationService =
+      LocationNotificationService();
 
   @override
   void initState() {
     super.initState();
 
-    // ใช้ LocationService แบบดึงจาก API
-    locationService = LocationService();
-    locationService.startTracking();
+    // ขอ Location permission หลัง widget โหลดเสร็จ
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await locationService.init();
+    });
 
-    // 3 วินาที splash แล้วไปหน้าหลัก
-    Timer(const Duration(seconds: 3), () {
+    // Timer รอสั้น ๆ แล้วไปหน้าหลัก
+    Timer(const Duration(seconds: 1), () async {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        Navigator.of(context).pushReplacementNamed('/home_teacher'); 
+        final prefs = await SharedPreferences.getInstance();
+        final roleId = prefs.getInt('role_id');
+
+        if (roleId == 2) {
+          Navigator.of(context).pushReplacementNamed('/home_teacher');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/home_student');
+        }
       } else {
         Navigator.of(context).pushReplacementNamed('/login');
       }
@@ -209,16 +266,7 @@ class _SplashScreenWrapperState extends State<SplashScreenWrapper> {
   }
 
   @override
-  void dispose() {
-    locationService.stopTracking();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return const SplashScreen();
   }
 }
-
-
-

@@ -12,7 +12,7 @@ class ForgotPassword extends StatefulWidget {
 }
 
 class _ForgotPasswordState extends State<ForgotPassword> {
-  static final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
+  static final String baseUrl = dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
   // Controller สำหรับ TextField ของอีเมล
   final TextEditingController _emailController = TextEditingController();
   // สถานะเพื่อแสดง CircularProgressIndicator เมื่อกำลังโหลด

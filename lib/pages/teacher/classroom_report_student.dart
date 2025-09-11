@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:edunudge/services/api_service.dart'; // import ApiService
-import 'package:url_launcher/url_launcher.dart';
-
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 
 class StudentReportPage extends StatefulWidget {
   final int classroomId;
@@ -13,7 +14,6 @@ class StudentReportPage extends StatefulWidget {
 }
 
 class _StudentReportPageState extends State<StudentReportPage> {
-  
   List<Map<String, dynamic>> students = [];
   String searchQuery = '';
   bool isLoading = true;
@@ -24,21 +24,44 @@ class _StudentReportPageState extends State<StudentReportPage> {
     fetchStudents();
   }
 
+  Future<void> downloadAndOpenPDF(String url, {String? fileName}) async {
+    try {
+      final dir = await getTemporaryDirectory(); // โฟลเดอร์ชั่วคราวของมือถือ
+      final name =
+          fileName ?? 'pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final filePath = '${dir.path}/$name';
+
+      // ดาวน์โหลดไฟล์ PDF ลงเครื่อง
+      await Dio().download(url, filePath);
+
+      // เปิดไฟล์ PDF ด้วย default viewer ของเครื่อง
+      await OpenFile.open(filePath);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เกิดข้อผิดพลาดในการดาวน์โหลด PDF: $e')),
+      );
+    }
+  }
+
   Future<void> fetchStudents() async {
     try {
-      final data = await ApiService.studentAttendanceSummary(widget.classroomId);
+      final data = await ApiService.studentAttendanceSummary(
+        widget.classroomId,
+      );
       setState(() {
-        students = List<Map<String, dynamic>>.from(data.map((student) {
-          return {
-            'id': student['id'],
-            'name': student['name'],
-            'lastname': student['lastname'],
-            'present': _toInt(student['present']),
-            'absent': _toInt(student['absent']),
-            'leave_count': _toInt(student['leave_count']),
-            'late': _toInt(student['late']),
-          };
-        }));
+        students = List<Map<String, dynamic>>.from(
+          data.map((student) {
+            return {
+              'id': student['id'],
+              'name': student['name'],
+              'lastname': student['lastname'],
+              'present': _toInt(student['present']),
+              'absent': _toInt(student['absent']),
+              'leave_count': _toInt(student['leave_count']),
+              'late': _toInt(student['late']),
+            };
+          }),
+        );
         isLoading = false;
       });
     } catch (e) {
@@ -61,8 +84,11 @@ class _StudentReportPageState extends State<StudentReportPage> {
   List<Map<String, dynamic>> get filteredStudents {
     if (searchQuery.isEmpty) return students;
     return students
-        .where((student) =>
-            (student['name'] ?? '').toLowerCase().contains(searchQuery.toLowerCase()))
+        .where(
+          (student) =>
+              ('${student['name']} ${student['lastname']}'.toLowerCase())
+                  .contains(searchQuery.toLowerCase()),
+        )
         .toList();
   }
 
@@ -99,12 +125,17 @@ class _StudentReportPageState extends State<StudentReportPage> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: const [
                     BoxShadow(
-                        color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                      color: Colors.black26,
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
                   ],
                 ),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -112,11 +143,14 @@ class _StudentReportPageState extends State<StudentReportPage> {
                         children: [
                           const Icon(Icons.people, color: Color(0xFF3F8FAF)),
                           const SizedBox(width: 8),
-                          const Text('รายชื่อนักศึกษา',
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold)),
+                          const Text(
+                            'รายชื่อนักศึกษา',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -125,30 +159,43 @@ class _StudentReportPageState extends State<StudentReportPage> {
                         height: 36,
                         child: TextField(
                           style: const TextStyle(
-                              color: Colors.black, fontSize: 14),
+                            color: Colors.black,
+                            fontSize: 14,
+                          ),
                           keyboardType: TextInputType.text,
                           textInputAction: TextInputAction.search,
                           decoration: InputDecoration(
                             contentPadding: const EdgeInsets.symmetric(
-                                vertical: 0, horizontal: 12),
+                              vertical: 0,
+                              horizontal: 12,
+                            ),
                             hintText: 'ค้นหา',
                             hintStyle: const TextStyle(color: Colors.grey),
-                            prefixIcon: const Icon(Icons.search,
-                                color: Colors.grey, size: 20),
+                            prefixIcon: const Icon(
+                              Icons.search,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
                             filled: true,
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                  color: Color(0xFF3F8FAF), width: 2),
+                                color: Color(0xFF3F8FAF),
+                                width: 2,
+                              ),
                             ),
                           ),
                           onChanged: (value) {
@@ -177,39 +224,70 @@ class _StudentReportPageState extends State<StudentReportPage> {
                         child: Row(
                           children: const [
                             Expanded(
-                                flex: 3,
-                                child: Center(
-                                    child: Text('ชื่อ - นามสกุล',
-                                        style:
-                                            TextStyle(fontWeight: FontWeight.bold)))),
-                            VerticalDivider(width: 1, color: Colors.black, thickness: 1),
+                              flex: 3,
+                              child: Center(
+                                child: Text(
+                                  'ชื่อ - นามสกุล',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            VerticalDivider(
+                              width: 1,
+                              color: Colors.black,
+                              thickness: 1,
+                            ),
                             Expanded(
-                                flex: 1,
-                                child: Center(
-                                    child: Text('มา',
-                                        style:
-                                            TextStyle(fontWeight: FontWeight.bold)))),
-                            VerticalDivider(width: 1, color: Colors.black, thickness: 1),
+                              flex: 1,
+                              child: Center(
+                                child: Text(
+                                  'มา',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            VerticalDivider(
+                              width: 1,
+                              color: Colors.black,
+                              thickness: 1,
+                            ),
                             Expanded(
-                                flex: 1,
-                                child: Center(
-                                    child: Text('ขาด',
-                                        style:
-                                            TextStyle(fontWeight: FontWeight.bold)))),
-                            VerticalDivider(width: 1, color: Colors.black, thickness: 1),
+                              flex: 1,
+                              child: Center(
+                                child: Text(
+                                  'ขาด',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            VerticalDivider(
+                              width: 1,
+                              color: Colors.black,
+                              thickness: 1,
+                            ),
                             Expanded(
-                                flex: 1,
-                                child: Center(
-                                    child: Text('สาย',
-                                        style:
-                                            TextStyle(fontWeight: FontWeight.bold)))),
-                            VerticalDivider(width: 1, color: Colors.black, thickness: 1),
+                              flex: 1,
+                              child: Center(
+                                child: Text(
+                                  'สาย',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            VerticalDivider(
+                              width: 1,
+                              color: Colors.black,
+                              thickness: 1,
+                            ),
                             Expanded(
-                                flex: 1,
-                                child: Center(
-                                    child: Text('ลา',
-                                        style:
-                                            TextStyle(fontWeight: FontWeight.bold)))),
+                              flex: 1,
+                              child: Center(
+                                child: Text(
+                                  'ลา',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -223,17 +301,24 @@ class _StudentReportPageState extends State<StudentReportPage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 32),
                           child: Center(
-                            child: Text('ไม่พบข้อมูล',
-                                style: TextStyle(
-                                    color: Colors.grey[600], fontSize: 16)),
+                            child: Text(
+                              'ไม่พบข้อมูล',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
                         )
                       else
                         Column(
-                          children: filteredStudents.asMap().entries.map((entry) {
+                          children: filteredStudents.asMap().entries.map((
+                            entry,
+                          ) {
                             int idx = entry.key;
                             Map<String, dynamic> student = entry.value;
-                            final bool isLast = idx == filteredStudents.length - 1;
+                            final bool isLast =
+                                idx == filteredStudents.length - 1;
                             final Color rowColor = idx % 2 == 0
                                 ? const Color(0x336D6D6D)
                                 : const Color(0x6E3F8FAF);
@@ -257,91 +342,136 @@ class _StudentReportPageState extends State<StudentReportPage> {
                               child: Row(
                                 children: [
                                   Expanded(
-                                      flex: 3,
-                                      child: Center(
-                                          child: Text(student['name'] ?? '',
-                                              style: const TextStyle(
-                                                  color: Colors.black)))),
-                                  Container(width: 1, height: 20, color: Colors.black),
+                                    flex: 3,
+                                    child: Center(
+                                      child: Text(
+                                        '${student['name'] ?? ''} ${student['lastname'] ?? ''}',
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 1,
+                                    height: 20,
+                                    color: Colors.black,
+                                  ),
                                   Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                          child: Text(
-                                              student['present']?.toString() ?? '0',
-                                              style: const TextStyle(
-                                                  color: Color(0xFF078230))))),
-                                  Container(width: 1, height: 20, color: Colors.black),
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        student['present']?.toString() ?? '0',
+                                        style: const TextStyle(
+                                          color: Color(0xFF078230),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 1,
+                                    height: 20,
+                                    color: Colors.black,
+                                  ),
                                   Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                          child: Text(
-                                              student['absent']?.toString() ?? '0',
-                                              style: const TextStyle(
-                                                  color: Color(0xFFFF0000))))),
-                                  Container(width: 1, height: 20, color: Colors.black),
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        student['absent']?.toString() ?? '0',
+                                        style: const TextStyle(
+                                          color: Color(0xFFFF0000),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 1,
+                                    height: 20,
+                                    color: Colors.black,
+                                  ),
                                   Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                          child: Text(
-                                              student['late']?.toString() ?? '0',
-                                              style: const TextStyle(
-                                                  color: Color(0xFFF18D00))))),
-                                  Container(width: 1, height: 20, color: Colors.black),
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        student['late']?.toString() ?? '0',
+                                        style: const TextStyle(
+                                          color: Color(0xFFF18D00),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 1,
+                                    height: 20,
+                                    color: Colors.black,
+                                  ),
                                   Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                          child: Text(
-                                              student['leave_count']?.toString() ??
-                                                  '0',
-                                              style: const TextStyle(
-                                                  color: Color.fromARGB(255, 61, 95, 242))))),
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        student['leave_count']?.toString() ??
+                                            '0',
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(
+                                            255,
+                                            61,
+                                            95,
+                                            242,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             );
                           }).toList(),
                         ),
-                      const SizedBox(height: 20), // เพิ่มระยะห่าง
+                      const SizedBox(height: 20),
                       Align(
-                        alignment: Alignment.center, // จัดให้อยู่กึ่งกลาง
+                        alignment: Alignment.center,
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF3F8FAF),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
                           onPressed: () async {
                             try {
-                              final token = await ApiService
-                                  .getToken();
+                              final token = await ApiService.getToken();
                               final url =
-                                  'http://127.0.0.1:8000/${widget.classroomId}/attendance-pdf/$token';
-                              Uri uri = Uri.parse(url);
+                                  'http://52.63.155.211/classrooms/${widget.classroomId}/attendance-pdf/$token';
 
-                              if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri,
-                                    mode: LaunchMode.externalApplication);
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('ไม่สามารถเปิดลิงก์ได้')),
-                                );
-                              }
+                              // เรียกใช้ฟังก์ชันดาวน์โหลด PDF
+                              await downloadAndOpenPDF(
+                                url,
+                                fileName:
+                                    'StudentReport_${widget.classroomId}.pdf',
+                              );
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
                               );
                             }
                           },
-                          icon: const Icon(Icons.picture_as_pdf,
-                              color: Colors.white, size: 20),
+
+                          icon: const Icon(
+                            Icons.picture_as_pdf,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                           label: const Text(
                             'ดาวน์โหลดเอกสาร (pdf.)',
                             style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold),
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),

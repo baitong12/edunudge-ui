@@ -9,7 +9,7 @@ class Register02 extends StatefulWidget {
 }
 
 class _Register02State extends State<Register02> {
-  static final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
+  static final String baseUrl = dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
   int? _selectedFacultyId;
   int? _selectedDepartmentId;
   int? _selectedRoleId;

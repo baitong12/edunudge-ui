@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:edunudge/pages/teacher/custombottomnav.dart';
+import 'package:edunudge/pages/teacher/manual.dart';
 
 class CreateClassroom02 extends StatefulWidget {
   const CreateClassroom02({super.key});
@@ -36,8 +37,6 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
   List<bool> startTimeError = [false, false, false];
   List<bool> endTimeError = [false, false, false];
 
-  bool isSaving = false;
-
   // ข้อมูลที่รับจากหน้า 01
   late String nameSubject;
   late String roomNumber;
@@ -60,8 +59,9 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF00C853),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -70,228 +70,239 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 5,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('สร้างห้องเรียน',
-                          style: TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold)),
-                      const Divider(
-                          height: 24, thickness: 1, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      const Text('จำนวนวันที่เรียนต่อสัปดาห์',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w500)),
-                      const SizedBox(height: 8),
-                      Container(
-                        decoration: daysError
-                            ? BoxDecoration(
-                                border:
-                                    Border.all(color: Colors.red, width: 2),
-                                borderRadius: BorderRadius.circular(8))
-                            : null,
-                        child: Wrap(
-                          spacing: 12,
-                          children: [1, 2, 3].map((value) {
-                            return SizedBox(
-                              width: 100,
-                              child: RadioListTile<int>(
-                                value: value,
-                                groupValue: selectedDays,
-                                activeColor: primaryColor,
-                                onChanged: (val) => setState(() {
-                                  selectedDays = val;
-                                  selectedWeekDays = List.filled(3, null);
-                                  startTimes = List.filled(3, null);
-                                  endTimes = List.filled(3, null);
-                                  daysError = false;
-                                }),
-                                title: Text('$value วัน'),
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: screenHeight * 0.85,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header แบบ Stack (ไอคอนคู่มือซ้าย, ข้อความกลาง)
+                    Stack(
+                      children: [
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                            icon: const Icon(Icons.help_outline,
+                                color: Colors.black87, size: 26),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => const GuideDialog(),
+                              );
+                            },
+                            tooltip: "คู่มือการใช้งาน",
+                          ),
+                        ),
+                        const Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            'สร้างห้องเรียน',
+                            style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 24, thickness: 1, color: Colors.grey),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('จำนวนวันที่เรียนต่อสัปดาห์',
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500)),
+                            const SizedBox(height: 8),
+                            Container(
+                              decoration: daysError
+                                  ? BoxDecoration(
+                                      border: Border.all(
+                                          color: Colors.red, width: 2),
+                                      borderRadius: BorderRadius.circular(8))
+                                  : null,
+                              child: Wrap(
+                                spacing: 12,
+                                children: [1, 2, 3].map((value) {
+                                  return SizedBox(
+                                    width: 100,
+                                    child: RadioListTile<int>(
+                                      value: value,
+                                      groupValue: selectedDays,
+                                      activeColor: primaryColor,
+                                      onChanged: (val) => setState(() {
+                                        selectedDays = val;
+                                        selectedWeekDays =
+                                            List.filled(3, null);
+                                        startTimes = List.filled(3, null);
+                                        endTimes = List.filled(3, null);
+                                        daysError = false;
+                                      }),
+                                      title: Text('$value วัน'),
+                                      dense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                  );
+                                }).toList(),
                               ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                      if (daysError)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4, left: 8),
-                          child: Text('กรุณาเลือกจำนวนวัน',
-                              style: TextStyle(color: Colors.red[700], fontSize: 12)),
-                        ),
-                      const SizedBox(height: 16),
-                      if (selectedDays != null)
-                        for (int i = 0; i < selectedDays!; i++)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('วันที่ ${i + 1}',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 16)),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Text('วันที่เรียน: '),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                            ),
+                            if (daysError)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(top: 4, left: 8),
+                                child: Text('กรุณาเลือกจำนวนวัน',
+                                    style: TextStyle(
+                                        color: Colors.red[700], fontSize: 12)),
+                              ),
+                            const SizedBox(height: 16),
+                            if (selectedDays != null)
+                              for (int i = 0; i < selectedDays!; i++)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('วันที่ ${i + 1}',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 16)),
+                                    const SizedBox(height: 8),
+                                    Row(
                                       children: [
-                                        Container(
-                                          decoration: weekDayError[i]
-                                              ? BoxDecoration(
-                                                  border: Border.all(
-                                                      color: Colors.red, width: 2),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8))
-                                              : null,
-                                          child: DropdownButton<String>(
-                                            isExpanded: true,
-                                            hint: const Text('เลือกวัน'),
-                                            value: selectedWeekDays[i],
-                                            items: weekDays.map((day) {
-                                              return DropdownMenuItem(
-                                                value: day,
-                                                child: Text(day,
-                                                    style: const TextStyle(
-                                                        color: Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.w500)),
-                                              );
-                                            }).toList(),
-                                            onChanged: (value) {
-                                              if (selectedWeekDays
-                                                  .sublist(0, selectedDays!)
-                                                  .contains(value)) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text('ไม่สามารถเลือกวันซ้ำกันได้'),
-                                                    backgroundColor: Colors.red,
-                                                  ),
+                                        const Text('วันที่เรียน: '),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Container(
+                                            decoration: weekDayError[i]
+                                                ? BoxDecoration(
+                                                    border: Border.all(
+                                                        color: Colors.red,
+                                                        width: 2),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8))
+                                                : null,
+                                            child: DropdownButton<String>(
+                                              isExpanded: true,
+                                              hint: const Text('เลือกวัน'),
+                                              value: selectedWeekDays[i],
+                                              items: weekDays.map((day) {
+                                                return DropdownMenuItem(
+                                                  value: day,
+                                                  child: Text(day,
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.w500)),
                                                 );
-                                              } else {
-                                                setState(() {
-                                                  selectedWeekDays[i] = value;
-                                                  weekDayError[i] = false;
-                                                });
-                                              }
-                                            },
+                                              }).toList(),
+                                              onChanged: (value) {
+                                                if (selectedWeekDays
+                                                    .sublist(
+                                                        0, selectedDays!)
+                                                    .contains(value)) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                          'ไม่สามารถเลือกวันซ้ำกันได้'),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                } else {
+                                                  setState(() {
+                                                    selectedWeekDays[i] =
+                                                        value;
+                                                    weekDayError[i] = false;
+                                                  });
+                                                }
+                                              },
+                                            ),
                                           ),
                                         ),
-                                        if (weekDayError[i])
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 4, left: 8),
-                                            child: Text('กรุณาเลือกวัน',
-                                                style: TextStyle(
-                                                    color: Colors.red[700],
-                                                    fontSize: 12)),
-                                          ),
                                       ],
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              buildTimePickerButton(
-                                  index: i, isStart: true, error: startTimeError[i]),
-                              if (startTimeError[i])
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4, left: 8),
-                                  child: Text('กรุณาเลือกเวลาเริ่ม',
-                                      style: TextStyle(
-                                          color: Colors.red[700], fontSize: 12)),
+                                    const SizedBox(height: 12),
+                                    buildTimePickerButton(
+                                        index: i, isStart: true, error: startTimeError[i]),
+                                    const SizedBox(height: 12),
+                                    buildTimePickerButton(
+                                        index: i, isStart: false, error: endTimeError[i]),
+                                    const SizedBox(height: 24),
+                                  ],
                                 ),
-                              const SizedBox(height: 12),
-                              buildTimePickerButton(
-                                  index: i, isStart: false, error: endTimeError[i]),
-                              if (endTimeError[i])
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4, left: 8),
-                                  child: Text('กรุณาเลือกเวลาจบ',
-                                      style: TextStyle(
-                                          color: Colors.red[700], fontSize: 12)),
-                                ),
-                              const SizedBox(height: 24),
-                            ],
-                          ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                                elevation: 3,
-                                shadowColor: Colors.black.withOpacity(0.2),
-                              ),
-                              onPressed: () => Navigator.popAndPushNamed(
-                                  context, '/classroom_create01'),
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                child: Text('ยกเลิก',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 16)),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                                elevation: 3,
-                                shadowColor: Colors.black.withOpacity(0.5),
-                              ),
-                              onPressed: validateAndSave,
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                child: Text('ถัดไป',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 16)),
-                              ),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              elevation: 3,
+                              shadowColor: Colors.black.withOpacity(0.2),
+                            ),
+                            onPressed: () => Navigator.popAndPushNamed(
+                                context, '/classroom_create01'),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              child: Text('ยกเลิก',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 16)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              elevation: 3,
+                              shadowColor: Colors.black.withOpacity(0.5),
+                            ),
+                            onPressed: validateAndSave,
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              child: Text('ถัดไป',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 16)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          bottomNavigationBar:
-              CustomBottomNav(currentIndex: 1, context: context),
         ),
       ),
+      bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
     );
   }
 
@@ -443,9 +454,7 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),
-              child: Text(
-                  formatTimeOfDay(
-                      isStart ? startTimes[index] : endTimes[index]),
+              child: Text(formatTimeOfDay(isStart ? startTimes[index] : endTimes[index]),
                   style: const TextStyle(color: Colors.white)),
             ),
           ),
@@ -464,96 +473,114 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
     int selectedHour = initialTime?.hour ?? TimeOfDay.now().hour;
     int selectedMinute = initialTime?.minute ?? TimeOfDay.now().minute;
 
-    return await showDialog<TimeOfDay>(context: context, builder: (context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: StatefulBuilder(builder: (context, setStateDialog) {
-            return Column(mainAxisSize: MainAxisSize.min, children: [
-              Text('เลือกเวลา',
-                  style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF3F8FAF))),
-              const SizedBox(height: 16),
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                SizedBox(
-                  height: 150,
-                  width: 80,
-                  child: ListWheelScrollView.useDelegate(
-                    itemExtent: 40,
-                    perspective: 0.003,
-                    controller:
-                        FixedExtentScrollController(initialItem: selectedHour),
-                    onSelectedItemChanged: (v) =>
-                        setStateDialog(() => selectedHour = v),
-                    childDelegate: ListWheelChildBuilderDelegate(
-                      builder: (_, idx) => Center(
-                          child: Text(idx.toString().padLeft(2, '0'),
-                              style: const TextStyle(fontSize: 20))),
-                      childCount: 24,
-                    ),
-                  ),
-                ),
-                const Text(':', style: TextStyle(fontSize: 24)),
-                SizedBox(
-                  height: 150,
-                  width: 80,
-                  child: ListWheelScrollView.useDelegate(
-                    itemExtent: 40,
-                    perspective: 0.003,
-                    controller: FixedExtentScrollController(
-                        initialItem: selectedMinute),
-                    onSelectedItemChanged: (v) =>
-                        setStateDialog(() => selectedMinute = v),
-                    childDelegate: ListWheelChildBuilderDelegate(
-                      builder: (_, idx) => Center(
-                          child: Text(idx.toString().padLeft(2, '0'),
-                              style: const TextStyle(fontSize: 20))),
-                      childCount: 60,
-                    ),
-                  ),
-                ),
-              ]),
-              const SizedBox(height: 20),
-              Row(children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: const Text('ยกเลิก',
+    return await showDialog<TimeOfDay>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: StatefulBuilder(
+              builder: (context, setStateDialog) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('เลือกเวลา',
                         style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(
-                        context, TimeOfDay(hour: selectedHour, minute: selectedMinute)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3F8FAF),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF3F8FAF))),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: 150,
+                          width: 80,
+                          child: ListWheelScrollView.useDelegate(
+                            itemExtent: 40,
+                            perspective: 0.003,
+                            physics: const FixedExtentScrollPhysics(),
+                            controller:
+                                FixedExtentScrollController(initialItem: selectedHour),
+                            onSelectedItemChanged: (v) =>
+                                setStateDialog(() => selectedHour = v % 24),
+                            childDelegate: ListWheelChildLoopingListDelegate(
+                              children: List.generate(
+                                  24,
+                                  (idx) => Center(
+                                          child: Text(idx.toString().padLeft(2, '0'),
+                                              style: const TextStyle(fontSize: 20))))),
+                            ),
+                        ),
+                        const Text(':', style: TextStyle(fontSize: 24)),
+                        SizedBox(
+                          height: 150,
+                          width: 80,
+                          child: ListWheelScrollView.useDelegate(
+                            itemExtent: 40,
+                            perspective: 0.003,
+                            physics: const FixedExtentScrollPhysics(),
+                            controller:
+                                FixedExtentScrollController(initialItem: selectedMinute),
+                            onSelectedItemChanged: (v) =>
+                                setStateDialog(() => selectedMinute = v % 60),
+                            childDelegate: ListWheelChildLoopingListDelegate(
+                              children: List.generate(
+                                  60,
+                                  (idx) => Center(
+                                          child: Text(idx.toString().padLeft(2, '0'),
+                                              style: const TextStyle(fontSize: 20))))),
+                            ),
+                        ),
+                      ],
                     ),
-                    child: const Text('ตกลง',
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ]),
-            ]);
-          }),
-        ),
-      );
-    });
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: const Text('ยกเลิก',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(
+                                context, TimeOfDay(hour: selectedHour, minute: selectedMinute)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF3F8FAF),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: const Text('ตกลง',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

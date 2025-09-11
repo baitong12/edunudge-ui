@@ -11,7 +11,7 @@ class ResetPassword extends StatefulWidget {
 }
 
 class _ResetPasswordState extends State<ResetPassword> {
-  final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
+  final String baseUrl = dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController otpController = TextEditingController();

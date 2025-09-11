@@ -17,18 +17,8 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
   LatLng defaultLocation = const LatLng(13.736717, 100.523186);
   bool isLoading = false;
 
-  // ข้อมูลจากหน้า 03
   late Map<String, dynamic> classroomInfo;
-
-  final Map<String, String> weekDayMap = {
-    'จันทร์': 'monday',
-    'อังคาร': 'tuesday',
-    'พุธ': 'wednesday',
-    'พฤหัสบดี': 'thursday',
-    'ศุกร์': 'friday',
-    'เสาร์': 'saturday',
-    'อาทิตย์': 'sunday',
-  };
+  late GoogleMapController _mapController;
 
   @override
   void initState() {
@@ -82,16 +72,90 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
     });
   }
 
+  Future<void> _goToCurrentLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      LatLng currentLatLng = LatLng(position.latitude, position.longitude);
+
+      setState(() {
+        selectedLocation = currentLatLng;
+        selectedMarker = Marker(
+          markerId: const MarkerId('selectedLocation'),
+          position: currentLatLng,
+          infoWindow: const InfoWindow(title: 'ตำแหน่งปัจจุบัน'),
+        );
+      });
+
+      _mapController.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: currentLatLng, zoom: 16),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ไม่สามารถหาตำแหน่งปัจจุบันได้'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Widget buildHeader(String title) {
+    return Stack(
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: IconButton(
+            icon: const Icon(Icons.help_outline, color: Colors.black87, size: 28),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('คู่มือการใช้งาน'),
+                  content: const Text(
+                      'แตะบนแผนที่เพื่อเลือกตำแหน่งห้องเรียน หรือกดปุ่มตำแหน่งปัจจุบัน'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('ปิด'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        Align(
+          alignment: Alignment.center,
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildLocationPicker() {
-    return Container(
-      height: 300,
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12), color: Colors.grey[200]),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: GoogleMap(
+    if (selectedLocation == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Stack(
+      children: [
+        GoogleMap(
+          onMapCreated: (controller) {
+            _mapController = controller;
+          },
           initialCameraPosition: CameraPosition(
-            target: selectedLocation ?? defaultLocation,
+            target: selectedLocation!,
             zoom: 14,
           ),
           markers: selectedMarker != null ? {selectedMarker!} : {},
@@ -110,25 +174,33 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
             });
           },
           myLocationEnabled: true,
-          myLocationButtonEnabled: true,
+          myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
         ),
-      ),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: FloatingActionButton(
+            onPressed: _goToCurrentLocation,
+            backgroundColor: const Color.fromARGB(255, 254, 255, 255),
+            child: const Icon(Icons.my_location),
+          ),
+        ),
+      ],
     );
   }
 
   Future<void> submitClassroom() async {
     if (selectedLocation == null) {
-      // SnackBar แจ้งเตือนผู้ใช้เลือกตำแหน่ง
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('กรุณาเลือกตำแหน่งห้องเรียน'),
-          backgroundColor: Colors.red, // พื้นหลังสีแดง
+          backgroundColor: Colors.red,
           duration: Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating, // ให้ลอยเหนือหน้าจอ
+          behavior: SnackBarBehavior.floating,
         ),
       );
-      return; // ออกจากฟังก์ชันไม่ให้ทำงานต่อ
+      return;
     }
 
     setState(() => isLoading = true);
@@ -201,6 +273,8 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bottomNavHeight = 60.0;
 
     return Scaffold(
       backgroundColor: const Color(0xFF00C853),
@@ -215,13 +289,13 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Align(
-                alignment: Alignment.topCenter,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 16),
                 child: Container(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  constraints: BoxConstraints(minHeight: screenHeight * 0.71),
+                  width: screenWidth * 0.9,
+                  height: screenHeight - bottomNavHeight - 32,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -236,25 +310,19 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                     ],
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text('สร้างห้องเรียน',
-                          style: TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold)),
+                      buildHeader('สร้างห้องเรียน'),
                       const Divider(height: 24, thickness: 1, color: Colors.grey),
-                      Row(
-                        children: const [
-                          Icon(Icons.add_location_alt, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('ตำแหน่งห้องเรียน',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w500)),
-                        ],
+                      const Text(
+                        'เลือกตำแหน่งห้องเรียนด้านล่าง',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(height: 12),
-                      _buildLocationPicker(),
-                      const SizedBox(height: 24),
+                      Expanded(child: _buildLocationPicker()),
                       if (isLoading) const LinearProgressIndicator(),
+                      const SizedBox(height: 16),
                       Row(
                         children: [
                           Expanded(
@@ -264,8 +332,9 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12)),
                               ),
-                              onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                                  context, '/classroom_create01', (r) => false),
+                              onPressed: () =>
+                                  Navigator.pushNamedAndRemoveUntil(
+                                      context, '/classroom_create01', (r) => false),
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 14),
                                 child: Text('ยกเลิก',
@@ -299,7 +368,8 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
               ),
             ),
           ),
-          bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
+          bottomNavigationBar:
+              CustomBottomNav(currentIndex: 1, context: context),
         ),
       ),
     );

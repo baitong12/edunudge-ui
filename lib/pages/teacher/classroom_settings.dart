@@ -20,11 +20,35 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
   List<DateTime> selectedHolidays = [];
   bool _isLoading = true;
 
+  String subjectName = '';
+  String roomNumber = '';
+
   @override
   void initState() {
     super.initState();
     _loadSavedSettings();
   }
+
+    Future<String?> _showTextInputDialog(String title, String initialValue) {
+      final controller = TextEditingController(text: initialValue);
+      return showDialog<String>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text(title),
+          content: TextField(controller: controller),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('ยกเลิก'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: Text('บันทึก'),
+            ),
+          ],
+        ),
+      );
+    }
 
   Future<void> _loadSavedSettings() async {
     try {
@@ -32,10 +56,16 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
       final settings = await ApiService.getClassroomSettings(widget.classroomId);
       // settings ควรมี keys: greenTimeMinute, redTimeMinute, isOpen, holidays (List<DateTime>)
       setState(() {
-        greenTime = TimeOfDay(hour: 0, minute: settings['greenTimeMinute'] ?? 1);
-        redTime = TimeOfDay(hour: 0, minute: settings['redTimeMinute'] ?? 1);
-        isOpen = settings['isOpen'] == 1;
-        selectedHolidays = List<DateTime>.from(settings['holidays'] ?? []);
+        greenTime = TimeOfDay(hour: 0, minute: (settings['warnGreen'] ?? 1));
+        redTime = TimeOfDay(hour: 0, minute: (settings['warnRed'] ?? 1));
+        isOpen = settings['isOpen'] == null ? true : settings['isOpen'] == 1;
+        if (settings['holidays'] != null) {
+          selectedHolidays = (settings['holidays'] as List)
+              .map((d) => DateTime.parse(d.toString()))
+              .toList();
+        } else {
+          selectedHolidays = [];
+        }
         _isLoading = false;
       });
     } catch (e) {
@@ -44,8 +74,12 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
     }
   }
 
-  Future<void> _selectTime(String level, TimeOfDay current) async {
+    Future<void> _selectTime(String level, TimeOfDay current) async {
+    // เก็บค่าปัจจุบัน
     int tempMinute = current.minute;
+    final pickerController = FixedExtentScrollController(
+    initialItem: tempMinute - 1 < 0 ? 0 : tempMinute - 1,
+  );
 
     await showDialog(
       context: context,
@@ -72,12 +106,12 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                   SizedBox(height: 10),
                   Expanded(
                     child: CupertinoPicker(
-                      scrollController: FixedExtentScrollController(
-                          initialItem: tempMinute - 1),
+                      // เริ่ม picker ที่ index = tempMinute - 1
+                      scrollController: pickerController,
                       itemExtent: 40,
                       onSelectedItemChanged: (index) {
                         setInner(() {
-                          tempMinute = index + 1;
+                          tempMinute = index + 1; // picker 0–59 → นาที 1–60
                         });
                       },
                       children: List<Widget>.generate(
@@ -127,11 +161,9 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                           onPressed: () {
                             setState(() {
                               if (level == 'green')
-                                greenTime =
-                                    TimeOfDay(hour: 0, minute: tempMinute);
+                                greenTime = TimeOfDay(hour: 0, minute: tempMinute);
                               if (level == 'red')
-                                redTime =
-                                    TimeOfDay(hour: 0, minute: tempMinute);
+                                redTime = TimeOfDay(hour: 0, minute: tempMinute);
                             });
                             Navigator.pop(context);
                           },
@@ -155,6 +187,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
       },
     );
   }
+
 
   void _selectStatus() {
     showModalBottomSheet(
@@ -458,6 +491,12 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
 
   Future<void> _saveSettings() async {
     try {
+      // อัพเดทชื่อวิชาและเลขห้องก่อน
+      if (subjectName.isNotEmpty) {
+        await ApiService.updateSubjectName(widget.classroomId, subjectName);
+      }
+
+      // อัพเดทการตั้งค่าอื่น ๆ
       await Future.wait([
         ApiService.updateWarnTimes(
           widget.classroomId,
@@ -473,12 +512,11 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
           selectedHolidays,
         ),
       ]);
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('บันทึกการตั้งค่าห้องเรียนเรียบร้อยแล้ว')),
       );
-
-      Navigator.pop(context);
+    // ส่งค่ากลับไปบอกหน้าเก่าว่ามีการแก้ไข
+    Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
@@ -547,6 +585,27 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text('ข้อมูลห้องเรียน',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[300],
+                            fontSize: 16)),
+                    SizedBox(height: 10),
+
+                    // เพิ่มสอง Tile สำหรับแก้ไขชื่อวิชาและเลขห้อง
+                    _buildSettingTile(
+                      'ชื่อวิชา',
+                      subjectName.isNotEmpty ? subjectName : 'กรอกชื่อวิชา',
+                      () async {
+                        final result = await _showTextInputDialog('ชื่อวิชา', subjectName);
+                        if (result != null) {
+                          setState(() {
+                            subjectName = result;
+                          });
+                        }
+                      },
+                    ),
+                    SizedBox(height: 30),
                     Text('เวลาการแจ้งเตือน',
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -557,8 +616,10 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                         '🟢 แจ้งเตือนระดับสีเขียว',
                         formatTime(greenTime),
                         () => _selectTime('green', greenTime)),
-                    _buildSettingTile('🔴 แจ้งเตือนระดับสีแดง',
-                        formatTime(redTime), () => _selectTime('red', redTime)),
+                    _buildSettingTile(
+                      '🔴 แจ้งเตือนระดับสีแดง',
+                        formatTime(redTime), 
+                        () => _selectTime('red', redTime)),
                     SizedBox(height: 30),
                     Text('สถานะห้องเรียน',
                         style: TextStyle(

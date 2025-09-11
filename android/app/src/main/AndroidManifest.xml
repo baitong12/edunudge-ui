@@ -1,18 +1,37 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+
+    <!-- ✅ Permissions (นอก <application>) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- ✅ Android 13+ ต้องขอสิทธิ์แจ้งเตือนแยก -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- ❌ ยังไม่ใส่ ถ้ายังไม่จำเป็นจริง ๆ
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    -->
 
     <application
-        android:label="edunudge"
         android:name="${applicationName}"
+        android:label="ednudge"
+        android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
-        android:icon="@mipmap/ic_launcher">
+        android:networkSecurityConfig="@xml/network_security_config">
 
+        <!-- Google Maps/Places (ถ้าใช้ Map/Geocoding) -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDPE70K5LXsG1UsNWMyKJK9b_4ATJN-F6s"/>
+            android:value="AIzaSyDqsAi8eVba8JV_VJekrt4BozrkMGWfjDk" />
+
+        <!-- ช่องแจ้งเตือนดีฟอลต์ (ต้องสร้าง channel ตรงชื่อเดียวกันในโค้ดด้วย) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="edunudge_alerts" />
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
 
         <activity
             android:name=".MainActivity"
@@ -20,26 +39,28 @@
             android:launchMode="singleTop"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode">
+
             <meta-data
-              android:name="io.flutter.embedding.android.NormalTheme"
-              android:resource="@style/NormalTheme"
-              />
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme" />
+
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <meta-data
-            android:name="flutterEmbedding"
-            android:value="2" />
+
     </application>
+
+    <!-- Queries (ตามที่ Flutter ต้องใช้) -->
     <queries>
         <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
         </intent>
     </queries>
+
 </manifest>

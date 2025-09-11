@@ -60,7 +60,7 @@ class _Register01State extends State<Register01> {
       return;
     }
 
-    // ✅ Validate phone number (must be exactly 10 digits)
+    // Validate phone number (must be exactly 10 digits)
     String phone = phoneController.text.trim();
     RegExp phoneRegex = RegExp(r'^[0-9]{10}$');
     if (!phoneRegex.hasMatch(phone)) {
@@ -142,9 +142,31 @@ class _Register01State extends State<Register01> {
                   _buildTextField('นามสกุล', controller: lastnameController),
                   _buildTextField('อีเมล', controller: emailController, keyboardType: TextInputType.emailAddress),
                   _buildTextField('เบอร์โทรศัพท์', controller: phoneController, keyboardType: TextInputType.phone),
-                  _buildTextField('รหัสผ่าน', obscureText: true, controller: passwordController),
+                  
+                  // รหัสผ่าน + ข้อความโชว์ตลอด
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildTextField('รหัสผ่าน', obscureText: true, controller: passwordController),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 4.0, left: 12.0),
+                        child: Text(
+                          'รหัสผ่านต้องมี 8 ตัวขึ้นไป',
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
                   _buildTextField('ยืนยันรหัสผ่าน', obscureText: true, controller: passwordConfirmationController),
+
                   const SizedBox(height: 20),
+
+                  // Error messages from validation
                   if (_errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 15.0),
@@ -158,36 +180,77 @@ class _Register01State extends State<Register01> {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                  Container(
-                    width: double.infinity,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black38,
-                          blurRadius: 6,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black38,
+                                blurRadius: 6,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(255, 255, 0, 0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.pushReplacementNamed(context, '/login');
+                            },
+                            child: const Text(
+                              'ย้อนกลับ',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      onPressed: _navigateToRegister02,
-                      child: const Text(
-                        'ถัดไป',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black38,
+                                blurRadius: 6,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
+                            onPressed: _navigateToRegister02,
+                            child: const Text(
+                              'ถัดไป',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),

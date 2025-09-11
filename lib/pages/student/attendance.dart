@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:edunudge/services/api_service.dart';
-import 'package:url_launcher/url_launcher.dart';
-
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 
 class Attendance extends StatefulWidget {
   const Attendance({super.key});
@@ -26,6 +27,25 @@ class _AttendanceState extends State<Attendance> {
     fetchAttendanceData();
   }
 
+  Future<void> downloadAndOpenPDF(String url, {String? fileName}) async {
+    try {
+      final dir = await getTemporaryDirectory(); // โฟลเดอร์ชั่วคราวของมือถือ
+      final name =
+          fileName ?? 'pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final filePath = '${dir.path}/$name';
+
+      // ดาวน์โหลดไฟล์ PDF ลงเครื่อง
+      await Dio().download(url, filePath);
+
+      // เปิดไฟล์ PDF ด้วย default viewer ของเครื่อง
+      await OpenFile.open(filePath);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เกิดข้อผิดพลาดในการดาวน์โหลด PDF: $e')),
+      );
+    }
+  }
+
   Future<void> fetchAttendanceData() async {
     setState(() {
       isLoadingTable = true;
@@ -39,7 +59,7 @@ class _AttendanceState extends State<Attendance> {
 
       subjectIds = {
         for (var cls in classrooms)
-          cls['name_subject'] as String: cls['classroom_id'] as int
+          cls['name_subject'] as String: cls['classroom_id'] as int,
       };
 
       setState(() {
@@ -95,8 +115,8 @@ class _AttendanceState extends State<Attendance> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      extendBody: true, // ✅ ให้ body กินเต็ม
-      backgroundColor: Colors.transparent, // ✅ ไม่มีพื้นหลังขาว
+      extendBody: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: const Color(0xFF00C853),
         elevation: 0,
@@ -112,7 +132,7 @@ class _AttendanceState extends State<Attendance> {
       ),
       body: Container(
         width: double.infinity,
-        height: double.infinity, // ✅ gradient เต็มจอ
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
@@ -158,47 +178,77 @@ class _AttendanceState extends State<Attendance> {
                             child: Row(
                               children: const [
                                 Expanded(
-                                    flex: 2,
-                                    child: Center(
-                                        child: Text('ชื่อวิชา',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white)))),
+                                  flex: 2,
+                                  child: Center(
+                                    child: Text(
+                                      'ชื่อวิชา',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                        child: Text('มา',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white)))),
+                                  flex: 1,
+                                  child: Center(
+                                    child: Text(
+                                      'มา',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                        child: Text('มาสาย',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white)))),
+                                  flex: 1,
+                                  child: Center(
+                                    child: Text(
+                                      'มาสาย',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                        child: Text('ขาด',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white)))),
+                                  flex: 1,
+                                  child: Center(
+                                    child: Text(
+                                      'ขาด',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                        child: Text('ลา',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white)))),
+                                  flex: 1,
+                                  child: Center(
+                                    child: Text(
+                                      'ลา',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 Expanded(
-                                    flex: 2,
-                                    child: Center(
-                                        child: Text('รวมทั้งหมด',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white)))),
+                                  flex: 2,
+                                  child: Center(
+                                    child: Text(
+                                      'รวมทั้งหมด',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -244,7 +294,8 @@ class _AttendanceState extends State<Attendance> {
                                       child: Text(
                                         val['present']?.toString() ?? '0',
                                         style: const TextStyle(
-                                            color: Colors.green),
+                                          color: Colors.green,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -254,7 +305,8 @@ class _AttendanceState extends State<Attendance> {
                                       child: Text(
                                         val['late']?.toString() ?? '0',
                                         style: const TextStyle(
-                                            color: Colors.orange),
+                                          color: Colors.orange,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -263,8 +315,9 @@ class _AttendanceState extends State<Attendance> {
                                     child: Center(
                                       child: Text(
                                         val['absent']?.toString() ?? '0',
-                                        style:
-                                            const TextStyle(color: Colors.red),
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -273,8 +326,9 @@ class _AttendanceState extends State<Attendance> {
                                     child: Center(
                                       child: Text(
                                         val['leave_count']?.toString() ?? '0',
-                                        style:
-                                            const TextStyle(color: Colors.blue),
+                                        style: const TextStyle(
+                                          color: Colors.blue,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -298,8 +352,10 @@ class _AttendanceState extends State<Attendance> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.lightBlue.shade50.withOpacity(0.9),
                     borderRadius: BorderRadius.circular(24),
@@ -307,7 +363,9 @@ class _AttendanceState extends State<Attendance> {
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
-                      value: selectedSubject.isNotEmpty ? selectedSubject : null,
+                      value: selectedSubject.isNotEmpty
+                          ? selectedSubject
+                          : null,
                       icon: const Icon(Icons.arrow_drop_down),
                       dropdownColor: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -353,10 +411,13 @@ class _AttendanceState extends State<Attendance> {
                         'ชื่อวิชา: ${selectedSubjectDetail['name_subject'] ?? '-'}\n'
                         'อาคารเรียน: ${selectedSubjectDetail['room_number'] ?? '-'}\n'
                         'อาจารย์ผู้สอน: ${selectedSubjectDetail['teacher_name'] ?? '-'}\n'
-                        'คณะ: ${selectedSubjectDetail['department'] ?? '-'}\n'
+                        'คณะ: ${selectedSubjectDetail['faculty'] ?? '-'}\n'
+                        'สาขา: ${selectedSubjectDetail['department'] ?? '-'}\n'
                         'เบอร์ติดต่อ: ${selectedSubjectDetail['contact'] ?? '-'}',
                         style: const TextStyle(
-                            fontSize: 16, color: Colors.black87),
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
                       ),
               ),
               const SizedBox(height: 24),
@@ -366,39 +427,43 @@ class _AttendanceState extends State<Attendance> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3F8FAF),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                   onPressed: () async {
                     try {
                       final token = await ApiService.getToken();
                       final url =
-                          'http://127.0.0.1:8000/student/home-attendance-pdf/$token';
-                      Uri uri = Uri.parse(url);
+                          'http://52.63.155.211/student/home-attendance-pdf/$token';
 
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri,
-                            mode: LaunchMode.externalApplication);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('ไม่สามารถเปิดลิงก์ได้')),
-                        );
-                      }
+                      // เรียกฟังก์ชัน downloadAndOpenPDF ที่สร้างไว้
+                      await downloadAndOpenPDF(
+                        url,
+                        fileName: 'attendance_${selectedSubject}.pdf',
+                      );
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
                       );
                     }
                   },
-                  icon: const Icon(Icons.picture_as_pdf,
-                      color: Colors.white, size: 20),
+
+                  icon: const Icon(
+                    Icons.picture_as_pdf,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   label: const Text(
                     'ดาวน์โหลดเอกสาร (pdf.)',
                     style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold),
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

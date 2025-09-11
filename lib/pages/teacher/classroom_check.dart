@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:edunudge/services/api_service.dart';
+import 'dart:convert';
 
 class AttendancePage extends StatefulWidget {
   final int classroomId;
@@ -19,9 +21,11 @@ class _AttendancePageState extends State<AttendancePage> {
   });
 
   bool isLoading = true;
+  bool hasClassToday = true;
+  String message = "";
   List<Map<String, dynamic>> students = [];
-  List<Map<String, String>> statusList = [];
-  Map<int, String> tempStatusMap = {}; // เก็บสถานะชั่วคราว
+  List<Map<String, dynamic>> statusList = [];
+  Map<int, String> tempStatusMap = {};
 
   @override
   void initState() {
@@ -33,40 +37,47 @@ class _AttendancePageState extends State<AttendancePage> {
     try {
       final classroomDetail =
           await ApiService.getTeacherClassroomDetail(widget.classroomId);
-      final studentData = classroomDetail['students'] as List<dynamic>? ?? [];
+
+      hasClassToday = classroomDetail['has_class_today'] ?? true;
+      message = classroomDetail['message'] ?? "";
+
+      final prefs = await SharedPreferences.getInstance();
+      final studentData = (classroomDetail['students'] as List<dynamic>?) ?? [];
+
+      final savedStatusJson =
+          prefs.getString('attendance_${widget.classroomId}');
+      Map<String, dynamic> savedStatus = {};
+      if (savedStatusJson != null) savedStatus = jsonDecode(savedStatusJson);
+
+      List<Map<String, dynamic>> loadedStudents = studentData.map((s) {
+        int? userId;
+        if (s['user_id'] is int) userId = s['user_id'];
+        else if (s['user_id'] is String) userId = int.tryParse(s['user_id']);
+
+        String status = '';
+        if (userId != null) {
+          status = savedStatus[userId.toString()] ?? (s['status'] ?? '');
+          tempStatusMap[userId] = status;
+        }
+
+        return {
+          'id': userId,
+          'name': s['name'] ?? '',
+          'lastname': s['lastname'] ?? '',
+        };
+      }).where((s) => s['id'] != null).toList();
 
       setState(() {
-        students = studentData
-            .where((s) => s['user_id'] != null)
-            .map((s) {
-              int? userId;
-              if (s['user_id'] is int) userId = s['user_id'];
-              else if (s['user_id'] is String) userId = int.tryParse(s['user_id']);
-
-              // โหลดค่าเดิมจาก API ลง tempStatusMap
-              if (userId != null && s['status'] != null) {
-                tempStatusMap[userId] = s['status'];
-              }
-
-              return {
-                'id': userId,
-                'name': s['name'],
-                'lastname': s['lastname'],
-              };
-            })
-            .where((s) => s['id'] != null)
-            .toList();
-
-        // สร้าง statusList จาก tempStatusMap
+        students = loadedStudents;
         statusList = students.map((s) {
           int uid = s['id'];
           String val = tempStatusMap[uid] ?? "";
           return {
             "value": val,
-            "label": val.isEmpty ? "" : getLabelFromValue(val),
+            "label": getLabelFromValue(val),
+            "disabled": !hasClassToday, // ปุ่มบล็อกถ้าไม่มีเรียน
           };
         }).toList();
-
         isLoading = false;
       });
     } catch (e) {
@@ -79,14 +90,14 @@ class _AttendancePageState extends State<AttendancePage> {
 
   String getLabelFromValue(String value) {
     switch (value) {
-      case "absent":
-        return "ขาด";
-      case "late":
-        return "สาย";
       case "present":
         return "มา";
+      case "late":
+        return "สาย";
       case "leave":
         return "ลา";
+      case "absent":
+        return "ขาด";
       default:
         return "";
     }
@@ -113,7 +124,7 @@ class _AttendancePageState extends State<AttendancePage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: onBackPressed,
         ),
         title: const Text(
           'การเช็คชื่อเข้าชั้นเรียน',
@@ -135,107 +146,91 @@ class _AttendancePageState extends State<AttendancePage> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 4,
-                              offset: Offset(0, 2))
-                        ],
+                    if (!hasClassToday)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Text(
+                          message,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF00C853),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            alignment: Alignment.center,
-                            child: Text(
-                              formattedDate,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 4,
+                                offset: Offset(0, 2))
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF00C853),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          const Row(
-                            children: [
-                              Icon(Icons.people, color: Color(0xFF3F8FAF)),
-                              SizedBox(width: 8),
-                              Text(
-                                'รายชื่อนักเรียน',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.4,
-                            child: ListView.builder(
-                              itemCount: students.length,
-                              itemBuilder: (context, index) => _buildStudentRow(
-                                index,
-                                avatarRadius,
-                                initialFontSize,
-                                buttonFontSize,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
-                                  ),
-                                  onPressed: onCancel,
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 14),
-                                    child: Text('ยกเลิก',
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 16)),
-                                  ),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 12),
+                              alignment: Alignment.center,
+                              child: Text(
+                                formattedDate,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.black,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
-                                  ),
-                                  onPressed: onComplete,
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 14),
-                                    child: Text('เสร็จสิ้น',
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 16)),
-                                  ),
+                            ),
+                            const SizedBox(height: 16),
+                            const Row(
+                              children: [
+                                Icon(Icons.people, color: Color(0xFF3F8FAF)),
+                                SizedBox(width: 8),
+                                Text(
+                                  'รายชื่อนักเรียน',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: students.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        'ยังไม่มีนักเรียนในห้อง',
+                                        style: TextStyle(
+                                            color: Colors.grey.shade700),
+                                      ),
+                                    )
+                                  : ListView.builder(
+                                      itemCount: students.length,
+                                      itemBuilder: (context, index) =>
+                                          _buildStudentRow(
+                                        index,
+                                        avatarRadius,
+                                        initialFontSize,
+                                        buttonFontSize,
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -246,11 +241,7 @@ class _AttendancePageState extends State<AttendancePage> {
   }
 
   Widget _buildStudentRow(
-    int index,
-    double avatarRadius,
-    double initialFontSize,
-    double buttonFontSize,
-  ) {
+      int index, double avatarRadius, double initialFontSize, double buttonFontSize) {
     final student = students[index];
     final initials = getInitials(student['name'], student['lastname']);
 
@@ -286,13 +277,21 @@ class _AttendancePageState extends State<AttendancePage> {
             ),
           ),
           const SizedBox(width: 4),
-          Expanded(child: _buildStatusButton(index, "absent", "ขาด", "FF1800", buttonFontSize)),
+          Expanded(
+              child: _buildStatusButton(
+                  index, "present", "มา", "00C853", buttonFontSize)),
           const SizedBox(width: 4),
-          Expanded(child: _buildStatusButton(index, "late", "สาย", "FFAB40", buttonFontSize)),
+          Expanded(
+              child: _buildStatusButton(
+                  index, "late", "สาย", "FFAB40", buttonFontSize)),
           const SizedBox(width: 4),
-          Expanded(child: _buildStatusButton(index, "present", "มา", "00C853", buttonFontSize)),
+          Expanded(
+              child: _buildStatusButton(
+                  index, "leave", "ลา", "2979FF", buttonFontSize)),
           const SizedBox(width: 4),
-          Expanded(child: _buildStatusButton(index, "leave", "ลา", "2979FF", buttonFontSize)),
+          Expanded(
+              child: _buildStatusButton(
+                  index, "absent", "ขาด", "FF1800", buttonFontSize)),
         ],
       ),
     );
@@ -301,30 +300,47 @@ class _AttendancePageState extends State<AttendancePage> {
   Widget _buildStatusButton(
       int index, String value, String label, String hexColor, double fontSize) {
     final isSelected = statusList[index]["value"] == value;
-    return GestureDetector(
-      onTap: () async {
-        int uid = students[index]['id'];
-        setState(() {
-          statusList[index] = {"value": value, "label": label};
-          tempStatusMap[uid] = value; // เก็บค่าใน temp map
-        });
+    final disabled = statusList[index]["disabled"] ?? false;
 
-        if (uid != null) {
-          try {
-            await ApiService.markAttendance(
-              userId: uid,
-              classroomId: widget.classroomId,
-              status: value,
-            );
-          } catch (e) {
-            // ไม่ต้องแจ้งเตือน
-          }
-        }
-      },
+    return GestureDetector(
+      onTap: disabled
+          ? null
+          : () async {
+              int uid = students[index]['id'];
+
+              tempStatusMap[uid] = value;
+              final prefs = await SharedPreferences.getInstance();
+              final savedMap =
+                  tempStatusMap.map((key, val) => MapEntry(key.toString(), val));
+              await prefs.setString(
+                  'attendance_${widget.classroomId}', jsonEncode(savedMap));
+
+              try {
+                await ApiService.markAttendance(
+                  userId: uid,
+                  classroomId: widget.classroomId,
+                  status: value,
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                        'เช็คชื่อไม่สำเร็จสำหรับ ${students[index]['name']}: $e'),
+                  ),
+                );
+              }
+
+              setState(() {
+                statusList[index]["value"] = value;
+                statusList[index]["label"] = getLabelFromValue(value);
+              });
+            },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Color(int.parse('0xFF$hexColor')) : Colors.white,
+          color: disabled
+              ? Colors.grey.shade300
+              : (isSelected ? Color(int.parse('0xFF$hexColor')) : Colors.white),
           border: Border.all(color: Colors.grey.shade300),
           borderRadius: BorderRadius.circular(8),
         ),
@@ -332,7 +348,7 @@ class _AttendancePageState extends State<AttendancePage> {
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
+            color: disabled ? Colors.grey : (isSelected ? Colors.white : Colors.black),
             fontWeight: FontWeight.bold,
             fontSize: fontSize,
           ),
@@ -341,24 +357,7 @@ class _AttendancePageState extends State<AttendancePage> {
     );
   }
 
-  void onCancel() {
-    setState(() {
-      statusList = List.filled(students.length, {"value": "", "label": ""});
-      tempStatusMap.clear();
-    });
-    Navigator.pushReplacementNamed(
-      context,
-      '/classroom_subject',
-      arguments: widget.classroomId,
-    );
-  }
-
-  void onComplete() {
-    tempStatusMap.clear();
-    Navigator.pushReplacementNamed(
-      context,
-      '/classroom_subject',
-      arguments: widget.classroomId,
-    );
+  void onBackPressed() {
+    Navigator.pop(context);
   }
 }

@@ -3,50 +3,70 @@ Please report a bug at https://github.com/flutter/flutter/issues.
 
 ## command
 
-flutter debug_adapter
+flutter --quiet assemble --no-version-check --depfile C:\project_testemu\my_app\build\app\intermediates\flutter\release/flutter_build.d --output C:\project_testemu\my_app\build\app\intermediates\flutter\release -dTargetFile=lib\main.dart -dTargetPlatform=android -dBuildMode=release -dTrackWidgetCreation=true -dTreeShakeIcons=true --DartDefines=RkxVVFRFUl9WRVJTSU9OPTMuMzUuMg==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049MDVkYjk2ODkwOA==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049YThiZmRmYzM5NA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My45LjA= -dFlavor= -dAndroidArchs=android-arm android-arm64 android-x64 -dMinSdkVersion=24 android_aot_bundle_release_android-arm android_aot_bundle_release_android-arm64 android_aot_bundle_release_android-x64
 
 ## exception
 
-RPCError: readyToResume: (-32603) Unexpected DWDS error for resume: WipError -32000 Execution context was destroyed.
+PathAccessException: PathAccessException: Cannot delete file, path = 'C:\project_testemu\my_app\.dart_tool\flutter_build\c226e5df2a658254b9c2f949e48780cf\aot_android_asset_bundle.stamp' (OS Error: Access is denied.
+, errno = 5)
 
 ```
-#0      new _OutstandingRequest (package:vm_service/src/vm_service.dart:268:34)
-#1      VmService._call.<anonymous closure> (package:vm_service/src/vm_service.dart:1950:25)
-#2      VmService._call (package:vm_service/src/vm_service.dart:1962:8)
-#3      VmService.callServiceExtension (package:vm_service/src/vm_service.dart:1901:14)
-#4      VmService.callMethod (package:vm_service/src/vm_service.dart:1884:12)
-#5      DdsExtension._callHelper (package:dds_service_extensions/dds_service_extensions.dart:365:12)
-#6      DdsExtension.readyToResume (package:dds_service_extensions/dds_service_extensions.dart:323:12)
+#0      _File.throwIfError (dart:io/file_impl.dart:783:7)
+#1      _File._deleteSync (dart:io/file_impl.dart:368:5)
+#2      FileSystemEntity.deleteSync (dart:io/file_system_entity.dart:425:7)
+#3      ForwardingFileSystemEntity.deleteSync (package:file/src/forwarding/forwarding_file_system_entity.dart:70:16)
+#4      ForwardingFileSystemEntity.deleteSync (package:file/src/forwarding/forwarding_file_system_entity.dart:70:16)
+#5      ErrorHandlingFileSystem.deleteIfExists (package:flutter_tools/src/base/error_handling_io.dart:90:14)
+#6      Target.clearStamp (package:flutter_tools/src/build_system/build_system.dart:178:29)
+#7      _BuildInstance._invokeInternal (package:flutter_tools/src/build_system/build_system.dart:900:19)
 <asynchronous suspension>
-#7      IsolateManager._readyToResume (package:dds/src/dap/isolate_manager.dart:425:7)
+#8      Future.wait.<anonymous closure> (dart:async/future.dart:525:21)
 <asynchronous suspension>
-#8      IsolateManager.readyToResumeThread (package:dds/src/dap/isolate_manager.dart:306:5)
+#9      _BuildInstance.invokeTarget (package:flutter_tools/src/build_system/build_system.dart:811:32)
 <asynchronous suspension>
-#9      IsolateManager._handlePause (package:dds/src/dap/isolate_manager.dart:695:7)
+#10     Future.wait.<anonymous closure> (dart:async/future.dart:525:21)
 <asynchronous suspension>
-#10     IsolateManager.handleEvent (package:dds/src/dap/isolate_manager.dart:207:7)
+#11     _BuildInstance.invokeTarget (package:flutter_tools/src/build_system/build_system.dart:811:32)
 <asynchronous suspension>
-#11     DartDebugAdapter.handleDebugEvent (package:dds/src/dap/adapters/dart.dart:2470:5)
+#12     FlutterBuildSystem.build (package:flutter_tools/src/build_system/build_system.dart:631:16)
 <asynchronous suspension>
-#12     DartDebugAdapter._withErrorHandling (package:dds/src/dap/adapters/dart.dart:2832:14)
+#13     AssembleCommand.runCommand (package:flutter_tools/src/commands/assemble.dart:346:32)
+<asynchronous suspension>
+#14     FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1581:27)
+<asynchronous suspension>
+#15     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#16     CommandRunner.runCommand (package:args/command_runner.dart:212:13)
+<asynchronous suspension>
+#17     FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:503:9)
+<asynchronous suspension>
+#18     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#19     FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:438:5)
+<asynchronous suspension>
+#20     run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:98:11)
+<asynchronous suspension>
+#21     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#22     main (package:flutter_tools/executable.dart:101:3)
 <asynchronous suspension>
 ```
 
 ## flutter doctor
 
 ```
-[✓] Flutter (Channel stable, 3.35.1, on Microsoft Windows [Version 10.0.26100.4946], locale th-TH) [1,123ms]
-    • Flutter version 3.35.1 on channel stable at C:\flutter\flutter
+[✓] Flutter (Channel stable, 3.35.2, on Microsoft Windows [Version 10.0.26100.4946], locale th-TH) [1,205ms]
+    • Flutter version 3.35.2 on channel stable at C:\flutter
     • Upstream repository https://github.com/flutter/flutter.git
-    • Framework revision 20f8274939 (2 weeks ago), 2025-08-14 10:53:09 -0700
-    • Engine revision 1e9a811bf8
+    • Framework revision 05db968908 (7 days ago), 2025-08-25 10:21:35 -0700
+    • Engine revision a8bfdfc394
     • Dart version 3.9.0
     • DevTools version 2.48.0
     • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-lldb-debugging
 
-[✓] Windows Version (11 Home Single Language 64-bit, 24H2, 2009) [19.3s]
+[✓] Windows Version (11 Home Single Language 64-bit, 24H2, 2009) [18.0s]
 
-[!] Android toolchain - develop for Android devices (Android SDK version 34.0.0) [2.0s]
+[!] Android toolchain - develop for Android devices (Android SDK version 35.0.0) [1,530ms]
     • Android SDK at C:\Users\USER\AppData\Local\Android\sdk
     • Emulator version 34.2.15.0 (build_id 11906825) (CL:N/A)
     ✗ cmdline-tools component is missing.
@@ -57,15 +77,15 @@ RPCError: readyToResume: (-32603) Unexpected DWDS error for resume: WipError -32
       Run `flutter doctor --android-licenses` to accept the SDK licenses.
       See https://flutter.dev/to/windows-android-setup for more details.
 
-[✓] Chrome - develop for the web [43ms]
+[✓] Chrome - develop for the web [22ms]
     • Chrome at C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
 
-[✗] Visual Studio - develop Windows apps [40ms]
+[✗] Visual Studio - develop Windows apps [20ms]
     ✗ Visual Studio not installed; this is necessary to develop Windows apps.
       Download at https://visualstudio.microsoft.com/downloads/.
       Please install the "Desktop development with C++" workload, including all of its default components
 
-[✓] Android Studio (version 2024.1) [32ms]
+[✓] Android Studio (version 2024.1) [15ms]
     • Android Studio at C:\Program Files\Android\Android Studio
     • Flutter plugin can be installed from:
       🔨 https://plugins.jetbrains.com/plugin/9212-flutter
@@ -73,16 +93,16 @@ RPCError: readyToResume: (-32603) Unexpected DWDS error for resume: WipError -32
       🔨 https://plugins.jetbrains.com/plugin/6351-dart
     • Java version OpenJDK Runtime Environment (build 17.0.10+0--11609105)
 
-[✓] VS Code (version 1.103.2) [25ms]
+[✓] VS Code (version 1.103.2) [12ms]
     • VS Code at C:\Users\USER\AppData\Local\Programs\Microsoft VS Code
     • Flutter extension version 3.116.0
 
-[✓] Connected device (3 available) [1,388ms]
+[✓] Connected device (3 available) [1,035ms]
     • Windows (desktop) • windows • windows-x64    • Microsoft Windows [Version 10.0.26100.4946]
-    • Chrome (web)      • chrome  • web-javascript • Google Chrome 139.0.7258.139
+    • Chrome (web)      • chrome  • web-javascript • Google Chrome 139.0.7258.155
     • Edge (web)        • edge    • web-javascript • Microsoft Edge 139.0.3405.111
 
-[✓] Network resources [2.2s]
+[✓] Network resources [1,496ms]
     • All expected network resources are available.
 
 ! Doctor found issues in 2 categories.

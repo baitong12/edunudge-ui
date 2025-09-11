@@ -6,9 +6,10 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../providers/profile_provider.dart';
 
-class CustomAppBar extends StatelessWidget {
+class CustomAppBar extends StatefulWidget {
+  static final String baseUrl =
+      dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
 
-  static final String baseUrl = dotenv.env['API_URL'] ?? "http://127.0.0.1:8000/api";
   final VoidCallback onProfileTap;
   final VoidCallback? onLogoutTap;
 
@@ -18,6 +19,30 @@ class CustomAppBar extends StatelessWidget {
     this.onLogoutTap,
   });
 
+  @override
+  State<CustomAppBar> createState() => _CustomAppBarState();
+}
+
+class _CustomAppBarState extends State<CustomAppBar> {
+  String _initials = '--';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitials();
+  }
+
+  Future<void> _loadInitials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('user_name') ?? '';
+    final lastname = prefs.getString('user_lastname') ?? '';
+    setState(() {
+      _initials =
+          ((name.isNotEmpty ? name[0] : '-') + (lastname.isNotEmpty ? lastname[0] : '-'))
+              .toUpperCase();
+    });
+  }
+
   Future<void> _logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('api_token');
@@ -25,7 +50,7 @@ class CustomAppBar extends StatelessWidget {
     if (token != null) {
       try {
         final response = await http.post(
-          Uri.parse("$baseUrl/logout"),
+          Uri.parse("${CustomAppBar.baseUrl}/logout"),
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
@@ -40,8 +65,8 @@ class CustomAppBar extends StatelessWidget {
 
     await prefs.clear();
 
-    if (onLogoutTap != null) {
-      onLogoutTap!();
+    if (widget.onLogoutTap != null) {
+      widget.onLogoutTap!();
     } else {
       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
     }
@@ -49,66 +74,71 @@ class CustomAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profile = Provider.of<ProfileProvider>(context);
+    return Consumer<ProfileProvider>(
+      builder: (context, profile, child) {
+        // ถ้า Provider มีค่า จะใช้ค่าจาก Provider อัปเดตทันที
+        final initialsFromProvider = profile.initials.isNotEmpty ? profile.initials : _initials;
 
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(40),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'EduNudge',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 23,
-              ),
+        return Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(40),
             ),
-            Row(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  onTap: onProfileTap,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        profile.initials,
-                        style: const TextStyle(
-                          color: Colors.white, 
-                          fontWeight: FontWeight.bold,
+                const Text(
+                  'EduNudge',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 23,
+                  ),
+                ),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: widget.onProfileTap,
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            initialsFromProvider,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                GestureDetector(
-                  onTap: () => _logout(context),
-                  child: const Icon(
-                    Icons.power_settings_new,
-                    color: Colors.red,
-                    size: 28,
-                  ),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () => _logout(context),
+                      child: const Icon(
+                        Icons.power_settings_new,
+                        color: Colors.red,
+                        size: 28,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

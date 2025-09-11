@@ -84,22 +84,34 @@ class _SubjectPageState extends State<Subject> {
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            automaticallyImplyLeading: true,
-            title: const Text(
-              'รายละเอียดรายวิชา',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
-            iconTheme: const IconThemeData(color: Colors.white),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  classroomDetail?['classroom']['name_subject'] ?? '-',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  'อาจารย์: ${classroomDetail?['classroom']['teacher'] ?? '-'} | ห้องเรียน: ${classroomDetail?['classroom']['room_number'] ?? '-'}',
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+            centerTitle: false,
           ),
           body: isLoading
               ? const Center(child: CircularProgressIndicator())
               : errorMessage != null
-                  ? Center(child: Text(errorMessage!))
-                  : buildContent(),
+              ? Center(child: Text(errorMessage!))
+              : buildContent(),
         ),
       ),
     );
@@ -113,16 +125,22 @@ class _SubjectPageState extends State<Subject> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // ================== Legend ==================
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _LegendDot(color: getStatusColor('present'), label: 'มาเรียน'),
-            _LegendDot(color: getStatusColor('late'), label: 'สาย'),
-            _LegendDot(color: getStatusColor('absent'), label: 'ขาด'),
-            _LegendDot(color: getStatusColor('leave'), label: 'ลา'),
-            _LegendDot(color: getStatusColor('no_class'), label: 'ไม่มีเรียน'),
-          ],
+        // ================== สัปดาห์ ==================
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            'สัปดาห์ที่: ${classroom['week']}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ),
         const SizedBox(height: 20),
 
@@ -159,6 +177,13 @@ class _SubjectPageState extends State<Subject> {
               ),
               Container(height: 40, width: 1, color: Colors.grey.shade300),
               _ScoreCard(
+                icon: Icons.event_busy,
+                count: int.tryParse(summary['leave'].toString()) ?? 0,
+                label: 'ลา',
+                color: Colors.blue,
+              ),
+              Container(height: 40, width: 1, color: Colors.grey.shade300),
+              _ScoreCard(
                 icon: Icons.star,
                 count: int.tryParse(summary['earned_points'].toString()) ?? 0,
                 label: 'คะแนนสะสม',
@@ -166,39 +191,6 @@ class _SubjectPageState extends State<Subject> {
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 20),
-
-        // ================== Subject Info ==================
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              classroom['name_subject'] ?? '-',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            Text(
-              classroom['room_number'] ?? '-',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: Colors.white),
-            ),
-            const SizedBox(height: 15),
-            Text(
-              classroom['teacher'] ?? '-',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: Colors.white),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              'สัปดาห์ที่: ${classroom['week']}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: Colors.white),
-            ),
-          ],
         ),
         const SizedBox(height: 20),
 
@@ -229,16 +221,30 @@ class _SubjectPageState extends State<Subject> {
                 ),
               ),
               const Divider(color: Colors.grey, thickness: 0.5, height: 20),
-              ...?classroom['rules']?.map((rule) => _buildGradeCriteriaRow(
-                    context,
-                    'มาเรียนคิดเป็น:',
-                    '${rule['point_percent']}%',
-                    'คะแนนพิเศษ:',
-                    '${rule['point_extra']} คะแนน',
-                  )),
+
+              // 👉 แสดง required_days และ reward_points ด้านบน
+              Text(
+                'มาเรียนติดกัน: ${classroomDetail!['required_days']} ครั้ง   '
+                'ได้คะแนนสะสม: ${classroomDetail!['reward_points']} คะแนน',
+                style: const TextStyle(color: Colors.black87, fontSize: 14),
+              ),
+              const SizedBox(height: 12),
+
+              // 👉 แสดง rules ด้านล่าง
+              ...?classroom['rules']?.map(
+                (rule) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'คะแนนสะสม(ร้อยละ): ${rule['point_percent']}%, '
+                    'ได้คะแนนพิเศษท้ายเทอม: ${rule['point_extra']} คะแนน',
+                    style: const TextStyle(color: Colors.black54, fontSize: 14),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
+
         const SizedBox(height: 20),
 
         // ================== Students ==================
@@ -249,8 +255,8 @@ class _SubjectPageState extends State<Subject> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 5,
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
                 spreadRadius: 1,
                 offset: const Offset(0, 3),
               ),
@@ -259,64 +265,69 @@ class _SubjectPageState extends State<Subject> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('รายชื่อนักศึกษา',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.black87,
-                  )),
+              const Text(
+                'รายชื่อนักศึกษา',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+              ),
               const Divider(color: Colors.grey, thickness: 0.5, height: 20),
-              ...students.map((student) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: const Color(0xFF00C853),
-                        radius: 20,
-                        child: Text(
-                          getInitials(student['name']),
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16),
-                        ),
-                      ),
-                      title: Text(
-                        student['name'],
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _LegendDot(
+                    color: getStatusColor('present'),
+                    label: 'มาเรียน',
+                  ),
+                  _LegendDot(color: getStatusColor('late'), label: 'สาย'),
+                  _LegendDot(color: getStatusColor('absent'), label: 'ขาด'),
+                  _LegendDot(color: getStatusColor('leave'), label: 'ลา'),
+                  _LegendDot(
+                    color: getStatusColor('no_class'),
+                    label: 'ไม่มีเรียน',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              ...students.map(
+                (student) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: const Color(0xFF00C853),
+                      radius: 20,
+                      child: Text(
+                        getInitials(student['name']),
                         style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Colors.black87,
                         ),
                       ),
-                      trailing: Icon(Icons.circle,
-                          color: getStatusColor(student['status']), size: 12),
                     ),
-                  )),
+                    title: Text(
+                      student['name'],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.circle,
+                      color: getStatusColor(student['status']),
+                      size: 12,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
         const SizedBox(height: 20),
-      ],
-    );
-  }
-
-  Widget _buildGradeCriteriaRow(BuildContext context, String label1,
-      String value1, String label2, String value2) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            '$label1 $value1',
-            style: const TextStyle(color: Colors.black54, fontSize: 14),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            '$label2 $value2',
-            textAlign: TextAlign.end,
-            style: const TextStyle(color: Colors.black54, fontSize: 14),
-          ),
-        ),
       ],
     );
   }
@@ -341,11 +352,18 @@ class _ScoreCard extends StatelessWidget {
       children: [
         Icon(icon, color: color, size: 30),
         const SizedBox(height: 4),
-        Text('$count',
-            style: TextStyle(
-                fontWeight: FontWeight.bold, color: color, fontSize: 18)),
-        Text(label,
-            style: const TextStyle(color: Colors.black87, fontSize: 14)),
+        Text(
+          '$count',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: color,
+            fontSize: 18,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.black87, fontSize: 14),
+        ),
       ],
     );
   }
@@ -367,7 +385,10 @@ class _LegendDot extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-              fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
+            fontSize: 12,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );

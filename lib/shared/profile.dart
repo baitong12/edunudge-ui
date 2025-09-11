@@ -42,7 +42,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _saveAndUpdateProfile(Map<String, String?> fields) async {
     if (!mounted) return;
-    try {
+    //try {
       final prefs = await SharedPreferences.getInstance();
       final profileProvider = Provider.of<ProfileProvider>(
         context,
@@ -73,10 +73,10 @@ class _ProfilePageState extends State<ProfilePage> {
             break;
         }
       }
-      profileProvider.notifyListeners();
-    } catch (e) {
-      debugPrint('Failed to save/update profile: $e');
-    }
+      // profileProvider.notifyListeners();
+    // } catch (e) {
+    //   debugPrint('Failed to save/update profile: $e');
+    // }
   }
 
   void showMessage(String message) {

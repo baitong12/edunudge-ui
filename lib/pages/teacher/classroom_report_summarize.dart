@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:edunudge/services/api_service.dart';
-import 'package:url_launcher/url_launcher.dart';//NOTE
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 
 class ReportBsummarizePage extends StatefulWidget {
   final int classroomId;
   final List<String> atRiskList; // เปลี่ยนจาก int เป็น List<String>
   // ต้องส่ง classroomId
-  const ReportBsummarizePage(
-      {super.key, required this.classroomId, required this.atRiskList});
+  const ReportBsummarizePage({
+    super.key,
+    required this.classroomId,
+    required this.atRiskList,
+  });
 
   @override
   State<ReportBsummarizePage> createState() => _ReportBsummarizePageState();
@@ -30,13 +35,35 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 800));
-    _animation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
     );
+    _animation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
 
     _loadData();
+  }
+
+  Future<void> downloadAndOpenPDF(String url, {String? fileName}) async {
+    try {
+      final dir = await getTemporaryDirectory(); // โฟลเดอร์ชั่วคราวของมือถือ
+      final name =
+          fileName ?? 'pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final filePath = '${dir.path}/$name';
+
+      // ดาวน์โหลดไฟล์ PDF ลงเครื่อง
+      await Dio().download(url, filePath);
+
+      // เปิดไฟล์ PDF ด้วย default viewer ของเครื่อง
+      await OpenFile.open(filePath);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เกิดข้อผิดพลาดในการดาวน์โหลด PDF: $e')),
+      );
+    }
   }
 
   Future<void> _loadData() async {
@@ -55,22 +82,25 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
 
         // studentData สำหรับตาราง
         studentData = weeklySummary
-            .map<Map<String, dynamic>>((e) => {
-                  "week": e['week_number'] ?? 0,
-                  "present": e['present'] ?? 0,
-                  "absent": e['absent'] ?? 0,
-                  "late": e['late'] ?? 0,
-                  "leave": e['leave_count'] ?? 0,
-                  "watchful": widget.atRiskList.length,
-                })
+            .map<Map<String, dynamic>>(
+              (e) => {
+                "week": e['week_number'] ?? 0,
+                "present": e['present'] ?? 0,
+                "absent": e['absent'] ?? 0,
+                "late": e['late'] ?? 0,
+                "leave": e['leave_count'] ?? 0,
+                "watchful": widget.atRiskList.length,
+              },
+            )
             .toList();
 
         isLoading = false;
       });
     } catch (e) {
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('โหลดข้อมูลล้มเหลว: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('โหลดข้อมูลล้มเหลว: $e')));
     }
   }
 
@@ -147,10 +177,11 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
         padding: const EdgeInsets.all(16),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final displayWeeks = selectedWeeks.isEmpty
-                ? List.generate(weeklyData.length, (i) => i)
-                : selectedWeeks.toList()
-              ..sort();
+            final displayWeeks =
+                selectedWeeks.isEmpty
+                      ? List.generate(weeklyData.length, (i) => i)
+                      : selectedWeeks.toList()
+                  ..sort();
 
             final Map<int, int> weekXMap = {};
             for (int i = 0; i < displayWeeks.length; i++) {
@@ -164,9 +195,11 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
             final filteredStudentData = selectedWeeks.isEmpty
                 ? studentData
                 : studentData
-                    .where((student) =>
-                        selectedWeeks.contains(student["week"] - 1))
-                    .toList();
+                      .where(
+                        (student) =>
+                            selectedWeeks.contains(student["week"] - 1),
+                      )
+                      .toList();
 
             return SingleChildScrollView(
               child: Container(
@@ -184,8 +217,10 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                   ],
                 ),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -206,24 +241,25 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                     x: xPos,
                                     barRods: [
                                       BarChartRodData(
-                                        toY: weeklyData[weekIndex] *
+                                        toY:
+                                            weeklyData[weekIndex] *
                                             _animation.value,
                                         width: 28,
                                         borderRadius: BorderRadius.circular(6),
                                         gradient: const LinearGradient(
                                           colors: [
                                             Color(0xFF3F8FAF),
-                                            Color(0xFF62B7C7)
+                                            Color(0xFF62B7C7),
                                           ],
                                           begin: Alignment.bottomCenter,
                                           end: Alignment.topCenter,
                                         ),
                                         backDrawRodData:
                                             BackgroundBarChartRodData(
-                                          show: true,
-                                          toY: 100,
-                                          color: Colors.grey.shade200,
-                                        ),
+                                              show: true,
+                                              toY: 100,
+                                              color: Colors.grey.shade200,
+                                            ),
                                       ),
                                     ],
                                   );
@@ -231,8 +267,9 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
 
                                 return Container(
                                   width: chartWidth.clamp(
-                                      constraints.maxWidth - 32,
-                                      double.infinity),
+                                    constraints.maxWidth - 32,
+                                    double.infinity,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(12),
@@ -245,8 +282,9 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                       ),
                                     ],
                                   ),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
                                   child: BarChart(
                                     BarChartData(
                                       maxY: 100,
@@ -256,18 +294,24 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                       barTouchData: BarTouchData(
                                         enabled: true,
                                         touchTooltipData: BarTouchTooltipData(
-                                          tooltipBgColor: Colors.black87,
-                                          getTooltipItem: (group, groupIndex,
-                                              rod, rodIndex) {
-                                            final week = displayWeeks[group.x];
-                                            return BarTooltipItem(
-                                              'สัปดาห์ ${week + 1}\n${rod.toY.toInt()}%',
-                                              const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 14),
-                                            );
-                                          },
+                                          getTooltipItem:
+                                              (
+                                                group,
+                                                groupIndex,
+                                                rod,
+                                                rodIndex,
+                                              ) {
+                                                final week =
+                                                    displayWeeks[group.x];
+                                                return BarTooltipItem(
+                                                  'สัปดาห์ ${week + 1}\n${rod.toY.toInt()}%',
+                                                  const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                );
+                                              },
                                         ),
                                       ),
                                       gridData: FlGridData(
@@ -276,9 +320,9 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                         horizontalInterval: 20,
                                         getDrawingHorizontalLine: (value) =>
                                             FlLine(
-                                          color: Colors.grey.shade300,
-                                          strokeWidth: 1,
-                                        ),
+                                              color: Colors.grey.shade300,
+                                              strokeWidth: 1,
+                                            ),
                                       ),
                                       titlesData: FlTitlesData(
                                         bottomTitles: AxisTitles(
@@ -294,7 +338,8 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                                 child: Text(
                                                   'สัปดาห์ ${week + 1}',
                                                   style: const TextStyle(
-                                                      fontSize: 12),
+                                                    fontSize: 12,
+                                                  ),
                                                 ),
                                               );
                                             },
@@ -312,11 +357,15 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                           ),
                                         ),
                                         topTitles: AxisTitles(
-                                            sideTitles:
-                                                SideTitles(showTitles: false)),
+                                          sideTitles: SideTitles(
+                                            showTitles: false,
+                                          ),
+                                        ),
                                         rightTitles: AxisTitles(
-                                            sideTitles:
-                                                SideTitles(showTitles: false)),
+                                          sideTitles: SideTitles(
+                                            showTitles: false,
+                                          ),
+                                        ),
                                       ),
                                       borderData: FlBorderData(show: false),
                                     ),
@@ -379,7 +428,9 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                         MaterialTapTargetSize.shrinkWrap,
                                     visualDensity: VisualDensity.compact,
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 4),
+                                      horizontal: 16,
+                                      vertical: 4,
+                                    ),
                                   );
                                 } else {
                                   final weekIndex = index - 1;
@@ -424,7 +475,9 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                         MaterialTapTargetSize.shrinkWrap,
                                     visualDensity: VisualDensity.compact,
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 4),
+                                      horizontal: 16,
+                                      vertical: 4,
+                                    ),
                                   );
                                 }
                               },
@@ -454,63 +507,96 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                             // header ตาราง
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  vertical: 14, horizontal: 8),
+                                vertical: 14,
+                                horizontal: 8,
+                              ),
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
                                     Color(0xFF3F8FAF),
-                                    Color(0xFF62B7C7)
+                                    Color(0xFF62B7C7),
                                   ],
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                 ),
                                 borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(16)),
+                                  top: Radius.circular(16),
+                                ),
                               ),
                               child: Row(
                                 children: const [
                                   Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                          child: Text("สัปดาห์ที่",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white)))),
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        "สัปดาห์ที่",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                   Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                          child: Text("มา",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white)))),
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        "มา",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                   Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                          child: Text("ขาด",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white)))),
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        "ลา",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                   Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                          child: Text("สาย",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white)))),
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        "สาย",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                   Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                          child: Text("ลา",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white)))),
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        "ขาด",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                   Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                          child: Text("เฝ้าระวัง",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white)))),
+                                    flex: 1,
+                                    child: Center(
+                                      child: Text(
+                                        "เฝ้าระวัง",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -521,54 +607,83 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                               var student = entry.value;
                               return Container(
                                 padding: const EdgeInsets.symmetric(
-                                    vertical: 12, horizontal: 8),
+                                  vertical: 12,
+                                  horizontal: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: index.isEven
                                       ? Colors.white
                                       : const Color(0xFFF4F9FA),
                                   border: Border(
                                     bottom: BorderSide(
-                                        color: Colors.grey.shade300,
-                                        width: 0.8),
+                                      color: Colors.grey.shade300,
+                                      width: 0.8,
+                                    ),
                                   ),
                                 ),
                                 child: Row(
                                   children: [
                                     Expanded(
-                                        flex: 1,
-                                        child: Center(
-                                            child: Text("${student["week"]}"))),
+                                      flex: 1,
+                                      child: Center(
+                                        child: Text("${student["week"]}"),
+                                      ),
+                                    ),
                                     Expanded(
-                                        flex: 1,
-                                        child: Center(
-                                            child: Text("${student["present"]}",
-                                                style: const TextStyle(
-                                                    color: Colors.green)))),
+                                      flex: 1,
+                                      child: Center(
+                                        child: Text(
+                                          "${student["present"]}",
+                                          style: const TextStyle(
+                                            color: Colors.green,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                     Expanded(
-                                        flex: 1,
-                                        child: Center(
-                                            child: Text("${student["absent"]}",
-                                                style: const TextStyle(
-                                                    color: Colors.red)))),
+                                      flex: 1,
+                                      child: Center(
+                                        child: Text(
+                                          "${student["leave"]}",
+                                          style: const TextStyle(
+                                            color: Colors.blue,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                     Expanded(
-                                        flex: 1,
-                                        child: Center(
-                                            child: Text("${student["late"]}",
-                                                style: const TextStyle(
-                                                    color: Colors.orange)))),
+                                      flex: 1,
+                                      child: Center(
+                                        child: Text(
+                                          "${student["late"]}",
+                                          style: const TextStyle(
+                                            color: Colors.orange,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                     Expanded(
-                                        flex: 1,
-                                        child: Center(
-                                            child: Text("${student["leave"]}",
-                                                style: const TextStyle(
-                                                    color: Colors.blue)))),
+                                      flex: 1,
+                                      child: Center(
+                                        child: Text(
+                                          "${student["absent"]}",
+                                          style: const TextStyle(
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                     Expanded(
-                                        flex: 1,
-                                        child: Center(
-                                            child: Text(
-                                                "${student["watchful"]}",
-                                                style: const TextStyle(
-                                                    color: Colors.purple)))),
+                                      flex: 1,
+                                      child: Center(
+                                        child: Text(
+                                          "${student["watchful"]}",
+                                          style: const TextStyle(
+                                            color: Colors.purple,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               );
@@ -589,35 +704,34 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                               borderRadius: BorderRadius.circular(12),
                             ),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             elevation: 3,
                           ),
-                      
                           onPressed: () async {
                             try {
-                              final token = await ApiService
-                                  .getToken(); // ✅ เรียก async ได้
+                              final token = await ApiService.getToken();
                               final url =
-                                  'http://127.0.0.1:8000/classrooms/${widget.classroomId}/weekly-pdf/$token';
-                              Uri uri = Uri.parse(url);
+                                  'http://52.63.155.211/classrooms/${widget.classroomId}/weekly-pdf/$token';
 
-                              if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri,
-                                    mode: LaunchMode.externalApplication);
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('ไม่สามารถเปิดลิงก์ได้')),
-                                );
-                              }
+                              await downloadAndOpenPDF(
+                                url,
+                                fileName:
+                                    'WeeklyReport_${widget.classroomId}.pdf',
+                              );
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
                               );
                             }
                           },
-                          icon: const Icon(Icons.picture_as_pdf,
-                              color: Colors.white, size: 22),
+
+                          icon: const Icon(
+                            Icons.picture_as_pdf,
+                            color: Colors.white,
+                            size: 22,
+                          ),
                           label: const Text(
                             'ดาวน์โหลดเอกสาร (pdf.)',
                             style: TextStyle(

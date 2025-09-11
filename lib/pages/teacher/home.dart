@@ -19,19 +19,23 @@ class _HomePageState extends State<HomePage> {
     _teacherHome = ApiService.getTeacherHome();
   }
 
+  Future<void> _reloadTeacherHome() async {
+    setState(() {
+      _teacherHome = ApiService.getTeacherHome();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
     final cardColors = [
-      const Color(0xFF1de9b6),
       const Color(0xFFe040fb),
       const Color(0xFFff4081),
       const Color(0xFFffab40),
       const Color(0xFF2979ff),
       const Color(0xFF7c4dff),
-      const Color(0xFF00c853),
       const Color(0xFFff1744),
     ];
     return Scaffold(
@@ -60,7 +64,8 @@ class _HomePageState extends State<HomePage> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
-                  child: CircularProgressIndicator(color: Colors.white));
+                child: CircularProgressIndicator(color: Colors.white),
+              );
             } else if (snapshot.hasError) {
               return Center(
                 child: Text(
@@ -70,7 +75,8 @@ class _HomePageState extends State<HomePage> {
               );
             } else if (!snapshot.hasData ||
                 (snapshot.data?['classrooms'] == null) ||
-                (snapshot.data?['classrooms'] is List && (snapshot.data?['classrooms'] as List).isEmpty)) {
+                (snapshot.data?['classrooms'] is List &&
+                    (snapshot.data?['classrooms'] as List).isEmpty)) {
               return const Center(
                 child: Text(
                   "ไม่พบห้องเรียน กรุณาสร้างห้องเรียน",
@@ -99,19 +105,32 @@ class _HomePageState extends State<HomePage> {
                     tag: classroom['name_subject'] ?? 'subject_$index',
                     child: InkWell(
                       borderRadius: BorderRadius.circular(screenWidth * 0.06),
-                      onTap: () {
-                        print('Go to classroom_subject id=${classroom['id']} (${classroom['id'].runtimeType})');
-                        Navigator.pushNamed(
+                      onTap: () async {
+                        print(
+                          'Go to classroom_subject id=${classroom['id']} (${classroom['id'].runtimeType})',
+                        );
+
+                        final result = await Navigator.pushNamed(
                           context,
                           '/classroom_subject',
                           arguments: classroom['id'],
                         );
+
+                        if (result == true) {
+                          _reloadTeacherHome(); // รีโหลดข้อมูล
+                        }
                       },
+
                       child: Container(
                         decoration: BoxDecoration(
                           color: color,
-                          borderRadius: BorderRadius.circular(screenWidth * 0.06),
-                          border: Border.all(color: Colors.white, width: 1.5), // เพิ่มบรรทัดนี้
+                          borderRadius: BorderRadius.circular(
+                            screenWidth * 0.06,
+                          ),
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 1.5,
+                          ), // เพิ่มบรรทัดนี้
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.2),
@@ -154,9 +173,11 @@ class _HomePageState extends State<HomePage> {
                               // แทนที่ด้วยแบบ Row เหมือน classroom.dart
                               Row(
                                 children: [
-                                  Icon(Icons.meeting_room,
-                                      size: screenWidth * 0.05,
-                                      color: Colors.white),
+                                  Icon(
+                                    Icons.meeting_room,
+                                    size: screenWidth * 0.05,
+                                    color: Colors.white,
+                                  ),
                                   SizedBox(width: screenWidth * 0.02),
                                   Text(
                                     classroom['room_number'] ?? '-',
@@ -167,9 +188,11 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                   SizedBox(width: screenWidth * 0.05),
-                                  Icon(Icons.vpn_key,
-                                      size: screenWidth * 0.05,
-                                      color: Colors.white),
+                                  Icon(
+                                    Icons.vpn_key,
+                                    size: screenWidth * 0.05,
+                                    color: Colors.white,
+                                  ),
                                   SizedBox(width: screenWidth * 0.02),
                                   Text(
                                     classroom['code'] ?? '-',
@@ -186,8 +209,11 @@ class _HomePageState extends State<HomePage> {
                               // ชื่อครู
                               Row(
                                 children: [
-                                  const Icon(Icons.person,
-                                      color: Colors.white70, size: 20),
+                                  const Icon(
+                                    Icons.person,
+                                    color: Colors.white70,
+                                    size: 20,
+                                  ),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(

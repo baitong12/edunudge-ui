@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:edunudge/shared/customappbar.dart';
 import 'package:edunudge/pages/student/custombottomnav.dart';
-import 'package:edunudge/services/api_service.dart'; // import ApiService
+import 'package:edunudge/services/api_service.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -29,7 +29,10 @@ class Home extends StatelessWidget {
               },
               onLogoutTap: () {
                 Navigator.pushNamedAndRemoveUntil(
-                    context, '/login', (route) => false);
+                  context,
+                  '/login',
+                  (route) => false,
+                );
               },
             ),
           ),
@@ -39,8 +42,7 @@ class Home extends StatelessWidget {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
-                return Center(
-                    child: Text('เกิดข้อผิดพลาด: ${snapshot.error}'));
+                return Center(child: Text('เกิดข้อผิดพลาด: ${snapshot.error}'));
               } else if (!snapshot.hasData) {
                 return const Center(child: Text('ไม่มีข้อมูล'));
               } else {
@@ -49,77 +51,32 @@ class Home extends StatelessWidget {
                 // แปลงค่า String เป็น double
                 final double come =
                     double.tryParse(homeData['present']?.toString() ?? '0') ??
-                        0.0;
+                    0.0;
                 final double late =
-                    double.tryParse(homeData['late']?.toString() ?? '0') ??
-                        0.0;
+                    double.tryParse(homeData['late']?.toString() ?? '0') ?? 0.0;
                 final double absent =
                     double.tryParse(homeData['absent']?.toString() ?? '0') ??
-                        0.0;
+                    0.0;
                 final double leave =
                     double.tryParse(homeData['leave']?.toString() ?? '0') ??
-                        0.0;
+                    0.0;
 
                 return SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 12.0),
+                      horizontal: 16.0,
+                      vertical: 12.0,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'การเข้าเรียนเฉลี่ยทั้งหมด',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color.fromARGB(255, 1, 150, 63),
-                                    Color.fromARGB(255, 1, 150, 63)
-                                  ],
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    spreadRadius: 1,
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: TextButton(
-                                onPressed: () {
-                                  Navigator.pushNamed(context, '/attendance');
-                                },
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'ตรวจสอบข้อมูลการเข้าเรียน',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        const Text(
+                          'การเข้าเรียนเฉลี่ยทั้งหมด',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 20),
                         Center(
@@ -144,13 +101,25 @@ class Home extends StatelessWidget {
                                 centerSpaceRadius: 45,
                                 sections: [
                                   _buildPieSection(
-                                      'มาเรียน', come, const Color(0xFF1de9b6)),
+                                    'มาเรียน',
+                                    come,
+                                    const Color(0xFF1de9b6),
+                                  ),
                                   _buildPieSection(
-                                      'มาสาย', late, const Color(0xFFffab400)),
+                                    'มาสาย',
+                                    late,
+                                    const Color(0xFFffab400),
+                                  ),
                                   _buildPieSection(
-                                      'ขาด', absent, const Color(0xFFff4081)),
+                                    'ขาด',
+                                    absent,
+                                    const Color(0xFFff4081),
+                                  ),
                                   _buildPieSection(
-                                      'ลา', leave, const Color.fromARGB(255, 72, 188, 255)),
+                                    'ลา',
+                                    leave,
+                                    const Color.fromARGB(255, 72, 188, 255),
+                                  ),
                                 ],
                               ),
                             ),
@@ -171,22 +140,82 @@ class Home extends StatelessWidget {
                             ],
                           ),
                           padding: const EdgeInsets.symmetric(
-                              vertical: 20, horizontal: 20),
+                            vertical: 20,
+                            horizontal: 20,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildProgressBar(
-                                  context, 'มาเรียน', come, const Color(0xFF1de9b6)),
+                                context,
+                                'มาเรียน',
+                                come,
+                                const Color(0xFF1de9b6),
+                              ),
                               const SizedBox(height: 16),
                               _buildProgressBar(
-                                  context, 'มาสาย', late, const Color(0xFFffab400)),
+                                context,
+                                'มาสาย',
+                                late,
+                                const Color(0xFFffab400),
+                              ),
                               const SizedBox(height: 16),
                               _buildProgressBar(
-                                  context, 'ขาด', absent, const Color(0xFFff4081)),
+                                context,
+                                'ขาด',
+                                absent,
+                                const Color(0xFFff4081),
+                              ),
                               const SizedBox(height: 16),
                               _buildProgressBar(
-                                  context, 'ลา', leave, const Color.fromARGB(255, 72, 188, 255)),
+                                context,
+                                'ลา',
+                                leave,
+                                const Color.fromARGB(255, 72, 188, 255),
+                              ),
                             ],
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+
+                        /// ✅ ปุ่มล่างสุด กึ่งกลาง
+                        Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black, // ปุ่มเป็นสีดำ
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  spreadRadius: 1,
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/attendance');
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'ตรวจสอบข้อมูลการเข้าเรียน',
+                                style: TextStyle(
+                                  color: Colors
+                                      .white, // ✅ ถ้าต้องการข้อความเป็นสีขาวคงไว้, ถ้าต้องการข้อความดำ เปลี่ยนเป็น Colors.black
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -196,15 +225,20 @@ class Home extends StatelessWidget {
               }
             },
           ),
-          bottomNavigationBar:
-              CustomBottomNav(currentIndex: 0, context: context),
+          bottomNavigationBar: CustomBottomNav(
+            currentIndex: 0,
+            context: context,
+          ),
         ),
       ),
     );
   }
 
   PieChartSectionData _buildPieSection(
-      String title, double value, Color color) {
+    String title,
+    double value,
+    Color color,
+  ) {
     return PieChartSectionData(
       color: color,
       value: value,
@@ -214,18 +248,17 @@ class Home extends StatelessWidget {
         fontSize: 14,
         fontWeight: FontWeight.bold,
         color: Colors.white,
-        shadows: [
-          Shadow(
-            color: Colors.black,
-            blurRadius: 2,
-          )
-        ],
+        shadows: [Shadow(color: Colors.black, blurRadius: 2)],
       ),
     );
   }
 
   Widget _buildProgressBar(
-      BuildContext context, String label, double percent, Color color) {
+    BuildContext context,
+    String label,
+    double percent,
+    Color color,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -242,10 +275,7 @@ class Home extends StatelessWidget {
             ),
             Text(
               '${percent.toStringAsFixed(2)}%',
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black54,
-              ),
+              style: const TextStyle(fontSize: 16, color: Colors.black54),
             ),
           ],
         ),

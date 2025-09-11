@@ -52,13 +52,11 @@ class _ClassroomState extends State<Classroom> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     final cardColors = [
-      const Color(0xFF1de9b6),
       const Color(0xFFe040fb),
       const Color(0xFFff4081),
       const Color(0xFFffab40),
       const Color(0xFF2979ff),
       const Color(0xFF7c4dff),
-      const Color(0xFF00c853),
       const Color(0xFFff1744),
     ];
 
