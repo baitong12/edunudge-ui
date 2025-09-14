@@ -118,16 +118,16 @@ class _AttendancePageState extends State<AttendancePage> {
     final buttonFontSize = screenWidth * 0.025;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF00C853),
+      backgroundColor: const Color(0xFF91C8E4), // เปลี่ยนพื้นหลังหลัก
       appBar: AppBar(
-        backgroundColor: const Color(0xFF00C853),
+        backgroundColor: const Color(0xFF91C8E4), // เปลี่ยนสี AppBar
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: onBackPressed,
         ),
         title: const Text(
-          'การเช็คชื่อเข้าชั้นเรียน',
+          'การเช็คชื่อเข้าเรียน',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
@@ -137,7 +137,7 @@ class _AttendancePageState extends State<AttendancePage> {
           : Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+                  colors: [Color(0xFF91C8E4), Color(0xFF00BCD4)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -180,7 +180,7 @@ class _AttendancePageState extends State<AttendancePage> {
                             Container(
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF00C853),
+                                color: const Color(0xFF91C8E4), // กรอบวันที่
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               padding:
@@ -189,7 +189,7 @@ class _AttendancePageState extends State<AttendancePage> {
                               child: Text(
                                 formattedDate,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.white, // ตัวอักษรขาว
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -257,11 +257,11 @@ class _AttendancePageState extends State<AttendancePage> {
         children: [
           CircleAvatar(
             radius: avatarRadius,
-            backgroundColor: const Color(0xFF00C853),
+            backgroundColor: const Color(0xFFFFFBDE), // สีวงกลม
             child: Text(
               initials,
               style: TextStyle(
-                color: Colors.white,
+                color: Colors.black, // ตัวอักษรสีดำ
                 fontWeight: FontWeight.bold,
                 fontSize: initialFontSize,
               ),

@@ -535,7 +535,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Color(0xFF00C853),
+        backgroundColor: Color(0xFF91C8E4),
         elevation: 0,
         automaticallyImplyLeading: false,
         toolbarHeight: 60,
@@ -560,7 +560,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: _saveSettings,
-                child: Text('เสร็จสิ้น',
+                child: Text('บันทึก',
                     style: TextStyle(
                         color: Color.fromARGB(255, 12, 12, 12), fontSize: 16)),
               ),
@@ -570,11 +570,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
       ),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: Color(0xFF91C8E4), 
         ),
         child: Scaffold(
           backgroundColor: Colors.transparent,

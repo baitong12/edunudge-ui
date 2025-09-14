@@ -14,16 +14,16 @@ class ReportMenuPage extends StatelessWidget {
         return false;
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF00C853),
+        backgroundColor: const Color(0xFF91C8E4), // พื้นหลังหน้า
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: const Color(0xFF91C8E4), // พื้นหลัง AppBar
           elevation: 0,
           title: const Text(
-            'ข้อมูลการเข้าชั้นเรียน',
+            'ข้อมูลการเข้าเรียน',
             style: TextStyle(color: Colors.white),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: const Icon(Icons.chevron_left, color: Colors.white), // ปุ่มย้อนกลับ <
             onPressed: () {
               Navigator.pop(context);
             },
@@ -32,7 +32,7 @@ class ReportMenuPage extends StatelessWidget {
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+              colors: [Color(0xFF91C8E4), Color(0xFF91C8E4)], // ไล่สีอ่อน ๆ
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -48,7 +48,10 @@ class ReportMenuPage extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: const [
-                    BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3)),
+                    BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 6,
+                        offset: Offset(0, 3)),
                   ],
                 ),
                 child: Column(
@@ -75,14 +78,14 @@ class ReportMenuPage extends StatelessWidget {
                               ),
                               _buildReportButton(
                                 context,
-                                label: 'รายงานนักเรียนที่เฝ้าระวัง',
+                                label: 'รายงานนักศึกษาที่เฝ้าระวัง',
                                 icon: Icons.warning_amber_rounded,
                                 color: Colors.orange.shade600,
                                 route: '/classroom_report_becareful',
                               ),
                               _buildReportButton(
                                 context,
-                                label: 'รายงานสรุปนักเรียนแต่ละคน',
+                                label: 'รายงานสรุปนักศึกษาเเต่ละคน',
                                 icon: Icons.person_search_rounded,
                                 color: Colors.blue.shade700,
                                 route: '/classroom_report_student',

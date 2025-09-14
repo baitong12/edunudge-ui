@@ -108,182 +108,171 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-            begin: Alignment.centerRight,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Center(
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  constraints: BoxConstraints(
-                    maxHeight: screenHeight * 0.85,
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Center(
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              constraints: BoxConstraints(
+                maxHeight: screenHeight * 0.85,
+              ),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF91C8E4), // เปลี่ยนสีกรอบเป็น 0xFF00BCD4
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 5,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 3),
                   ),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 5,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
+                ],
+              ),
+              child: Column(
+                children: [
+                  // 🔹 Header + คู่มือ
+                  Stack(
                     children: [
-                      // 🔹 Header + คู่มือ (ไอคอนซ้าย, ข้อความกลาง)
-                      Stack(
-                        children: [
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: IconButton(
-                              icon: const Icon(
-                                Icons.help_outline,
-                                color: Colors.black87,
-                                size: 26,
-                              ),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => const GuideDialog(),
-                                );
-                              },
-                              tooltip: "คู่มือการใช้งาน",
-                            ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.help_outline,
+                            color: Colors.black87,
+                            size: 26,
                           ),
-                          const Align(
-                            alignment: Alignment.center,
-                            child: Text(
-                              'สร้างห้องเรียน',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ],
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => const GuideDialog(),
+                            );
+                          },
+                          tooltip: "คู่มือการใช้งาน",
+                        ),
                       ),
-                      const Divider(
-                        height: 24,
-                        thickness: 1,
-                        color: Colors.grey,
-                      ),
-
-                      // 🔹 เนื้อหาที่เลื่อนข้างในกรอบ
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              buildLabeledField(
-                                  'ชื่อวิชา', subjectController, 'กรุณากรอกชื่อวิชา',
-                                  error: subjectError),
-                              const SizedBox(height: 16),
-                              buildLabeledField(
-                                  'ห้องเรียน', roomNumberController, 'กรุณากรอกเลขห้อง',
-                                  error: roomError),
-                              const SizedBox(height: 16),
-                              const Text('ภาคการศึกษา',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black87)),
-                              const SizedBox(height: 8),
-                              _buildSemesterDropdownField(error: semesterError),
-                              const SizedBox(height: 16),
-                              buildLabeledField('ปีการศึกษา', academicYearController,
-                                  'กรุณากรอกปีการศึกษา',
-                                  keyboardType: TextInputType.number),
-                              const SizedBox(height: 16),
-                              const Text('วันแรกของเทอม',
-                                  style: TextStyle(
-                                      fontSize: 16, fontWeight: FontWeight.w500)),
-                              const SizedBox(height: 8),
-                              _buildDatePickerButton(
-                                  'เลือกวันแรกของเทอม', selectedStartDate, true,
-                                  error: startDateError),
-                              const SizedBox(height: 16),
-                              const Text('วันสุดท้ายของเทอม',
-                                  style: TextStyle(
-                                      fontSize: 16, fontWeight: FontWeight.w500)),
-                              const SizedBox(height: 8),
-                              _buildDatePickerButton(
-                                  'เลือกวันสุดท้ายของเทอม', selectedEndDate, false,
-                                  error: endDateError),
-                              const SizedBox(height: 24),
-                            ],
+                      const Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          'สร้างห้องเรียน',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
                           ),
                         ),
                       ),
+                    ],
+                  ),
+                  const Divider(
+                    height: 24,
+                    thickness: 1,
+                    color: Colors.grey,
+                  ),
 
-                      // 🔹 ปุ่มด้านล่าง
-                      Row(
+                  // 🔹 เนื้อหาที่เลื่อนข้างในกรอบ
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: () =>
-                                  Navigator.pushReplacementNamed(context, '/home_teacher'),
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                child: Text(
-                                  'ยกเลิก',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: _validateAndNavigate,
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                child: Text(
-                                  'ถัดไป',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16),
-                                ),
-                              ),
-                            ),
-                          ),
+                          buildLabeledField(
+                              'ชื่อวิชา', subjectController, 'กรุณากรอกชื่อวิชา',
+                              error: subjectError),
+                          const SizedBox(height: 16),
+                          buildLabeledField(
+                              'เลขห้องเรียน', roomNumberController, 'กรุณากรอกเลขห้องเรียน',
+                              error: roomError),
+                          const SizedBox(height: 16),
+                          const Text('ภาคการศึกษา',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black87)),
+                          const SizedBox(height: 8),
+                          _buildSemesterDropdownField(error: semesterError),
+                          const SizedBox(height: 16),
+                          buildLabeledField('ปีการศึกษา', academicYearController,
+                              'กรุณากรอกปีการศึกษา',
+                              keyboardType: TextInputType.number),
+                          const SizedBox(height: 16),
+                          const Text('วันแรกของเทอม',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500)),
+                          const SizedBox(height: 8),
+                          _buildDatePickerButton(
+                              'เลือกวันแรกของเทอม', selectedStartDate, true,
+                              error: startDateError),
+                          const SizedBox(height: 16),
+                          const Text('วันสุดท้ายของเทอม',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500)),
+                          const SizedBox(height: 8),
+                          _buildDatePickerButton(
+                              'เลือกวันสุดท้ายของเทอม', selectedEndDate, false,
+                              error: endDateError),
+                          const SizedBox(height: 24),
                         ],
+                      ),
+                    ),
+                  ),
+
+                  // 🔹 ปุ่มด้านล่าง
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: () =>
+                              Navigator.pushReplacementNamed(context, '/home_teacher'),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            child: Text(
+                              'ยกเลิก',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF3F8FAF),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: _validateAndNavigate,
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            child: Text(
+                              'ถัดไป',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
             ),
           ),
-          bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
         ),
       ),
+      bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
     );
   }
 
@@ -542,7 +531,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                         });
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        backgroundColor: Color(0xFF3F8FAF),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),

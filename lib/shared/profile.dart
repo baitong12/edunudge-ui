@@ -131,7 +131,7 @@ class _ProfilePageState extends State<ProfilePage> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               gradient: const LinearGradient(
-                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+                colors: [Color(0xFF00B894),  Color(0xFF91C8E4),],
               ),
             ),
             padding: const EdgeInsets.all(20),
@@ -329,7 +329,7 @@ class _ProfilePageState extends State<ProfilePage> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+                  colors: [Color(0xFF00B894),  Color(0xFF91C8E4),],
                 ),
               ),
               padding: const EdgeInsets.all(20),
@@ -500,7 +500,7 @@ class _ProfilePageState extends State<ProfilePage> {
           subtitle: value != null && value.isNotEmpty
               ? Text(value, style: TextStyle(color: Colors.grey[600]))
               : null,
-          trailing: const Icon(Icons.edit, color: Color(0xFF00C853)),
+          trailing: const Icon(Icons.edit, color: Color(0xFF00B894)),
           onTap: onTap,
         ),
       );
@@ -513,7 +513,7 @@ class _ProfilePageState extends State<ProfilePage> {
           body: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+                colors: [Color(0xFF00B894),  Color(0xFF91C8E4),],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

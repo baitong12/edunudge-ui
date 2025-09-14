@@ -29,15 +29,12 @@ class _AttendanceState extends State<Attendance> {
 
   Future<void> downloadAndOpenPDF(String url, {String? fileName}) async {
     try {
-      final dir = await getTemporaryDirectory(); // โฟลเดอร์ชั่วคราวของมือถือ
+      final dir = await getTemporaryDirectory();
       final name =
           fileName ?? 'pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
       final filePath = '${dir.path}/$name';
 
-      // ดาวน์โหลดไฟล์ PDF ลงเครื่อง
       await Dio().download(url, filePath);
-
-      // เปิดไฟล์ PDF ด้วย default viewer ของเครื่อง
       await OpenFile.open(filePath);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -116,9 +113,9 @@ class _AttendanceState extends State<Attendance> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white, // ✅ พื้นหลังขาว
       appBar: AppBar(
-        backgroundColor: const Color(0xFF00C853),
+        backgroundColor: const Color(0xFF00B894), // ✅ เขียวมิ้นท์
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -130,61 +127,162 @@ class _AttendanceState extends State<Attendance> {
         ),
         centerTitle: true,
       ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.04,
+          vertical: screenHeight * 0.02,
         ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: screenWidth * 0.04,
-            vertical: screenHeight * 0.02,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ==== ตารางเข้าชั้นเรียน ====
-              isLoadingTable
-                  ? const Center(child: CircularProgressIndicator())
-                  : Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.85), // ✅ ไม่ขาวทึบ
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ==== ตารางเข้าชั้นเรียน ====
+            isLoadingTable
+                ? const Center(child: CircularProgressIndicator())
+                : Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00B894).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: const Color(0xFF00B894), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF00B894),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                            ),
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Container(
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF3F8FAF),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                topRight: Radius.circular(16),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            children: const [
+                              Expanded(
+                                flex: 2,
+                                child: Center(
+                                  child: Text(
+                                    'ชื่อวิชา',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
                               ),
+                              Expanded(
+                                flex: 1,
+                                child: Center(
+                                  child: Text(
+                                    'มา',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Center(
+                                  child: Text(
+                                    'มาสาย',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Center(
+                                  child: Text(
+                                    'ขาด',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Center(
+                                  child: Text(
+                                    'ลา',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Center(
+                                  child: Text(
+                                    'รวมทั้งหมด',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ...attendanceData.asMap().entries.map((entry) {
+                          int idx = entry.key;
+                          final val = entry.value;
+                          final bool isLast =
+                              idx == attendanceData.length - 1;
+
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: idx % 2 == 0
+                                  ? Colors.white
+                                  : const Color(0xFFE8FDF7),
+                              border: Border(
+                                left: BorderSide(color: Colors.grey.shade300),
+                                right: BorderSide(color: Colors.grey.shade300),
+                                bottom: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              borderRadius: isLast
+                                  ? const BorderRadius.only(
+                                      bottomLeft: Radius.circular(20),
+                                      bottomRight: Radius.circular(20),
+                                    )
+                                  : null,
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             child: Row(
-                              children: const [
+                              children: [
                                 Expanded(
                                   flex: 2,
                                   child: Center(
                                     child: Text(
-                                      'ชื่อวิชา',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                      val['name_subject'] ?? '',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: Center(
+                                    child: Text(
+                                      val['present']?.toString() ?? '0',
+                                      style: const TextStyle(
+                                        color: Colors.green,
                                       ),
                                     ),
                                   ),
@@ -193,10 +291,9 @@ class _AttendanceState extends State<Attendance> {
                                   flex: 1,
                                   child: Center(
                                     child: Text(
-                                      'มา',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                      val['late']?.toString() ?? '0',
+                                      style: const TextStyle(
+                                        color: Colors.orange,
                                       ),
                                     ),
                                   ),
@@ -205,10 +302,9 @@ class _AttendanceState extends State<Attendance> {
                                   flex: 1,
                                   child: Center(
                                     child: Text(
-                                      'มาสาย',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                      val['absent']?.toString() ?? '0',
+                                      style: const TextStyle(
+                                        color: Colors.red,
                                       ),
                                     ),
                                   ),
@@ -217,22 +313,9 @@ class _AttendanceState extends State<Attendance> {
                                   flex: 1,
                                   child: Center(
                                     child: Text(
-                                      'ขาด',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Center(
-                                    child: Text(
-                                      'ลา',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                      val['leave_count']?.toString() ?? '0',
+                                      style: const TextStyle(
+                                        color: Colors.blue,
                                       ),
                                     ),
                                   ),
@@ -241,234 +324,133 @@ class _AttendanceState extends State<Attendance> {
                                   flex: 2,
                                   child: Center(
                                     child: Text(
-                                      'รวมทั้งหมด',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
+                                      '${val['percent']?.toString() ?? '0'}%',
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          ...attendanceData.asMap().entries.map((entry) {
-                            int idx = entry.key;
-                            final val = entry.value;
-                            final bool isLast =
-                                idx == attendanceData.length - 1;
-                            final Color rowColor = idx % 2 == 0
-                                ? const Color(0x336D6D6D)
-                                : const Color(0x6E3F8FAF);
-
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: rowColor,
-                                border: const Border(
-                                  left: BorderSide(color: Colors.black),
-                                  right: BorderSide(color: Colors.black),
-                                  bottom: BorderSide(color: Colors.black),
-                                ),
-                                borderRadius: isLast
-                                    ? const BorderRadius.only(
-                                        bottomLeft: Radius.circular(16),
-                                        bottomRight: Radius.circular(16),
-                                      )
-                                    : null,
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: Center(
-                                      child: Text(
-                                        val['name_subject'] ?? '',
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                      child: Text(
-                                        val['present']?.toString() ?? '0',
-                                        style: const TextStyle(
-                                          color: Colors.green,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                      child: Text(
-                                        val['late']?.toString() ?? '0',
-                                        style: const TextStyle(
-                                          color: Colors.orange,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                      child: Text(
-                                        val['absent']?.toString() ?? '0',
-                                        style: const TextStyle(
-                                          color: Colors.red,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                      child: Text(
-                                        val['leave_count']?.toString() ?? '0',
-                                        style: const TextStyle(
-                                          color: Colors.blue,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Center(
-                                      child: Text(
-                                        '${val['percent']?.toString() ?? '0'}%',
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ],
-                      ),
-                    ),
-              const SizedBox(height: 16),
-              // ==== Dropdown วิชา ====
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.lightBlue.shade50.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white, width: 1.5),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: selectedSubject.isNotEmpty
-                          ? selectedSubject
-                          : null,
-                      icon: const Icon(Icons.arrow_drop_down),
-                      dropdownColor: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      style: const TextStyle(color: Colors.black, fontSize: 16),
-                      onChanged: (String? newValue) {
-                        if (newValue == null) return;
-                        setState(() {
-                          selectedSubject = newValue;
-                        });
-                        fetchSubjectDetail(newValue);
-                      },
-                      items: subjectIds.keys.map((value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value, textAlign: TextAlign.center),
-                        );
-                      }).toList(),
+                          );
+                        }).toList(),
+                      ],
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              // ==== รายละเอียดวิชา ====
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.all(16),
+            const SizedBox(height: 16),
+            // ==== Dropdown วิชา ====
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.lightBlue.shade50.withOpacity(0.85),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white, width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                  color: const Color(0xFF00B894).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFF00B894), width: 1.5),
                 ),
-                child: isLoadingDetail
-                    ? const Center(child: CircularProgressIndicator())
-                    : Text(
-                        'ชื่อวิชา: ${selectedSubjectDetail['name_subject'] ?? '-'}\n'
-                        'อาคารเรียน: ${selectedSubjectDetail['room_number'] ?? '-'}\n'
-                        'อาจารย์ผู้สอน: ${selectedSubjectDetail['teacher_name'] ?? '-'}\n'
-                        'คณะ: ${selectedSubjectDetail['faculty'] ?? '-'}\n'
-                        'สาขา: ${selectedSubjectDetail['department'] ?? '-'}\n'
-                        'เบอร์ติดต่อ: ${selectedSubjectDetail['contact'] ?? '-'}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedSubject.isNotEmpty ? selectedSubject : null,
+                    icon: const Icon(Icons.arrow_drop_down),
+                    dropdownColor: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    style: const TextStyle(color: Colors.black, fontSize: 16),
+                    onChanged: (String? newValue) {
+                      if (newValue == null) return;
+                      setState(() {
+                        selectedSubject = newValue;
+                      });
+                      fetchSubjectDetail(newValue);
+                    },
+                    items: subjectIds.keys.map((value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value, textAlign: TextAlign.center),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // ==== รายละเอียดวิชา ====
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00B894).withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF00B894), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: isLoadingDetail
+                  ? const Center(child: CircularProgressIndicator())
+                  : Text(
+                      'ชื่อวิชา: ${selectedSubjectDetail['name_subject'] ?? '-'}\n'
+                      'อาคารเรียน: ${selectedSubjectDetail['room_number'] ?? '-'}\n'
+                      'อาจารย์ผู้สอน: ${selectedSubjectDetail['teacher_name'] ?? '-'}\n'
+                      'คณะ: ${selectedSubjectDetail['faculty'] ?? '-'}\n'
+                      'สาขา: ${selectedSubjectDetail['department'] ?? '-'}\n'
+                      'เบอร์ติดต่อ: ${selectedSubjectDetail['contact'] ?? '-'}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
                       ),
-              ),
-              const SizedBox(height: 24),
-              // ==== ปุ่มดาวน์โหลด ====
-              Center(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3F8FAF),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+            ),
+            const SizedBox(height: 24),
+            // ==== ปุ่มดาวน์โหลด ====
+            Center(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFEAA7), // ✅ เหลืองพาสเทล
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  onPressed: () async {
-                    try {
-                      final token = await ApiService.getToken();
-                      final url =
-                          'http://52.63.155.211/student/home-attendance-pdf/$token';
-
-                      // เรียกฟังก์ชัน downloadAndOpenPDF ที่สร้างไว้
-                      await downloadAndOpenPDF(
-                        url,
-                        fileName: 'attendance_${selectedSubject}.pdf',
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
-                      );
-                    }
-                  },
-
-                  icon: const Icon(
-                    Icons.picture_as_pdf,
-                    color: Colors.white,
-                    size: 20,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
                   ),
-                  label: const Text(
-                    'ดาวน์โหลดเอกสาร (pdf.)',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  elevation: 3,
+                ),
+                onPressed: () async {
+                  try {
+                    final token = await ApiService.getToken();
+                    final url =
+                        'http://52.63.155.211/student/home-attendance-pdf/$token';
+
+                    await downloadAndOpenPDF(
+                      url,
+                      fileName: 'attendance_${selectedSubject}.pdf',
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+                    );
+                  }
+                },
+                icon: const Icon(
+                  Icons.picture_as_pdf,
+                  color: Colors.black87,
+                  size: 22,
+                ),
+                label: const Text(
+                  'ดาวน์โหลดเอกสาร (pdf.)',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

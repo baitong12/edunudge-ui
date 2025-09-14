@@ -76,7 +76,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
   Widget build(BuildContext context) {
     return Consumer<ProfileProvider>(
       builder: (context, profile, child) {
-        // ถ้า Provider มีค่า จะใช้ค่าจาก Provider อัปเดตทันที
+        // ใช้ค่า initials จาก Provider หากมี
         final initialsFromProvider = profile.initials.isNotEmpty ? profile.initials : _initials;
 
         return Padding(
@@ -84,7 +84,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFFFFBDE), // เปลี่ยนสีกรอบเป็น FFFBDE
               borderRadius: BorderRadius.circular(40),
             ),
             child: Row(
@@ -107,7 +107,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
-                            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
+                            colors: [Color(0xFF00B894), Color(0xFF91C8E4)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),

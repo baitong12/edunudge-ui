@@ -134,7 +134,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF00C853),
+      backgroundColor: const Color(0xFF91C8E4),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -165,14 +165,13 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
   }
 
   Widget _buildContent() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+  return Container(
+    width: double.infinity,
+    height: double.infinity, // ล็อคความสูงเต็มหน้าจอ
+    decoration: const BoxDecoration(
+      color: Color(0xFF91C8E4), // สีพื้นเรียบ
+    ),
+
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: LayoutBuilder(

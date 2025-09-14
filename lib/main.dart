@@ -43,6 +43,7 @@ import 'pages/teacher/classroom_report_summarize.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:workmanager/workmanager.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final locationService = LocationNotificationService();
 final notificationService = NotificationService();
 
@@ -93,13 +94,11 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Register background message handler
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   // =======================
   // Init NotificationService
   // =======================
-  await locationService.init(); // ขอสิทธิ์ location + cache ตำแหน่ง + token FCM
-  await notificationService.init();
+  // await locationService.init(); // ขอสิทธิ์ location + cache ตำแหน่ง + token FCM
 
   // Init FCM + listener
 
@@ -146,6 +145,7 @@ class EduNudgeApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      navigatorKey: navigatorKey,
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreenWrapper(),
@@ -245,6 +245,7 @@ class _SplashScreenWrapperState extends State<SplashScreenWrapper> {
     // ขอ Location permission หลัง widget โหลดเสร็จ
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await locationService.init();
+      await notificationService.init();
     });
 
     // Timer รอสั้น ๆ แล้วไปหน้าหลัก

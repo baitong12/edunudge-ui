@@ -63,13 +63,7 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        color: Colors.white,
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
@@ -79,7 +73,7 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                 height: screenHeight * 0.85,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFF91C8E4),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -242,10 +236,14 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                                     ),
                                     const SizedBox(height: 12),
                                     buildTimePickerButton(
-                                        index: i, isStart: true, error: startTimeError[i]),
+                                        index: i,
+                                        isStart: true,
+                                        error: startTimeError[i]),
                                     const SizedBox(height: 12),
                                     buildTimePickerButton(
-                                        index: i, isStart: false, error: endTimeError[i]),
+                                        index: i,
+                                        isStart: false,
+                                        error: endTimeError[i]),
                                     const SizedBox(height: 24),
                                   ],
                                 ),
@@ -278,7 +276,7 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                         Expanded(
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black,
+                              backgroundColor: Color(0xFF3F8FAF),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
                               elevation: 3,
@@ -341,7 +339,8 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
           hasError = true;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('เวลาจบคาบเรียนต้องมากกว่าเวลาเริ่มคาบเรียน'),
+              content:
+                  Text('เวลาจบคาบเรียนต้องมากกว่าเวลาเริ่มคาบเรียน'),
               backgroundColor: Colors.red,
               duration: Duration(seconds: 2),
             ),
@@ -454,7 +453,8 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),
-              child: Text(formatTimeOfDay(isStart ? startTimes[index] : endTimes[index]),
+              child: Text(
+                  formatTimeOfDay(isStart ? startTimes[index] : endTimes[index]),
                   style: const TextStyle(color: Colors.white)),
             ),
           ),

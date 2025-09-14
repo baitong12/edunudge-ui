@@ -57,7 +57,7 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
           position: selectedLocation!,
         );
       });
-    } catch (e) {
+    } catch (_) {
       _setDefaultLocation();
     }
   }
@@ -92,7 +92,7 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
           CameraPosition(target: currentLatLng, zoom: 16),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('ไม่สามารถหาตำแหน่งปัจจุบันได้'),
@@ -151,9 +151,7 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
     return Stack(
       children: [
         GoogleMap(
-          onMapCreated: (controller) {
-            _mapController = controller;
-          },
+          onMapCreated: (controller) => _mapController = controller,
           initialCameraPosition: CameraPosition(
             target: selectedLocation!,
             zoom: 14,
@@ -182,8 +180,8 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
           right: 16,
           child: FloatingActionButton(
             onPressed: _goToCurrentLocation,
-            backgroundColor: const Color.fromARGB(255, 254, 255, 255),
-            child: const Icon(Icons.my_location),
+            backgroundColor: Colors.white,
+            child: const Icon(Icons.my_location, color: Colors.black),
           ),
         ),
       ],
@@ -207,14 +205,11 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
 
     int year = 2023;
     if (classroomInfo['year'] != null) {
-      int? inputYear;
-      if (classroomInfo['year'] is int) {
-        inputYear = classroomInfo['year'];
-      } else {
-        inputYear = int.tryParse(classroomInfo['year'].toString());
-      }
+      int? inputYear = classroomInfo['year'] is int
+          ? classroomInfo['year']
+          : int.tryParse(classroomInfo['year'].toString());
       if (inputYear != null) {
-        if (inputYear > 2500) inputYear = inputYear - 543;
+        if (inputYear > 2500) inputYear -= 543;
         year = inputYear;
       }
     }
@@ -273,105 +268,98 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final bottomNavHeight = 60.0;
+    //final screenWidth = MediaQuery.of(context).size.width;
+    const bottomNavHeight = 60.0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF00C853),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Container(
-                  width: screenWidth * 0.9,
-                  height: screenHeight - bottomNavHeight - 32,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 5,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      buildHeader('สร้างห้องเรียน'),
-                      const Divider(height: 24, thickness: 1, color: Colors.grey),
-                      const Text(
-                        'เลือกตำแหน่งห้องเรียนด้านล่าง',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(child: _buildLocationPicker()),
-                      if (isLoading) const LinearProgressIndicator(),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: () =>
-                                  Navigator.pushNamedAndRemoveUntil(
-                                      context, '/classroom_create01', (r) => false),
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                child: Text('ยกเลิก',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 16)),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: submitClassroom,
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                child: Text('ตกลง',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 16)),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          child: Container(
+            width: double.infinity,
+            height: screenHeight - bottomNavHeight - 32 - 32, // ปรับลดให้ไม่ชิดขอบ
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF91C8E4),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 5,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                buildHeader('สร้างห้องเรียน'),
+                const Divider(height: 24, thickness: 1, color: Colors.grey),
+                const Text(
+                  'เลือกตำแหน่งห้องเรียนด้านล่าง',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 12),
+                Expanded(child: _buildLocationPicker()),
+                const SizedBox(height: 12),
+                const Text(
+                  'หมายเหตุ: หลังจากสร้างห้องเสร็จสิ้น กรุณาตั้งค่าเวลาการแจ้งเตือน\n'
+                  'ระดับสีเขียวคือก่อนถึงเวลาเรียน\n'
+                  'ระดับสีแดงคือเลยเวลาเรียน',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromARGB(221, 255, 2, 2),
                   ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                if (isLoading) const LinearProgressIndicator(),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                            context, '/classroom_create01', (r) => false),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Text('ยกเลิก',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF3F8FAF),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: submitClassroom,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Text('ตกลง',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          bottomNavigationBar:
-              CustomBottomNav(currentIndex: 1, context: context),
         ),
       ),
+      bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
     );
   }
 }

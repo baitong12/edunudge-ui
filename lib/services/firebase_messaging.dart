@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../shared/constants.dart';
+//import 'package:shared_preferences/shared_preferences.dart';
+//import '../shared/constants.dart';
 import '../services/api_service.dart';
+import '../main.dart';
 
 class NotificationService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -25,7 +26,7 @@ class NotificationService {
     if (!forceRefresh && classroomLatStr != null && classroomLngStr != null)
       return;
 
-    final prefs = await SharedPreferences.getInstance();
+    //final prefs = await SharedPreferences.getInstance();
 
     try {
       final res = await ApiService.getLocationClassroom();
@@ -54,10 +55,15 @@ class NotificationService {
     await _fcm.requestPermission(alert: true, badge: true, sound: true);
 
     FirebaseMessaging.onMessage.listen(_handleMessage);
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      navigatorKey.currentState?.pushNamed('/home_student');
+    });
 
     final initial = await _fcm.getInitialMessage();
-    if (initial != null) _handleMessage(initial);
+    if (initial != null) {
+      navigatorKey.currentState?.pushNamed('/home_student');
+    }
+    ;
   }
 
   void _handleMessage(RemoteMessage message) async {
@@ -96,8 +102,8 @@ class NotificationService {
     final color = type == 'red'
         ? (Colors.red[700] ?? Colors.red)
         : type == 'yellow'
-            ? (Colors.orange[700] ?? Colors.orange)
-            : (Colors.green[700] ?? Colors.green);
+        ? (Colors.orange[700] ?? Colors.orange)
+        : (Colors.green[700] ?? Colors.green);
 
     // สร้างข้อความ Notification
     String contentText;
@@ -109,7 +115,10 @@ class NotificationService {
       contentText = "คุณยังไม่ได้เช็คชื่อในวิชา $subjectName ($distanceText)";
     }
 
-    final title = message.notification?.title ?? "แจ้งเตือน";
+    final title =
+        (message.data['title'] as String?) ??
+        message.notification?.title ??
+        "แจ้งเตือน";
 
     showSimpleNotification(
       Column(
@@ -151,7 +160,8 @@ class NotificationService {
     final dLat = _deg2rad(lat2 - lat1);
     final dLng = _deg2rad(lng2 - lng1);
 
-    final a = (sin(dLat / 2) * sin(dLat / 2)) +
+    final a =
+        (sin(dLat / 2) * sin(dLat / 2)) +
         cos(_deg2rad(lat1)) *
             cos(_deg2rad(lat2)) *
             (sin(dLng / 2) * sin(dLng / 2));
@@ -164,7 +174,7 @@ class NotificationService {
 
   // ฟอร์แมตระยะทาง → ม./กม.
   String _formatDistance(double meters) {
-    if (meters < 1000) return "${meters.toStringAsFixed(0)} ม.";
-    return "${(meters / 1000).toStringAsFixed(2)} กม.";
+    if (meters < 1000) return "ระยะทาง:${meters.toStringAsFixed(0)} ม.";
+    return "ระยะทาง:${(meters / 1000).toStringAsFixed(2)} กม.";
   }
 }

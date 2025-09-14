@@ -22,7 +22,7 @@ class ClassroomSubject extends StatefulWidget {
   final int classroomId;
 
   const ClassroomSubject({Key? key, required this.classroomId})
-    : super(key: key);
+      : super(key: key);
 
   @override
   State<ClassroomSubject> createState() => _ClassroomSubjectState();
@@ -44,18 +44,15 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
 
   Future<void> fetchClassroomData() async {
     try {
-      final data =
-          await ApiService.getTeacherClassroomDetail(
-            widget.classroomId,
-          ).catchError((e) {
-            throw Exception('Failed to load classroom data: $e');
-          });
+      final data = await ApiService.getTeacherClassroomDetail(widget.classroomId)
+          .catchError((e) {
+        throw Exception('Failed to load classroom data: $e');
+      });
 
       setState(() {
         subjectName = data['name_subject'] ?? '';
         roomNumber = data['room_number'] ?? '';
-        students =
-            (data['students'] as List<dynamic>?)
+        students = (data['students'] as List<dynamic>?)
                 ?.map(
                   (e) => Student(
                     id: e['user_id'],
@@ -63,19 +60,16 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                     phone: e['phone'],
                     score: double.tryParse((e['score'] ?? 0).toString()) ?? 0.0,
                     percentScore:
-                        double.tryParse((e['point_percent'] ?? 0).toString()) ??
-                        0.0,
+                        double.tryParse((e['point_percent'] ?? 0).toString()) ?? 0.0,
                   ),
                 )
                 .toList() ??
             [];
 
         if (data['latitude'] != null && data['longitude'] != null) {
-          double lat =
-              double.tryParse(data['latitude'].toString()) ??
+          double lat = double.tryParse(data['latitude'].toString()) ??
               classroomLocation.latitude;
-          double lng =
-              double.tryParse(data['longitude'].toString()) ??
+          double lng = double.tryParse(data['longitude'].toString()) ??
               classroomLocation.longitude;
           classroomLocation = LatLng(lat, lng);
           _mapController?.moveCamera(
@@ -124,20 +118,15 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
       await ApiService.removeStudent(widget.classroomId, student.id);
       setState(() => students.removeAt(index));
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('ลบนักศึกษาไม่สำเร็จ')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('ลบนักศึกษาไม่สำเร็จ')));
     }
   }
 
   String getInitials(String fullName) {
     List<String> parts = fullName.split(' ');
-    String firstInitial = parts.isNotEmpty && parts[0].isNotEmpty
-        ? parts[0][0]
-        : '';
-    String lastInitial = parts.length > 1 && parts[1].isNotEmpty
-        ? parts[1][0]
-        : '';
+    String firstInitial = parts.isNotEmpty && parts[0].isNotEmpty ? parts[0][0] : '';
+    String lastInitial = parts.length > 1 && parts[1].isNotEmpty ? parts[1][0] : '';
     return '$firstInitial$lastInitial';
   }
 
@@ -160,45 +149,39 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF00C853),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context, true),
-        ),
+        iconTheme: const IconThemeData(color: Colors.black),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               subjectName,
               style: const TextStyle(
-                color: Colors.white,
+                color: Colors.black,
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
               ),
             ),
             Text(
               'ห้องเรียน: $roomNumber',
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
+              style: const TextStyle(color: Colors.black54, fontSize: 14),
             ),
           ],
         ),
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
+            icon: const Icon(Icons.settings, color: Colors.black),
             onPressed: () async {
               final result = await Navigator.pushNamed(
                 context,
                 '/classroom_settings',
                 arguments: widget.classroomId,
               );
-
-              if (result == true) {
-                fetchClassroomData(); // รีโหลดข้อมูลเมื่อมีการแก้ไข
-              }
+              if (result == true) fetchClassroomData();
             },
           ),
         ],
@@ -208,15 +191,8 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFF91C8E4),
             borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 4,
-                offset: Offset(0, 2),
-              ),
-            ],
           ),
           padding: EdgeInsets.all(padding),
           child: Column(
@@ -231,11 +207,11 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.pushNamed(
                           context,
-                          '/classroom_report',
+                          '/classroom_check',
                           arguments: widget.classroomId,
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00C853),
+                          backgroundColor: const Color(0xFFFFFBDE),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -246,9 +222,9 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                             horizontal: size.width * 0.02,
                           ),
                           child: Text(
-                            'ข้อมูลการเข้าชั้นเรียน',
+                            'การเช็คชื่อเข้าเรียน',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Colors.black,
                               fontSize: size.width * 0.035,
                             ),
                             textAlign: TextAlign.center,
@@ -262,11 +238,11 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.pushNamed(
                           context,
-                          '/classroom_check',
+                          '/classroom_report',
                           arguments: widget.classroomId,
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00C853),
+                          backgroundColor: const Color(0xFF3F8FAF),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -277,7 +253,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                             horizontal: size.width * 0.02,
                           ),
                           child: Text(
-                            'การเช็คชื่อเข้าชั้นเรียน',
+                            'ข้อมูลการเข้าเรียน',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: size.width * 0.035,
@@ -302,11 +278,14 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                       // Students list
                       Row(
                         children: [
-                          Icon(Icons.people, color: const Color(0xFF3F8FAF)),
+                          const Icon(Icons.people, color: Colors.white),
                           SizedBox(width: size.width * 0.02),
                           const Text(
                             'รายชื่อนักศึกษา',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
                           ),
                         ],
                       ),
@@ -338,11 +317,11 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                               children: [
                                 CircleAvatar(
                                   radius: avatarRadius,
-                                  backgroundColor: const Color(0xFF00C853),
+                                  backgroundColor: const Color(0xFFFFFBDE),
                                   child: Text(
                                     initials,
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: Colors.black,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -358,6 +337,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                                         style: TextStyle(
                                           fontSize: size.width * 0.035,
                                           fontWeight: FontWeight.w500,
+                                          color: Colors.black,
                                         ),
                                       ),
                                       SizedBox(height: size.height * 0.005),
@@ -365,7 +345,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                                         'เบอร์: ${student.phone ?? '-'}',
                                         style: TextStyle(
                                           fontSize: size.width * 0.028,
-                                          color: Colors.grey,
+                                          color: Colors.black87,
                                         ),
                                       ),
                                       SizedBox(height: size.height * 0.002),
@@ -373,7 +353,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                                         'คะเเนนสะสม: ${student.score.toStringAsFixed(2)} | คะแนนเปอร์เซ็นต์: ${student.percentScore.toStringAsFixed(2)} %',
                                         style: TextStyle(
                                           fontSize: size.width * 0.028,
-                                          color: Colors.grey,
+                                          color: Colors.black87,
                                         ),
                                       ),
                                     ],
@@ -423,6 +403,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: size.width * 0.04,
+                                    color: Colors.black,
                                   ),
                                 ),
                               ],

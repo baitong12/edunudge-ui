@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:edunudge/services/api_service.dart';
 
 class Subject extends StatefulWidget {
@@ -70,49 +71,40 @@ class _SubjectPageState extends State<Subject> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF00C853), Color(0xFF00BCD4)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      backgroundColor: Colors.white,
+      body: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
+            onPressed: () => Navigator.pop(context),
           ),
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  classroomDetail?['classroom']['name_subject'] ?? '-',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                classroomDetail?['classroom']['name_subject'] ?? '-',
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
-                Text(
-                  'อาจารย์: ${classroomDetail?['classroom']['teacher'] ?? '-'} | ห้องเรียน: ${classroomDetail?['classroom']['room_number'] ?? '-'}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
-                ),
-              ],
-            ),
-            centerTitle: false,
+              ),
+              Text(
+                'อาจารย์: ${classroomDetail?['classroom']['teacher'] ?? '-'} | ห้องเรียน: ${classroomDetail?['classroom']['room_number'] ?? '-'}',
+                style: const TextStyle(color: Colors.black54, fontSize: 14),
+              ),
+            ],
           ),
-          body: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : errorMessage != null
-              ? Center(child: Text(errorMessage!))
-              : buildContent(),
+          centerTitle: false,
         ),
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : errorMessage != null
+                ? Center(child: Text(errorMessage!))
+                : buildContent(),
       ),
     );
   }
@@ -129,13 +121,13 @@ class _SubjectPageState extends State<Subject> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: const Color(0xFF00B894).withOpacity(0.2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             'สัปดาห์ที่: ${classroom['week']}',
             style: const TextStyle(
-              color: Colors.white,
+              color: Colors.black87,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -148,7 +140,7 @@ class _SubjectPageState extends State<Subject> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFF00B894),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -166,28 +158,28 @@ class _SubjectPageState extends State<Subject> {
                 icon: Icons.close,
                 count: int.tryParse(summary['absent'].toString()) ?? 0,
                 label: 'ขาดเรียน',
-                color: Colors.red,
+                color: const Color.fromARGB(255, 255, 48, 48),
               ),
-              Container(height: 40, width: 1, color: Colors.grey.shade300),
+              Container(height: 40, width: 1, color: Colors.white),
               _ScoreCard(
                 icon: Icons.access_time,
                 count: int.tryParse(summary['late'].toString()) ?? 0,
                 label: 'มาเรียนสาย',
-                color: Colors.orange,
+                color: const Color.fromARGB(255, 255, 206, 45),
               ),
-              Container(height: 40, width: 1, color: Colors.grey.shade300),
+              Container(height: 40, width: 1, color: Colors.white),
               _ScoreCard(
                 icon: Icons.event_busy,
                 count: int.tryParse(summary['leave'].toString()) ?? 0,
                 label: 'ลา',
-                color: Colors.blue,
+                color: const Color.fromARGB(255, 69, 143, 255),
               ),
-              Container(height: 40, width: 1, color: Colors.grey.shade300),
+              Container(height: 40, width: 1, color: Colors.white),
               _ScoreCard(
                 icon: Icons.star,
                 count: int.tryParse(summary['earned_points'].toString()) ?? 0,
                 label: 'คะแนนสะสม',
-                color: Colors.amber,
+                color: const Color(0xFFFFEAA7),
               ),
             ],
           ),
@@ -198,7 +190,7 @@ class _SubjectPageState extends State<Subject> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFF00B894),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -217,41 +209,36 @@ class _SubjectPageState extends State<Subject> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Colors.white,
                 ),
               ),
-              const Divider(color: Colors.grey, thickness: 0.5, height: 20),
-
-              // 👉 แสดง required_days และ reward_points ด้านบน
+              const Divider(color: Colors.white70, thickness: 0.5, height: 20),
               Text(
                 'มาเรียนติดกัน: ${classroomDetail!['required_days']} ครั้ง   '
                 'ได้คะแนนสะสม: ${classroomDetail!['reward_points']} คะแนน',
-                style: const TextStyle(color: Colors.black87, fontSize: 14),
+                style: const TextStyle(color: Colors.white, fontSize: 14),
               ),
               const SizedBox(height: 12),
-
-              // 👉 แสดง rules ด้านล่าง
               ...?classroom['rules']?.map(
                 (rule) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
                     'คะแนนสะสม(ร้อยละ): ${rule['point_percent']}%, '
                     'ได้คะแนนพิเศษท้ายเทอม: ${rule['point_extra']} คะแนน',
-                    style: const TextStyle(color: Colors.black54, fontSize: 14),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ),
               ),
             ],
           ),
         ),
-
         const SizedBox(height: 20),
 
         // ================== Students ==================
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFF00B894),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -270,11 +257,10 @@ class _SubjectPageState extends State<Subject> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: Colors.black87,
+                  color: Colors.white,
                 ),
               ),
-              const Divider(color: Colors.grey, thickness: 0.5, height: 20),
-
+              const Divider(color: Colors.white70, thickness: 0.5, height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -292,13 +278,12 @@ class _SubjectPageState extends State<Subject> {
                 ],
               ),
               const SizedBox(height: 12),
-
               ...students.map(
                 (student) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: const Color(0xFF00C853),
+                      backgroundColor: const Color(0xFFFFEAA7),
                       radius: 20,
                       child: Text(
                         getInitials(student['name']),
@@ -313,7 +298,7 @@ class _SubjectPageState extends State<Subject> {
                       student['name'],
                       style: const TextStyle(
                         fontSize: 16,
-                        color: Colors.black87,
+                        color: Colors.white,
                       ),
                     ),
                     trailing: Icon(
@@ -322,6 +307,70 @@ class _SubjectPageState extends State<Subject> {
                       size: 12,
                     ),
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // ================== Map Section ==================
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFF00B894),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: const [
+                  Icon(Icons.location_pin, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text(
+                    'ตำแหน่งห้องเรียน',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 200,
+                width: double.infinity,
+                child: GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(
+                      double.tryParse(classroom['latitude']?.toString() ?? '13.736717') ?? 13.736717,
+                      double.tryParse(classroom['longitude']?.toString() ?? '100.523186') ?? 100.523186,
+                    ),
+                    zoom: 16,
+                  ),
+                  markers: {
+                    Marker(
+                      markerId: const MarkerId('classroom'),
+                      position: LatLng(
+                        double.tryParse(classroom['latitude']?.toString() ?? '13.736717') ?? 13.736717,
+                        double.tryParse(classroom['longitude']?.toString() ?? '100.523186') ?? 100.523186,
+                      ),
+                    ),
+                  },
+                  zoomControlsEnabled: false,
+                  myLocationEnabled: false,
+                  myLocationButtonEnabled: false,
+                  mapType: MapType.normal,
                 ),
               ),
             ],
@@ -362,7 +411,7 @@ class _ScoreCard extends StatelessWidget {
         ),
         Text(
           label,
-          style: const TextStyle(color: Colors.black87, fontSize: 14),
+          style: const TextStyle(color: Colors.white, fontSize: 14),
         ),
       ],
     );
@@ -386,7 +435,7 @@ class _LegendDot extends StatelessWidget {
           label,
           style: const TextStyle(
             fontSize: 12,
-            color: Colors.black87,
+            color: Colors.white,
             fontWeight: FontWeight.w500,
           ),
         ),
