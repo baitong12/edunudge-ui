@@ -137,7 +137,7 @@ class _StudentReportPageState extends State<StudentReportPage> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.people, color: Color(0xFF3F8FAF)),
+                            const Icon(Icons.people, color: Color(0xFFFFEAA7)),
                             const SizedBox(width: 8),
                             const Text(
                               'รายชื่อนักศึกษา',
@@ -189,7 +189,7 @@ class _StudentReportPageState extends State<StudentReportPage> {
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFF3F8FAF),
+                                  color: Color(0xFFFFEAA7),
                                   width: 2,
                                 ),
                               ),
@@ -437,7 +437,7 @@ class _StudentReportPageState extends State<StudentReportPage> {
                     alignment: Alignment.bottomCenter,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3F8FAF),
+                        backgroundColor: const Color(0xFFFFEAA7),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),

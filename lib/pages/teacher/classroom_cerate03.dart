@@ -10,7 +10,7 @@ class CreateClassroom03 extends StatefulWidget {
 }
 
 class _CreateClassroom03State extends State<CreateClassroom03> {
-  final Color primaryColor = const Color(0xFF3F8FAF);
+  final Color primaryColor = const Color(0xFFFFEAA7);
 
   int _selectedItemCount = 1;
   final List<String> _itemCountOptions = ['1', '2', '3', '4', '5'];
@@ -401,7 +401,7 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                           width: 150,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF3F8FAF),
+                              backgroundColor: Color(0xFFFFEAA7),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             onPressed: validateAndSave,

@@ -211,7 +211,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                           arguments: widget.classroomId,
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFFBDE),
+                          backgroundColor: const Color(0xFFFFEAA7),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -242,7 +242,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                           arguments: widget.classroomId,
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3F8FAF),
+                          backgroundColor: const Color(0xFFFFEAA7),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -317,7 +317,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                               children: [
                                 CircleAvatar(
                                   radius: avatarRadius,
-                                  backgroundColor: const Color(0xFFFFFBDE),
+                                  backgroundColor: const Color(0xFFFFEAA7),
                                   child: Text(
                                     initials,
                                     style: const TextStyle(

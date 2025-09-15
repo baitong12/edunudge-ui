@@ -58,7 +58,7 @@ class CustomBottomNav extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF007BFF).withOpacity(0.2) // Highlight ของไอคอนที่เลือก
+              ? const Color(0xFFFFEAA7).withOpacity(0.2) // Highlight ของไอคอนที่เลือก
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
@@ -67,7 +67,7 @@ class CustomBottomNav extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? const Color(0xFF007BFF) : Colors.white, // ไอคอน
+              color: isSelected ? const Color(0xFFFFEAA7) : Colors.white, // ไอคอน
               size: 28,
             ),
             const SizedBox(height: 4),
@@ -76,7 +76,7 @@ class CustomBottomNav extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? const Color(0xFF007BFF) : Colors.white, // ตัวหนังสือ
+                color: isSelected ? const Color(0xFFFFEAA7) : Colors.white, // ตัวหนังสือ
               ),
             ),
           ],

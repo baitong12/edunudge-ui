@@ -247,7 +247,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                       Expanded(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF3F8FAF),
+                            backgroundColor: Color(0xFFFFEAA7),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                           ),
@@ -531,7 +531,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                         });
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF3F8FAF),
+                        backgroundColor: Color(0xFFFFEAA7),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),

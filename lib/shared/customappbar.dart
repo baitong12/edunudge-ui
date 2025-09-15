@@ -84,7 +84,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFBDE), // เปลี่ยนสีกรอบเป็น FFFBDE
+              color: const Color(0xFFFFEAA7), // เปลี่ยนสีกรอบเป็น FFFBDE
               borderRadius: BorderRadius.circular(40),
             ),
             child: Row(

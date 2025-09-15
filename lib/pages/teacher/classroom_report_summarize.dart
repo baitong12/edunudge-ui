@@ -247,7 +247,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                         borderRadius: BorderRadius.circular(6),
                                         gradient: const LinearGradient(
                                           colors: [
-                                            Color(0xFF3F8FAF),
+                                            Color(0xFFFFEAA7),
                                             Color(0xFF62B7C7),
                                           ],
                                           begin: Alignment.bottomCenter,
@@ -410,13 +410,13 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                         _scrollToCenter(0);
                                       });
                                     },
-                                    selectedColor: const Color(0xFF3F8FAF),
+                                    selectedColor: const Color(0xFFFFEAA7),
                                     backgroundColor: Colors.grey.shade400,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(20),
                                       side: BorderSide(
                                         color: selectedWeeks.isEmpty
-                                            ? const Color(0xFF3F8FAF)
+                                            ? const Color(0xFFFFEAA7)
                                             : Colors.grey.shade300,
                                         width: 1.5,
                                       ),
@@ -441,7 +441,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                         fontSize: 14,
                                         color: selectedWeeks.contains(weekIndex)
                                             ? Colors.white
-                                            : const Color(0xFF3F8FAF),
+                                            : const Color(0xFFFFEAA7),
                                       ),
                                     ),
                                     selected: selectedWeeks.contains(weekIndex),
@@ -455,13 +455,13 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                         }
                                       });
                                     },
-                                    selectedColor: const Color(0xFF3F8FAF),
+                                    selectedColor: const Color(0xFFFFEAA7),
                                     backgroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(20),
                                       side: BorderSide(
                                         color: selectedWeeks.contains(weekIndex)
-                                            ? const Color(0xFF3F8FAF)
+                                            ? const Color(0xFFFFEAA7)
                                             : Colors.grey.shade300,
                                         width: 1.5,
                                       ),
@@ -512,7 +512,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    Color(0xFF3F8FAF),
+                                    Color(0xFFFFEAA7),
                                     Color(0xFF62B7C7),
                                   ],
                                   begin: Alignment.centerLeft,
@@ -698,7 +698,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                         alignment: Alignment.center,
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3F8FAF),
+                            backgroundColor: const Color(0xFFFFEAA7),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),

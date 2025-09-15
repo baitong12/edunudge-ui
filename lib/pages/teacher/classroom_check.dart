@@ -198,7 +198,7 @@ class _AttendancePageState extends State<AttendancePage> {
                             const SizedBox(height: 16),
                             const Row(
                               children: [
-                                Icon(Icons.people, color: Color(0xFF3F8FAF)),
+                                Icon(Icons.people, color: Color(0xFFFFEAA7)),
                                 SizedBox(width: 8),
                                 Text(
                                   'รายชื่อนักเรียน',
@@ -257,7 +257,7 @@ class _AttendancePageState extends State<AttendancePage> {
         children: [
           CircleAvatar(
             radius: avatarRadius,
-            backgroundColor: const Color(0xFFFFFBDE), // สีวงกลม
+            backgroundColor: const Color(0xFFFFEAA7), // สีวงกลม
             child: Text(
               initials,
               style: TextStyle(

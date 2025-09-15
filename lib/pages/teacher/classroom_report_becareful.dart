@@ -14,7 +14,7 @@ class ReportBecarefulPage extends StatefulWidget {
 }
 
 class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
-  final Color primaryColor = const Color(0xFF3F8FAF);
+  final Color primaryColor = const Color(0xFFFFEAA7);
 
   List<dynamic> students = [];
   String searchQuery = '';
