@@ -348,7 +348,7 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                           padding: EdgeInsets.symmetric(vertical: 14),
                           child: Text('ตกลง',
                               style:
-                                  TextStyle(color: Colors.white, fontSize: 16)),
+                                  TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 16)),
                         ),
                       ),
                     ),

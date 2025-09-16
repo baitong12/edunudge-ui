@@ -7,8 +7,8 @@ import 'package:open_file/open_file.dart';
 
 class ReportBsummarizePage extends StatefulWidget {
   final int classroomId;
-  final List<String> atRiskList; // เปลี่ยนจาก int เป็น List<String>
-  // ต้องส่ง classroomId
+  final List<String> atRiskList;
+
   const ReportBsummarizePage({
     super.key,
     required this.classroomId,
@@ -21,7 +21,8 @@ class ReportBsummarizePage extends StatefulWidget {
 
 class _ReportBsummarizePageState extends State<ReportBsummarizePage>
     with SingleTickerProviderStateMixin {
-  List<double> weeklyData = [];
+  /// ใช้ Map เพื่อรองรับกรณีสัปดาห์ไม่ต่อเนื่อง
+  Map<int, double> weeklyDataMap = {};
   List<Map<String, dynamic>> studentData = [];
   Set<int> selectedWeeks = {};
   final ScrollController _chipScrollController = ScrollController();
@@ -49,15 +50,12 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
 
   Future<void> downloadAndOpenPDF(String url, {String? fileName}) async {
     try {
-      final dir = await getTemporaryDirectory(); // โฟลเดอร์ชั่วคราวของมือถือ
+      final dir = await getTemporaryDirectory();
       final name =
           fileName ?? 'pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
       final filePath = '${dir.path}/$name';
 
-      // ดาวน์โหลดไฟล์ PDF ลงเครื่อง
       await Dio().download(url, filePath);
-
-      // เปิดไฟล์ PDF ด้วย default viewer ของเครื่อง
       await OpenFile.open(filePath);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -69,18 +67,18 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
   Future<void> _loadData() async {
     setState(() => isLoading = true);
     try {
-      // เรียก API
       final weeklySummary = await ApiService.getWeeklyAttendanceSummary(
         classroomId: widget.classroomId,
       );
 
       setState(() {
-        // แปลง weeklySummary ให้เป็น weeklyData สำหรับกราฟ
-        weeklyData = weeklySummary
-            .map<double>((e) => (e['percent_present'] ?? 0).toDouble())
-            .toList();
+        // ✅ เก็บ weeklyData เป็น Map<week_number, percent_present>
+        weeklyDataMap = {
+          for (var e in weeklySummary)
+            (e['week_number'] as int): (e['percent_present'] ?? 0).toDouble(),
+        };
 
-        // studentData สำหรับตาราง
+        // ข้อมูลนักศึกษา
         studentData = weeklySummary
             .map<Map<String, dynamic>>(
               (e) => {
@@ -165,40 +163,29 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
   }
 
   Widget _buildContent() {
-  return Container(
-    width: double.infinity,
-    height: double.infinity, // ล็อคความสูงเต็มหน้าจอ
-    decoration: const BoxDecoration(
-      color: Color(0xFF91C8E4), // สีพื้นเรียบ
-    ),
-
+    return Container(
+      decoration: const BoxDecoration(color: Color(0xFF91C8E4)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: LayoutBuilder(
           builder: (context, constraints) {
+            // ✅ เลือกเฉพาะสัปดาห์ที่มีข้อมูลจริง
+            final allWeeks = weeklyDataMap.keys.toList()..sort();
+
             final displayWeeks =
-                selectedWeeks.isEmpty
-                      ? List.generate(weeklyData.length, (i) => i)
-                      : selectedWeeks.toList()
+                selectedWeeks.isEmpty ? allWeeks : selectedWeeks.toList()
                   ..sort();
 
-            final Map<int, int> weekXMap = {};
-            for (int i = 0; i < displayWeeks.length; i++) {
-              weekXMap[displayWeeks[i]] = i;
-            }
-
-            final chartWidth = displayWeeks.length * 40.0;
+            final chartWidth = displayWeeks.length * 50.0;
             final availableWidthForChips = constraints.maxWidth - 32;
 
-            // กรอง studentData ตามสัปดาห์ที่เลือก
             final filteredStudentData = selectedWeeks.isEmpty
                 ? studentData
                 : studentData
-                      .where(
-                        (student) =>
-                            selectedWeeks.contains(student["week"] - 1),
-                      )
-                      .toList();
+                    .where(
+                      (student) => selectedWeeks.contains(student["week"]),
+                    )
+                    .toList();
 
             return SingleChildScrollView(
               child: Container(
@@ -225,7 +212,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                     children: [
                       const SizedBox(height: 12),
 
-                      // กราฟแท่ง
+                      // ✅ กราฟแท่ง
                       SizedBox(
                         height: 320,
                         child: Center(
@@ -234,20 +221,18 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                             child: AnimatedBuilder(
                               animation: _animation,
                               builder: (context, child) {
-                                final barGroups = displayWeeks.map((weekIndex) {
-                                  final xPos = weekXMap[weekIndex]!;
+                                final barGroups = displayWeeks.map((week) {
+                                  final value = weeklyDataMap[week] ?? 0;
                                   return BarChartGroupData(
-                                    x: xPos,
+                                    x: week,
                                     barRods: [
                                       BarChartRodData(
-                                        toY:
-                                            weeklyData[weekIndex] *
-                                            _animation.value,
+                                        toY: value * _animation.value,
                                         width: 28,
                                         borderRadius: BorderRadius.circular(6),
                                         gradient: const LinearGradient(
                                           colors: [
-                                            Color(0xFFFFEAA7),
+                                            Color(0xFF3F8FAF),
                                             Color(0xFF62B7C7),
                                           ],
                                           begin: Alignment.bottomCenter,
@@ -255,20 +240,19 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                         ),
                                         backDrawRodData:
                                             BackgroundBarChartRodData(
-                                              show: true,
-                                              toY: 100,
-                                              color: Colors.grey.shade200,
-                                            ),
+                                          show: true,
+                                          toY: 100,
+                                          color: Colors.grey.shade200,
+                                        ),
                                       ),
                                     ],
                                   );
                                 }).toList();
 
                                 return Container(
-                                  width: chartWidth.clamp(
-                                    constraints.maxWidth - 32,
-                                    double.infinity,
-                                  ),
+                                  width: chartWidth < constraints.maxWidth
+                                      ? constraints.maxWidth
+                                      : chartWidth,
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(12),
@@ -281,9 +265,8 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                       ),
                                     ],
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
                                   child: BarChart(
                                     BarChartData(
                                       maxY: 100,
@@ -294,23 +277,17 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                         enabled: true,
                                         touchTooltipData: BarTouchTooltipData(
                                           getTooltipItem:
-                                              (
-                                                group,
-                                                groupIndex,
-                                                rod,
-                                                rodIndex,
-                                              ) {
-                                                final week =
-                                                    displayWeeks[group.x];
-                                                return BarTooltipItem(
-                                                  'สัปดาห์ ${week + 1}\n${rod.toY.toInt()}%',
-                                                  const TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
-                                                  ),
-                                                );
-                                              },
+                                              (group, groupIndex, rod, rodIndex) {
+                                            final week = group.x;
+                                            return BarTooltipItem(
+                                              'สัปดาห์ $week\n${rod.toY.toInt()}%',
+                                              const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            );
+                                          },
                                         ),
                                       ),
                                       gridData: FlGridData(
@@ -319,23 +296,19 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                         horizontalInterval: 20,
                                         getDrawingHorizontalLine: (value) =>
                                             FlLine(
-                                              color: Colors.grey.shade300,
-                                              strokeWidth: 1,
-                                            ),
+                                          color: Colors.grey.shade300,
+                                          strokeWidth: 1,
+                                        ),
                                       ),
                                       titlesData: FlTitlesData(
                                         bottomTitles: AxisTitles(
                                           sideTitles: SideTitles(
                                             showTitles: true,
                                             getTitlesWidget: (value, meta) {
-                                              int i = value.toInt();
-                                              if (i >= displayWeeks.length)
-                                                return const SizedBox();
-                                              final week = displayWeeks[i];
                                               return Transform.rotate(
                                                 angle: -1.57,
                                                 child: Text(
-                                                  'สัปดาห์ ${week + 1}',
+                                                  'สัปดาห์ ${value.toInt()}',
                                                   style: const TextStyle(
                                                     fontSize: 12,
                                                   ),
@@ -356,14 +329,12 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                           ),
                                         ),
                                         topTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                            showTitles: false,
-                                          ),
+                                          sideTitles:
+                                              SideTitles(showTitles: false),
                                         ),
                                         rightTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                            showTitles: false,
-                                          ),
+                                          sideTitles:
+                                              SideTitles(showTitles: false),
                                         ),
                                       ),
                                       borderData: FlBorderData(show: false),
@@ -378,7 +349,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
 
                       const SizedBox(height: 8),
 
-                      // FilterChip
+                      // ✅ FilterChip
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Padding(
@@ -389,7 +360,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                             child: ListView.separated(
                               controller: _chipScrollController,
                               scrollDirection: Axis.horizontal,
-                              itemCount: weeklyData.length + 1,
+                              itemCount: allWeeks.length + 1,
                               separatorBuilder: (context, index) =>
                                   const SizedBox(width: 8),
                               itemBuilder: (context, index) {
@@ -410,73 +381,37 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                         _scrollToCenter(0);
                                       });
                                     },
-                                    selectedColor: const Color(0xFFFFEAA7),
+                                    selectedColor: const Color(0xFF3F8FAF),
                                     backgroundColor: Colors.grey.shade400,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                      side: BorderSide(
-                                        color: selectedWeeks.isEmpty
-                                            ? const Color(0xFFFFEAA7)
-                                            : Colors.grey.shade300,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    elevation: selectedWeeks.isEmpty ? 4 : 1,
-                                    showCheckmark: false,
-                                    materialTapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                    visualDensity: VisualDensity.compact,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 4,
-                                    ),
                                   );
                                 } else {
-                                  final weekIndex = index - 1;
+                                  final weekNumber = allWeeks[index - 1];
                                   return FilterChip(
                                     label: Text(
-                                      'สัปดาห์ ${weekIndex + 1}',
+                                      'สัปดาห์ $weekNumber',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
-                                        color: selectedWeeks.contains(weekIndex)
-                                            ? Colors.white
-                                            : const Color(0xFFFFEAA7),
+                                        color:
+                                            selectedWeeks.contains(weekNumber)
+                                                ? Colors.white
+                                                : const Color(0xFF3F8FAF),
                                       ),
                                     ),
-                                    selected: selectedWeeks.contains(weekIndex),
+                                    selected:
+                                        selectedWeeks.contains(weekNumber),
                                     onSelected: (selected) {
                                       setState(() {
                                         if (selected) {
-                                          selectedWeeks.add(weekIndex);
+                                          selectedWeeks.add(weekNumber);
                                           _scrollToCenter(index);
                                         } else {
-                                          selectedWeeks.remove(weekIndex);
+                                          selectedWeeks.remove(weekNumber);
                                         }
                                       });
                                     },
-                                    selectedColor: const Color(0xFFFFEAA7),
+                                    selectedColor: const Color(0xFF3F8FAF),
                                     backgroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                      side: BorderSide(
-                                        color: selectedWeeks.contains(weekIndex)
-                                            ? const Color(0xFFFFEAA7)
-                                            : Colors.grey.shade300,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    elevation: selectedWeeks.contains(weekIndex)
-                                        ? 4
-                                        : 1,
-                                    showCheckmark: false,
-                                    materialTapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                    visualDensity: VisualDensity.compact,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 4,
-                                    ),
                                   );
                                 }
                               },
@@ -487,7 +422,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
 
                       const SizedBox(height: 16),
 
-                      // ตารางสรุปนักศึกษา
+                      // ✅ ตาราง
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
@@ -503,7 +438,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                         ),
                         child: Column(
                           children: [
-                            // header ตาราง
+                            // header
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 vertical: 14,
@@ -511,12 +446,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                               ),
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [
-                                    Color(0xFFFFEAA7),
-                                    Color(0xFF62B7C7),
-                                  ],
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
+                                  colors: [Color(0xFF3F8FAF), Color(0xFF62B7C7)],
                                 ),
                                 borderRadius: BorderRadius.vertical(
                                   top: Radius.circular(16),
@@ -524,165 +454,33 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                               ),
                               child: Row(
                                 children: const [
-                                  Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                      child: Text(
-                                        "สัปดาห์ที่",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                      child: Text(
-                                        "มา",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                      child: Text(
-                                        "ลา",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                      child: Text(
-                                        "สาย",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                      child: Text(
-                                        "ขาด",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                      child: Text(
-                                        "เฝ้าระวัง",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                  Expanded(child: Center(child: Text("สัปดาห์ที่", style: TextStyle(color: Colors.white)))),
+                                  Expanded(child: Center(child: Text("มา", style: TextStyle(color: Colors.white)))),
+                                  Expanded(child: Center(child: Text("ลา", style: TextStyle(color: Colors.white)))),
+                                  Expanded(child: Center(child: Text("สาย", style: TextStyle(color: Colors.white)))),
+                                  Expanded(child: Center(child: Text("ขาด", style: TextStyle(color: Colors.white)))),
+                                  Expanded(child: Center(child: Text("เฝ้าระวัง", style: TextStyle(color: Colors.white)))),
                                 ],
                               ),
                             ),
-
-                            // แถวข้อมูลนักศึกษา
+                            // rows
                             ...filteredStudentData.asMap().entries.map((entry) {
                               int index = entry.key;
                               var student = entry.value;
                               return Container(
+                                color: index.isEven
+                                    ? Colors.white
+                                    : const Color(0xFFF4F9FA),
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                  horizontal: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: index.isEven
-                                      ? Colors.white
-                                      : const Color(0xFFF4F9FA),
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: Colors.grey.shade300,
-                                      width: 0.8,
-                                    ),
-                                  ),
-                                ),
+                                    vertical: 12, horizontal: 8),
                                 child: Row(
                                   children: [
-                                    Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                        child: Text("${student["week"]}"),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                        child: Text(
-                                          "${student["present"]}",
-                                          style: const TextStyle(
-                                            color: Colors.green,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                        child: Text(
-                                          "${student["leave"]}",
-                                          style: const TextStyle(
-                                            color: Colors.blue,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                        child: Text(
-                                          "${student["late"]}",
-                                          style: const TextStyle(
-                                            color: Colors.orange,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                        child: Text(
-                                          "${student["absent"]}",
-                                          style: const TextStyle(
-                                            color: Colors.red,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Center(
-                                        child: Text(
-                                          "${student["watchful"]}",
-                                          style: const TextStyle(
-                                            color: Colors.purple,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                    Expanded(child: Center(child: Text("${student["week"]}"))),
+                                    Expanded(child: Center(child: Text("${student["present"]}", style: const TextStyle(color: Colors.green)))),
+                                    Expanded(child: Center(child: Text("${student["leave"]}", style: const TextStyle(color: Colors.blue)))),
+                                    Expanded(child: Center(child: Text("${student["late"]}", style: const TextStyle(color: Colors.orange)))),
+                                    Expanded(child: Center(child: Text("${student["absent"]}", style: const TextStyle(color: Colors.red)))),
+                                    Expanded(child: Center(child: Text("${student["watchful"]}", style: const TextStyle(color: Colors.purple)))),
                                   ],
                                 ),
                               );
@@ -693,7 +491,7 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
 
                       const SizedBox(height: 20),
 
-                      // ✅ ปุ่มดาวน์โหลด PDF ย้ายมาที่นี่ (ตรงกลางล่างหลังตาราง)
+                      // ปุ่ม PDF
                       Align(
                         alignment: Alignment.center,
                         child: ElevatedButton.icon(
@@ -702,18 +500,12 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            elevation: 3,
                           ),
                           onPressed: () async {
                             try {
                               final token = await ApiService.getToken();
                               final url =
                                   'http://52.63.155.211/classrooms/${widget.classroomId}/weekly-pdf/$token';
-
                               await downloadAndOpenPDF(
                                 url,
                                 fileName:
@@ -725,17 +517,12 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                               );
                             }
                           },
-
-                          icon: const Icon(
-                            Icons.picture_as_pdf,
-                            color: Colors.white,
-                            size: 22,
-                          ),
+                          icon: const Icon(Icons.picture_as_pdf,
+                              color: Colors.black),
                           label: const Text(
                             'ดาวน์โหลดเอกสาร (pdf.)',
                             style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
+                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

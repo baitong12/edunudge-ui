@@ -407,7 +407,7 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                             onPressed: validateAndSave,
                             child: const Padding(
                               padding: EdgeInsets.symmetric(vertical: 14),
-                              child: Text('ถัดไป', style: TextStyle(color: Colors.white, fontSize: 16)),
+                              child: Text('ถัดไป', style: TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 16)),
                             ),
                           ),
                         ),

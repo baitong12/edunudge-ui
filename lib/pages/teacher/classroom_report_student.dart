@@ -137,7 +137,7 @@ class _StudentReportPageState extends State<StudentReportPage> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.people, color: Color(0xFFFFEAA7)),
+                            const Icon(Icons.people, color: const Color(0xFF3F8FAF)),
                             const SizedBox(width: 8),
                             const Text(
                               'รายชื่อนักศึกษา',
@@ -465,13 +465,13 @@ class _StudentReportPageState extends State<StudentReportPage> {
                       },
                       icon: const Icon(
                         Icons.picture_as_pdf,
-                        color: Colors.white,
+                        color: Color.fromARGB(255, 0, 0, 0),
                         size: 20,
                       ),
                       label: const Text(
                         'ดาวน์โหลดเอกสาร (pdf.)',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Color.fromARGB(255, 0, 0, 0),
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),

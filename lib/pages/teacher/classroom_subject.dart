@@ -211,7 +211,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                           arguments: widget.classroomId,
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFEAA7),
+                          backgroundColor: Color(0xFFFFEAA7),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -242,7 +242,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                           arguments: widget.classroomId,
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFEAA7),
+                          backgroundColor: const Color(0xFF3F8FAF),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -278,7 +278,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                       // Students list
                       Row(
                         children: [
-                          const Icon(Icons.people, color: Colors.white),
+                          const Icon(Icons.people, color: const Color(0xFF3F8FAF)),
                           SizedBox(width: size.width * 0.02),
                           const Text(
                             'รายชื่อนักศึกษา',
@@ -317,7 +317,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                               children: [
                                 CircleAvatar(
                                   radius: avatarRadius,
-                                  backgroundColor: const Color(0xFFFFEAA7),
+                                  backgroundColor: const Color(0xFFFFFBDE),
                                   child: Text(
                                     initials,
                                     style: const TextStyle(

@@ -163,7 +163,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                       Expanded(
                         child: _isLoading
                             ? const Center(child: CircularProgressIndicator())
-                            : _buildButton("ยืนยัน", Colors.black, _saveNewPassword),
+                            : _buildButton("ยืนยัน", const Color(0xFF3F8FAF), _saveNewPassword),
                       ),
                     ],
                   ),

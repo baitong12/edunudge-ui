@@ -166,7 +166,7 @@ class _LoginState extends State<Login> {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black, // สีพื้นหลัง
+                      backgroundColor: const Color(0xFF3F8FAF), // สีพื้นหลัง
                       foregroundColor: Colors.white, // สีตัวอักษร
                       minimumSize: const Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(

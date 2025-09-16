@@ -188,7 +188,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     children: [
                       Expanded(child: _buildButton('ยกเลิก', Colors.red, _cancel)),
                       const SizedBox(width: 16),
-                      Expanded(child: _buildButton('ยืนยัน', const Color(0xFF221B64), _sendOtp, loading: _isLoading)), // เปลี่ยนสีปุ่มยืนยัน
+                      Expanded(child: _buildButton('ยืนยัน', const Color(0xFF3F8FAF), _sendOtp, loading: _isLoading)), // เปลี่ยนสีปุ่มยืนยัน
                     ],
                   ),
                 ],

@@ -100,7 +100,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFFFEAA7),
+                      color: Color(0xFF3F8FAF),
                     ),
                   ),
                   SizedBox(height: 10),
@@ -153,7 +153,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                       Expanded(
                         child: TextButton(
                           style: TextButton.styleFrom(
-                            backgroundColor: Color(0xFFFFEAA7),
+                            backgroundColor: Color(0xFF3F8FAF),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -252,7 +252,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFFFEAA7),
+                    color: Color(0xFF3F8FAF),
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -309,11 +309,11 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                         ],
                       ),
                       selectedDecoration: BoxDecoration(
-                        color: Color(0xFFFFEAA7),
+                        color: Color(0xFF3F8FAF),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Color(0xFFFFEAA7).withOpacity(0.3),
+                            color: Color(0xFF3F8FAF).withOpacity(0.3),
                             blurRadius: 8,
                             spreadRadius: 1,
                           ),
@@ -337,15 +337,15 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                       formatButtonVisible: false,
                       titleCentered: true,
                       leftChevronIcon: Icon(Icons.chevron_left,
-                          color: Color(0xFFFFEAA7), size: 28),
+                          color: Color(0xFF3F8FAF), size: 28),
                       rightChevronIcon: Icon(Icons.chevron_right,
-                          color: Color(0xFFFFEAA7), size: 28),
+                          color: Color(0xFF3F8FAF), size: 28),
                       titleTextFormatter: (date, locale) =>
                           DateFormat.yMMMM('th').format(date),
                       titleTextStyle: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFFFEAA7),
+                        color: Color(0xFF3F8FAF),
                       ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
@@ -358,7 +358,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                         fontWeight: FontWeight.bold,
                       ),
                       weekdayStyle: TextStyle(
-                        color: Color(0xFFFFEAA7),
+                        color: Color(0xFF3F8FAF),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -395,7 +395,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFFFEAA7),
+                          backgroundColor: Color(0xFF3F8FAF),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -441,7 +441,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('ยกเลิก', style: TextStyle(color: Color(0xFFFFEAA7))),
+            child: Text('ยกเลิก', style: TextStyle(color: Color(0xFF3F8FAF))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(

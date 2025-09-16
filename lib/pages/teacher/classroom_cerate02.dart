@@ -16,7 +16,7 @@ bool isEndTimeBeforeStartTime(TimeOfDay start, TimeOfDay end) {
 }
 
 class _CreateClassroom02State extends State<CreateClassroom02> {
-  final Color primaryColor = const Color(0xFFFFEAA7);
+  final Color primaryColor = const Color(0xFF3F8FAF);
 
   int? selectedDays;
   List<String> weekDays = [
@@ -287,7 +287,7 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                               padding: EdgeInsets.symmetric(vertical: 14),
                               child: Text('ถัดไป',
                                   style: TextStyle(
-                                      color: Colors.white, fontSize: 16)),
+                                      color: Color.fromARGB(255, 0, 0, 0), fontSize: 16)),
                             ),
                           ),
                         ),
@@ -490,7 +490,7 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                         style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFFFFEAA7))),
+                            color: Color(0xFF3F8FAF))),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -560,7 +560,7 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                             onPressed: () => Navigator.pop(
                                 context, TimeOfDay(hour: selectedHour, minute: selectedMinute)),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFEAA7),
+                              backgroundColor: const Color(0xFF3F8FAF),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16)),

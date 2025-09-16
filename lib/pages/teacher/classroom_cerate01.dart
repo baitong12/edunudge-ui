@@ -257,7 +257,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                             child: Text(
                               'ถัดไป',
                               style: TextStyle(
-                                  color: Colors.white,
+                                  color: Color.fromARGB(255, 0, 0, 0),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16),
                             ),
@@ -538,7 +538,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                       ),
                       child: const Text('ตกลง',
                           style: TextStyle(
-                              color: Colors.white,
+                              color: Color.fromARGB(255, 0, 0, 0),
                               fontWeight: FontWeight.bold,
                               fontSize: 16)),
                     ),

@@ -198,7 +198,7 @@ class _AttendancePageState extends State<AttendancePage> {
                             const SizedBox(height: 16),
                             const Row(
                               children: [
-                                Icon(Icons.people, color: Color(0xFFFFEAA7)),
+                                Icon(Icons.people, color: const Color(0xFF3F8FAF)),
                                 SizedBox(width: 8),
                                 Text(
                                   'รายชื่อนักเรียน',
