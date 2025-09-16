@@ -157,6 +157,8 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            elevation: 0,
                           ),
                           onPressed: () {
                             setState(() {

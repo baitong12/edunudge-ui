@@ -72,6 +72,48 @@ class _CustomAppBarState extends State<CustomAppBar> {
     }
   }
 
+    Future<void> _confirmLogout(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text(
+          'ยืนยันการออกจากระบบ',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+            'คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ? การดำเนินการนี้จะต้องเข้าสู่ระบบใหม่เพื่อใช้งาน'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'ยกเลิก',
+              style: TextStyle(color: Color(0xFF3F8FAF)),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context); // ปิด dialog ก่อน
+              _logout(context);       // เรียก logout
+            },
+            child: const Text(
+              'ออกจากระบบ',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ProfileProvider>(
@@ -125,7 +167,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     ),
                     const SizedBox(width: 12),
                     GestureDetector(
-                      onTap: () => _logout(context),
+                      onTap: () => _confirmLogout(context),
                       child: const Icon(
                         Icons.power_settings_new,
                         color: Colors.red,

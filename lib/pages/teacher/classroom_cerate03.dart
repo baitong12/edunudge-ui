@@ -303,7 +303,7 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          const Text('จำนวนรายการที่ใช้คำนวณคะแนนพิเศษ',
+                          const Text('จำนวนรายการที่ใช้คำนวณคะแนนพิเศษท้ายเทอม',
                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
                           _buildDropdownField(
