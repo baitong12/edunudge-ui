@@ -13,16 +13,14 @@ class ForgotPassword extends StatefulWidget {
 
 class _ForgotPasswordState extends State<ForgotPassword> {
   static final String baseUrl = dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
-  // Controller สำหรับ TextField ของอีเมล
+
   final TextEditingController _emailController = TextEditingController();
-  // สถานะเพื่อแสดง CircularProgressIndicator เมื่อกำลังโหลด
+
   bool _isLoading = false;
 
-  // ฟังก์ชันสำหรับส่งรหัส OTP ไปยังเซิร์ฟเวอร์
   Future<void> _sendOtp() async {
     final email = _emailController.text.trim();
 
-    // ตรวจสอบว่าช่องอีเมลว่างเปล่าหรือไม่
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("กรุณากรอกอีเมล")),
@@ -30,8 +28,6 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       return;
     }
 
-    // ตรวจสอบรูปแบบอีเมลเบื้องต้น (Client-side validation)
-    // ใช้ Regular Expression (regex) เพื่อตรวจสอบรูปแบบอีเมลมาตรฐาน
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -40,59 +36,55 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       return;
     }
 
-    // ตั้งค่าสถานะเป็นกำลังโหลดเพื่อแสดง Indicator
     setState(() => _isLoading = true);
 
     try {
-      // ทำการเรียก API POST ไปยัง Laravel backend
       final response = await http.post(
-        // URL ของ Laravel API สำหรับการลืมรหัสผ่าน (ควรเปลี่ยนเป็น Production URL เมื่อ Deploy)
+
         Uri.parse("$baseUrl/forgot-password"),
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
         },
-        // ส่งข้อมูลอีเมลในรูปแบบ JSON
+
         body: jsonEncode({"email": email}),
       );
       
-      // เมื่อได้รับ response แล้ว ให้ตั้งค่าสถานะเป็นไม่กำลังโหลด
+
       setState(() => _isLoading = false);
 
-      // ตรวจสอบว่า Content-Type ของ response เป็น JSON หรือไม่
+
       if (response.headers['content-type'] != null &&
           response.headers['content-type']!.contains('application/json')) {
-        final data = jsonDecode(response.body); // แปลง JSON string เป็น Map
+        final data = jsonDecode(response.body); 
 
         if (response.statusCode == 200) {
-          // หากสำเร็จ (HTTP 200 OK) แสดงข้อความจากเซิร์ฟเวอร์
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(data['message'] ?? 'ส่ง OTP สำเร็จ')),
           );
 
-          // นำทางไปยังหน้า ResetPassword พร้อมส่งอีเมลไปด้วย
-          // หน้านี้ (ResetPassword) จะเป็นหน้าที่ให้กรอก OTP
+
           Navigator.pushNamed(
             context,
             '/reset_password',
             arguments: {"email": email},
           );
         } else {
-          // หากมีข้อผิดพลาด (เช่น validation error จาก server) แสดงข้อความผิดพลาด
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(data['message'] ?? 'เกิดข้อผิดพลาดในการส่ง OTP')),
           );
         }
       } else {
-        // กรณีที่เซิร์ฟเวอร์ไม่ได้ส่ง response เป็น JSON
-        // เช่น อาจจะเป็น HTML error page หรือข้อความธรรมดาที่ไม่ใช่ JSON
-        print("Non-JSON response from server: ${response.body}"); // สำหรับ Debug
+
+        print("Non-JSON response from server: ${response.body}"); 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: ${response.statusCode}")),
         );
       }
     } catch (e) {
-      // จัดการข้อผิดพลาดที่เกิดจากการเชื่อมต่อ (เช่น ไม่มีอินเทอร์เน็ต, เซิร์ฟเวอร์ไม่ทำงาน)
+
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: $e")),
@@ -100,14 +92,12 @@ class _ForgotPasswordState extends State<ForgotPassword> {
     }
   }
 
-  // ฟังก์ชันสำหรับยกเลิกและย้อนกลับไปยังหน้าก่อนหน้า
   void _cancel() {
     Navigator.pop(context);
   }
 
   @override
   void dispose() {
-    // ปิด controller เมื่อ widget ถูกทำลายเพื่อป้องกัน memory leaks
     _emailController.dispose();
     super.dispose();
   }
@@ -133,7 +123,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 gradient: const LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xFFE8F5E9), Color(0xFFE1F5FE)], // สีอ่อนด้านใน
+                  colors: [Color(0xFFE8F5E9), Color(0xFFE1F5FE)], 
                 ),
                 boxShadow: const [
                   BoxShadow(
@@ -167,7 +157,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    enabled: !_isLoading, // ปิดการใช้งาน TextField เมื่อกำลังโหลด
+                    enabled: !_isLoading, 
                     decoration: InputDecoration(
                       hintText: 'กรุณากรอกอีเมล',
                       hintStyle: const TextStyle(color: Colors.grey),
@@ -178,7 +168,6 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                         borderRadius: BorderRadius.circular(25),
                         borderSide: BorderSide.none,
                       ),
-                      // เพิ่ม icon สำหรับอีเมล
                       prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[600]),
                     ),
                   ),
@@ -188,7 +177,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     children: [
                       Expanded(child: _buildButton('ยกเลิก', Colors.red, _cancel)),
                       const SizedBox(width: 16),
-                      Expanded(child: _buildButton('ยืนยัน', const Color(0xFF3F8FAF), _sendOtp, loading: _isLoading)), // เปลี่ยนสีปุ่มยืนยัน
+                      Expanded(child: _buildButton('ยืนยัน', const Color(0xFF3F8FAF), _sendOtp, loading: _isLoading)),
                     ],
                   ),
                 ],
@@ -200,7 +189,6 @@ class _ForgotPasswordState extends State<ForgotPassword> {
     );
   }
 
-  // Widget ช่วยสร้างปุ่มที่มีสไตล์สวยงาม
   Widget _buildButton(String text, Color color, VoidCallback onPressed, {bool loading = false}) {
     return Container(
       height: 50,
@@ -209,7 +197,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
         boxShadow: const [BoxShadow(color: Colors.black38, offset: Offset(0, 4), blurRadius: 6)],
       ),
       child: ElevatedButton(
-        onPressed: loading ? null : onPressed, // ปิดการใช้งานปุ่มเมื่อกำลังโหลด
+        onPressed: loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),

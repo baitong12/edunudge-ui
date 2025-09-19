@@ -1,4 +1,4 @@
-// main.dart
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -53,29 +53,29 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 Future<bool> requestLocationPermissionAtStartup() async {
-  // 1) ตรวจบริการ Location เปิดไหม
+
   final serviceEnabled = await Geolocator.isLocationServiceEnabled();
   if (!serviceEnabled) {
-    // เปิดหน้าตั้งค่าให้ผู้ใช้เปิด GPS
+
     await Geolocator.openLocationSettings();
-    // ยังให้ไปต่อได้ แต่อาจได้ permission แล้วแต่ GPS ปิดอยู่
+
   }
 
-  // 2) เช็คสิทธิ์ปัจจุบัน
+
   var permission = await Geolocator.checkPermission();
 
-  // 3) ขอสิทธิ์ถ้าถูกปฏิเสธ
+
   if (permission == LocationPermission.denied) {
     permission = await Geolocator.requestPermission();
   }
 
-  // 4) ถ้า deniedForever ให้พาผู้ใช้ไปเปิดใน Settings
+
   if (permission == LocationPermission.deniedForever) {
     await Geolocator.openAppSettings();
     return false;
   }
 
-  // ผ่าน (whileInUse / always อย่างใดอย่างหนึ่ง)
+
   return permission == LocationPermission.always ||
       permission == LocationPermission.whileInUse;
 }
@@ -84,41 +84,26 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-  // โหลด locale
+
   await initializeDateFormatting('th');
 
-  // โหลด dotenv
+
   await dotenv.load(fileName: ".env");
 
-  // Initialize Firebase
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Register background message handler
-
-  // =======================
-  // Init NotificationService
-  // =======================
-  // await locationService.init(); // ขอสิทธิ์ location + cache ตำแหน่ง + token FCM
-
-  // Init FCM + listener
-
-  // ขอ permission location ตอน startup
   await requestLocationPermissionAtStartup();
 
-  // =======================
-  // Initialize Workmanager
-  // =======================
+  
   await Workmanager().initialize(
     lastLocationWorkmanagerDispatcher,
-    isInDebugMode: false, // ตอนดีบักสามารถใช้ true
+    isInDebugMode: false, 
   );
 
-  // FCM background
+
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // =======================
-  // Run App
-  // =======================
   runApp(
     OverlaySupport.global(
       child: MultiProvider(
@@ -242,13 +227,13 @@ class _SplashScreenWrapperState extends State<SplashScreenWrapper> {
   void initState() {
     super.initState();
 
-    // ขอ Location permission หลัง widget โหลดเสร็จ
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await locationService.init();
       await notificationService.init();
     });
 
-    // Timer รอสั้น ๆ แล้วไปหน้าหลัก
+
     Timer(const Duration(seconds: 1), () async {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {

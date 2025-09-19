@@ -9,14 +9,11 @@ class ApiService {
   static final String baseUrl =
       dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
   static final String apiKey = dotenv.env['API_KEY'] ?? "";
-  // =======================
-  // ✅ ดึง token จาก SharedPreferences
-  // =======================
+  // ดึง token จาก SharedPreferences
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(kAuthToken);
   }
-
   // อัปเดตข้อมูล profile
   static Future<Map<String, dynamic>> updateData(
     Map<String, dynamic> body,

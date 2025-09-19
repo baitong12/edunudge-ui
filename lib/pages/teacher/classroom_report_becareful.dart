@@ -80,7 +80,7 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
         elevation: 0,
         foregroundColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new), // ปุ่มย้อนกลับเป็น "<"
+          icon: const Icon(Icons.arrow_back_ios_new), 
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('รายงานนักศึกษาที่เฝ้าระวัง'),
@@ -91,7 +91,7 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
               padding: const EdgeInsets.all(16.0),
               child: Container(
                 width: double.infinity,
-                // ล็อคความสูงของกรอบ
+
                 height:
                     MediaQuery.of(context).size.height - kToolbarHeight - 32,
                 decoration: BoxDecoration(
@@ -154,13 +154,10 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                         ],
                       ),
                       const SizedBox(height: 16),
-
-                      // เนื้อหาภายในเลื่อนขึ้นลงได้
                       Expanded(
                         child: SingleChildScrollView(
                           child: Column(
                             children: [
-                              // ---- หัวตาราง ----
                               Container(
                                 decoration: const BoxDecoration(
                                   color: Colors.white,
@@ -242,8 +239,6 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                                   ],
                                 ),
                               ),
-
-                              // ---- รายการนักศึกษา ----
                               filteredStudents.isEmpty
                                   ? Container(
                                       width: double.infinity,

@@ -67,7 +67,7 @@ class Home extends StatelessWidget {
                         color: const Color(0xFF00B894).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: const Color(0xFF00B894), // ขอบสีเขียวมิ้นท์
+                          color: const Color(0xFF00B894),
                           width: 2,
                         ),
                         boxShadow: [
@@ -101,7 +101,7 @@ class Home extends StatelessWidget {
                       color: const Color(0xFF00B894).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0xFF00B894), // ขอบสีเขียวมิ้นท์
+                        color: const Color(0xFF00B894),
                         width: 2,
                       ),
                       boxShadow: [
@@ -138,7 +138,6 @@ class Home extends StatelessWidget {
                             horizontal: 24, vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          // ขอบปุ่มถูกลบออก
                         ),
                         elevation: 4,
                         shadowColor: Colors.black.withOpacity(0.2),
@@ -208,7 +207,7 @@ class Home extends StatelessWidget {
                 color: color.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(5),
                 border: Border.all(
-                  color: const Color(0xFF00B894), // ขอบสีเขียวมิ้นท์
+                  color: const Color(0xFF00B894),
                   width: 1,
                 ),
               ),

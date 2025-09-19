@@ -117,7 +117,6 @@ class _SubjectPageState extends State<Subject> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // ================== สัปดาห์ ==================
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
@@ -135,8 +134,6 @@ class _SubjectPageState extends State<Subject> {
           ),
         ),
         const SizedBox(height: 20),
-
-        // ================== Score Card ==================
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
@@ -185,8 +182,6 @@ class _SubjectPageState extends State<Subject> {
           ),
         ),
         const SizedBox(height: 20),
-
-        // ================== Grade Criteria ==================
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -233,8 +228,6 @@ class _SubjectPageState extends State<Subject> {
           ),
         ),
         const SizedBox(height: 20),
-
-        // ================== Students ==================
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -313,8 +306,6 @@ class _SubjectPageState extends State<Subject> {
           ),
         ),
         const SizedBox(height: 20),
-
-        // ================== Map Section ==================
         Container(
           width: double.infinity,
           decoration: BoxDecoration(

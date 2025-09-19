@@ -1,4 +1,4 @@
-// location_notification_service.dart
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -9,10 +9,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 import './shared/constants.dart';
 
-// Task name
+
 const _kTaskSendLastLocation = 'sendLastLocation';
 
-// =============== Workmanager dispatcher ===============
+
 @pragma('vm:entry-point')
 void lastLocationWorkmanagerDispatcher() {
   Workmanager().executeTask((task, inputData) async {
@@ -58,7 +58,7 @@ void lastLocationWorkmanagerDispatcher() {
   });
 }
 
-// =============== Core Service ===============
+
 class LocationNotificationService with WidgetsBindingObserver {
   StreamSubscription<Position>? _positionStream;
   Position? lastPosition;
@@ -71,7 +71,7 @@ class LocationNotificationService with WidgetsBindingObserver {
     await _initNotification();
   }
 
-  // --------- Location ----------
+ 
   Future<void> _initLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) await Geolocator.openLocationSettings();
@@ -154,15 +154,14 @@ class LocationNotificationService with WidgetsBindingObserver {
     }
   }
 
-  // --------- Notification bootstrap (FCM token only) ----------
   Future<void> _initNotification() async {
     await _fcm.requestPermission(alert: true, badge: true, sound: true);
     final token = await _fcm.getToken();
     print("📱 FCM Token: $token");
-    // *อย่าสมัคร onMessage ที่นี่* — ให้ NotificationService เป็นคนดูแล
+ 
   }
 
-  // --------- App lifecycle ----------
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||

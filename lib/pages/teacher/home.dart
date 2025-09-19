@@ -30,7 +30,7 @@ class _HomePageState extends State<HomePage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    // Responsive scaling functions
+
     double scaleWidth(double value) => value * screenWidth / 375;
     double scaleHeight(double value) => value * screenHeight / 812;
 
@@ -127,7 +127,6 @@ class _HomePageState extends State<HomePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Subject name
                             Row(
                               children: [
                                 Icon(
@@ -151,8 +150,6 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                             SizedBox(height: scaleHeight(8)),
-
-                            // Room number & code
                             Row(
                               children: [
                                 Icon(Icons.meeting_room, size: scaleWidth(18), color: Colors.white),
@@ -179,8 +176,6 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                             SizedBox(height: scaleHeight(8)),
-
-                            // Teacher name
                             Row(
                               children: [
                                 Icon(Icons.person, color: Colors.white70, size: scaleWidth(16)),

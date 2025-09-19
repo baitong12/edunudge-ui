@@ -1,11 +1,9 @@
-// notification_service.dart
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:geolocator/geolocator.dart';
-//import 'package:shared_preferences/shared_preferences.dart';
-//import '../shared/constants.dart';
 import '../services/api_service.dart';
 import '../main.dart';
 
@@ -19,14 +17,14 @@ class NotificationService {
   double? _classroomLatDouble;
   double? _classroomLngDouble;
 
-  /// โหลดพิกัดห้องเรียนจาก memory/cache/API
+
   Future<void> _ensureClassroomLocationLoaded({
     bool forceRefresh = false,
   }) async {
     if (!forceRefresh && classroomLatStr != null && classroomLngStr != null)
       return;
 
-    //final prefs = await SharedPreferences.getInstance();
+ 
 
     try {
       final res = await ApiService.getLocationClassroom();
@@ -50,7 +48,7 @@ class NotificationService {
     }
   }
 
-  /// Init FCM + โหลดพิกัดห้องเรียน
+
   Future<void> init() async {
     await _fcm.requestPermission(alert: true, badge: true, sound: true);
 
@@ -105,7 +103,7 @@ class NotificationService {
         ? (Colors.orange[700] ?? Colors.orange)
         : (Colors.green[700] ?? Colors.green);
 
-    // สร้างข้อความ Notification
+
     String contentText;
     if (type == 'green') {
       contentText = "อีกไม่นานจะเริ่มเรียนวิชา $subjectName ($distanceText)";
@@ -156,7 +154,7 @@ class NotificationService {
     double lat2,
     double lng2,
   ) {
-    const earthRadius = 6371000.0; // เมตร
+    const earthRadius = 6371000.0; 
     final dLat = _deg2rad(lat2 - lat1);
     final dLng = _deg2rad(lng2 - lng1);
 
@@ -172,7 +170,7 @@ class NotificationService {
 
   double _deg2rad(double deg) => deg * (pi / 180.0);
 
-  // ฟอร์แมตระยะทาง → ม./กม.
+
   String _formatDistance(double meters) {
     if (meters < 1000) return "ระยะทาง:${meters.toStringAsFixed(0)} ม.";
     return "ระยะทาง:${(meters / 1000).toStringAsFixed(2)} กม.";

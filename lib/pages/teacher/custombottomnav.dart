@@ -13,13 +13,12 @@ class CustomBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // พื้นหลังหลัก
-      color: Colors.white, // สีพื้นหลังหลัก
+      color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF91C8E4), // กรอบด้านในโค้งเป็นสีฟ้า
+          color: const Color(0xFF91C8E4),
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
@@ -58,7 +57,7 @@ class CustomBottomNav extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFFFEAA7).withOpacity(0.2) // Highlight ของไอคอนที่เลือก
+              ? const Color(0xFFFFEAA7).withOpacity(0.2)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
@@ -67,7 +66,7 @@ class CustomBottomNav extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? const Color(0xFFFFEAA7) : Colors.white, // ไอคอน
+              color: isSelected ? const Color(0xFFFFEAA7) : Colors.white,
               size: 28,
             ),
             const SizedBox(height: 4),
@@ -76,7 +75,7 @@ class CustomBottomNav extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? const Color(0xFFFFEAA7) : Colors.white, // ตัวหนังสือ
+                color: isSelected ? const Color(0xFFFFEAA7) : Colors.white,
               ),
             ),
           ],

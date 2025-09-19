@@ -198,7 +198,6 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Buttons
               Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -268,14 +267,11 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                 ),
               ),
               SizedBox(height: size.height * 0.02),
-
-              // Scrollable content
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Students list
                       Row(
                         children: [
                           const Icon(Icons.people, color: const Color(0xFF3F8FAF)),
@@ -372,8 +368,6 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
                         },
                       ),
                       SizedBox(height: size.height * 0.02),
-
-                      // Map
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(

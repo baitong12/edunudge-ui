@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:edunudge/services/api_service.dart'; // import ApiService
+import 'package:edunudge/services/api_service.dart'; 
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
@@ -26,15 +26,12 @@ class _StudentReportPageState extends State<StudentReportPage> {
 
   Future<void> downloadAndOpenPDF(String url, {String? fileName}) async {
     try {
-      final dir = await getTemporaryDirectory(); // โฟลเดอร์ชั่วคราวของมือถือ
+      final dir = await getTemporaryDirectory(); 
       final name =
           fileName ?? 'pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
       final filePath = '${dir.path}/$name';
 
-      // ดาวน์โหลดไฟล์ PDF ลงเครื่อง
       await Dio().download(url, filePath);
-
-      // เปิดไฟล์ PDF ด้วย default viewer ของเครื่อง
       await OpenFile.open(filePath);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -101,7 +98,7 @@ class _StudentReportPageState extends State<StudentReportPage> {
         elevation: 0,
         foregroundColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new), // ปุ่มย้อนกลับเป็น "<"
+          icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('รายงานสรุปนักศึกษาเเต่ละคน'),
@@ -127,7 +124,6 @@ class _StudentReportPageState extends State<StudentReportPage> {
             ),
             child: Column(
               children: [
-                // ส่วนเนื้อหาเลื่อนขึ้นลงได้
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(
@@ -202,7 +198,6 @@ class _StudentReportPageState extends State<StudentReportPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        // ตารางหัวคอลัมน์
                         Container(
                           decoration: const BoxDecoration(
                             color: Colors.white,
@@ -429,8 +424,6 @@ class _StudentReportPageState extends State<StudentReportPage> {
                     ),
                   ),
                 ),
-
-                // ปุ่มดาวน์โหลดติดด้านล่าง
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Align(

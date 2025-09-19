@@ -21,7 +21,6 @@ class ReportBsummarizePage extends StatefulWidget {
 
 class _ReportBsummarizePageState extends State<ReportBsummarizePage>
     with SingleTickerProviderStateMixin {
-  /// ใช้ Map เพื่อรองรับกรณีสัปดาห์ไม่ต่อเนื่อง
   Map<int, double> weeklyDataMap = {};
   List<Map<String, dynamic>> studentData = [];
   Set<int> selectedWeeks = {};
@@ -72,13 +71,10 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
       );
 
       setState(() {
-        // ✅ เก็บ weeklyData เป็น Map<week_number, percent_present>
         weeklyDataMap = {
           for (var e in weeklySummary)
             (e['week_number'] as int): (e['percent_present'] ?? 0).toDouble(),
         };
-
-        // ข้อมูลนักศึกษา
         studentData = weeklySummary
             .map<Map<String, dynamic>>(
               (e) => {
@@ -169,7 +165,6 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
         padding: const EdgeInsets.all(16),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // ✅ เลือกเฉพาะสัปดาห์ที่มีข้อมูลจริง
             final allWeeks = weeklyDataMap.keys.toList()..sort();
 
             final displayWeeks =
@@ -211,8 +206,6 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 12),
-
-                      // ✅ กราฟแท่ง
                       SizedBox(
                         height: 320,
                         child: Center(
@@ -348,8 +341,6 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                       ),
 
                       const SizedBox(height: 8),
-
-                      // ✅ FilterChip
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Padding(
@@ -421,8 +412,6 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                       ),
 
                       const SizedBox(height: 16),
-
-                      // ✅ ตาราง
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
@@ -438,7 +427,6 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                         ),
                         child: Column(
                           children: [
-                            // header
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 vertical: 14,
@@ -463,7 +451,6 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                                 ],
                               ),
                             ),
-                            // rows
                             ...filteredStudentData.asMap().entries.map((entry) {
                               int index = entry.key;
                               var student = entry.value;
@@ -490,8 +477,6 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                       ),
 
                       const SizedBox(height: 20),
-
-                      // ปุ่ม PDF
                       Align(
                         alignment: Alignment.center,
                         child: ElevatedButton.icon(

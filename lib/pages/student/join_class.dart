@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:edunudge/pages/student/custombottomnav.dart';
 import 'package:edunudge/services/api_service.dart';
-import 'package:edunudge/shared/customappbar.dart'; // เพิ่ม import สำหรับ CustomAppBar
+import 'package:edunudge/shared/customappbar.dart';
 
 class ClassroomJoin extends StatefulWidget {
   const ClassroomJoin({Key? key}) : super(key: key);
@@ -72,7 +72,7 @@ class _ClassroomJoinState extends State<ClassroomJoin> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(80),
         child: Container(
-          color: Colors.white, // พื้นหลัง AppBar สีขาว
+          color: Colors.white, 
           child: CustomAppBar(
             onProfileTap: () {
               Navigator.pushNamed(context, '/profile');
@@ -86,7 +86,7 @@ class _ClassroomJoinState extends State<ClassroomJoin> {
       ),
       body: Container(
         width: double.infinity,
-        height: screenHeight, // ล็อคหน้าไม่ให้เลื่อน
+        height: screenHeight, 
         padding: EdgeInsets.symmetric(
           horizontal: screenWidth * 0.08,
           vertical: screenHeight * 0.06,
@@ -95,7 +95,6 @@ class _ClassroomJoinState extends State<ClassroomJoin> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // หัวข้อ
             const Text(
               'เข้าร่วมห้องเรียน',
               textAlign: TextAlign.center,
@@ -114,8 +113,6 @@ class _ClassroomJoinState extends State<ClassroomJoin> {
               ),
             ),
             SizedBox(height: screenHeight * 0.05),
-
-            // กล่องรหัสห้องเรียน
             Container(
               width: double.infinity,
               padding: EdgeInsets.all(screenWidth * 0.06),
@@ -185,14 +182,12 @@ class _ClassroomJoinState extends State<ClassroomJoin> {
             ),
 
             SizedBox(height: screenHeight * 0.06),
-
-            // ปุ่มเข้าร่วม
             Center(
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _joinClassroom,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFEAA7), // สีพื้นหลังใหม่
-                  foregroundColor: Colors.black, // ตัวอักษรสีดำ
+                  backgroundColor: const Color(0xFFFFEAA7),
+                  foregroundColor: Colors.black,
                   padding: EdgeInsets.symmetric(
                     horizontal: screenWidth * 0.1,
                     vertical: screenHeight * 0.02,
@@ -206,7 +201,7 @@ class _ClassroomJoinState extends State<ClassroomJoin> {
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(
-                        color: Colors.black, // สีวงกลมโหลด
+                        color: Colors.black,
                       )
                     : const Text(
                         'เข้าร่วมห้องเรียน',

@@ -105,7 +105,6 @@ class _Register02State extends State<Register02> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // แสดง Dialog แจ้งผู้ใช้
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -116,7 +115,7 @@ class _Register02State extends State<Register02> {
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // ปิด Dialog
+                  Navigator.pop(context);
                   Navigator.of(context)
                       .pushNamedAndRemoveUntil('/login', (route) => false);
                 },

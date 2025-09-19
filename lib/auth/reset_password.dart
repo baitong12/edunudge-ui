@@ -42,7 +42,7 @@ class _ResetPasswordState extends State<ResetPassword> {
 
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/reset-password"), // endpoint จริง
+        Uri.parse("$baseUrl/reset-password"), 
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "otp": otp,

@@ -6,7 +6,7 @@ class ProfileProvider extends ChangeNotifier {
   String _email = '';
   String _phone = '';
 
-  // getters
+
   String get name => _name;
   String get lastname => _lastname;
   String get email => _email;
@@ -18,7 +18,7 @@ class ProfileProvider extends ChangeNotifier {
     return (first + last).toUpperCase();
   }
 
-  // setters
+
   set name(String value) {
     _name = value;
     notifyListeners();
@@ -39,7 +39,7 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Set all data at once
+
   void setProfileData({
     required String name,
     required String lastname,

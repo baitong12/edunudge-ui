@@ -23,7 +23,6 @@ class _LoginState extends State<Login> {
     _checkToken();
   }
 
-  // ✅ ตรวจสอบ token และ role
   Future<void> _checkToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('api_token');
@@ -68,7 +67,7 @@ class _LoginState extends State<Login> {
       await prefs.setString('api_token', token ?? '');
       await prefs.setInt('role_id', roleId);
 
-      // ✅ เก็บเฉพาะ field ที่ Laravel ส่งมา
+      
       await prefs.setInt('user_id', user['id'] ?? -1);
       await prefs.setString('user_name', user['name'] ?? '');
       await prefs.setString('user_lastname', user['lastname'] ?? '');
@@ -76,7 +75,7 @@ class _LoginState extends State<Login> {
       await prefs.setString('user_phone', user['phone'] ?? '');
       await prefs.setInt('department_id', user['department_id'] ?? -1);
 
-      // Navigate ตาม role
+      
       if (roleId == 1) {
         Navigator.pushReplacementNamed(context, '/home_student');
       } else if (roleId == 2) {
@@ -166,8 +165,8 @@ class _LoginState extends State<Login> {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3F8FAF), // สีพื้นหลัง
-                      foregroundColor: Colors.white, // สีตัวอักษร
+                      backgroundColor: const Color(0xFF3F8FAF),
+                      foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),

@@ -14,9 +14,9 @@ class ReportMenuPage extends StatelessWidget {
         return false;
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF91C8E4), // พื้นหลังหน้า
+        backgroundColor: const Color(0xFF91C8E4), 
         appBar: AppBar(
-          backgroundColor: const Color(0xFF91C8E4), // พื้นหลัง AppBar
+          backgroundColor: const Color(0xFF91C8E4), 
           elevation: 0,
           title: const Text(
             'ข้อมูลการเข้าเรียน',
@@ -32,7 +32,7 @@ class ReportMenuPage extends StatelessWidget {
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF91C8E4), Color(0xFF91C8E4)], // ไล่สีอ่อน ๆ
+              colors: [Color(0xFF91C8E4), Color(0xFF91C8E4)], 
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -114,7 +114,6 @@ class ReportMenuPage extends StatelessWidget {
       onTap: () async {
         if (route == '/classroom_report_summarize') {
           try {
-            // ดึงรายชื่อนักศึกษาที่เฝ้าระวัง
             final atRiskData = await ApiService.getAtRiskStudents(classroomId);
             final atRiskList = atRiskData
                 .map<String>((s) => "${s['name']} ${s['lastname']}")

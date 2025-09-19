@@ -16,7 +16,7 @@ class _AttendanceState extends State<Attendance> {
   bool isLoadingTable = true;
 
   String selectedSubject = '';
-  Map<String, int> subjectIds = {}; // name_subject => classroomId
+  Map<String, int> subjectIds = {}; 
 
   Map<String, dynamic> selectedSubjectDetail = {};
   bool isLoadingDetail = false;
@@ -113,9 +113,9 @@ class _AttendanceState extends State<Attendance> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.white, // ✅ พื้นหลังขาว
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF00B894), // ✅ เขียวมิ้นท์
+        backgroundColor: const Color(0xFF00B894),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -135,7 +135,6 @@ class _AttendanceState extends State<Attendance> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ==== ตารางเข้าชั้นเรียน ====
             isLoadingTable
                 ? const Center(child: CircularProgressIndicator())
                 : Container(
@@ -336,7 +335,6 @@ class _AttendanceState extends State<Attendance> {
                     ),
                   ),
             const SizedBox(height: 16),
-            // ==== Dropdown วิชา ====
             Align(
               alignment: Alignment.centerLeft,
               child: Container(
@@ -372,7 +370,6 @@ class _AttendanceState extends State<Attendance> {
               ),
             ),
             const SizedBox(height: 8),
-            // ==== รายละเอียดวิชา ====
             Container(
               width: double.infinity,
               margin: const EdgeInsets.only(top: 8),
@@ -405,11 +402,10 @@ class _AttendanceState extends State<Attendance> {
                     ),
             ),
             const SizedBox(height: 24),
-            // ==== ปุ่มดาวน์โหลด ====
             Center(
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFEAA7), // ✅ เหลืองพาสเทล
+                  backgroundColor: const Color(0xFFFFEAA7), 
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),

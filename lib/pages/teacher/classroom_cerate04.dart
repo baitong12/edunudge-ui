@@ -268,7 +268,6 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    //final screenWidth = MediaQuery.of(context).size.width;
     const bottomNavHeight = 60.0;
 
     return Scaffold(
@@ -278,7 +277,7 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           child: Container(
             width: double.infinity,
-            height: screenHeight - bottomNavHeight - 32 - 32, // ปรับลดให้ไม่ชิดขอบ
+            height: screenHeight - bottomNavHeight - 32 - 32, 
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: const Color(0xFF91C8E4),

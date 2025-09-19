@@ -37,7 +37,7 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
   List<bool> startTimeError = [false, false, false];
   List<bool> endTimeError = [false, false, false];
 
-  // ข้อมูลที่รับจากหน้า 01
+
   late String nameSubject;
   late String roomNumber;
   late String academicYear;
@@ -87,7 +87,6 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Header แบบ Stack (ไอคอนคู่มือซ้าย, ข้อความกลาง)
                     Stack(
                       children: [
                         Align(

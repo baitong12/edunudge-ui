@@ -101,8 +101,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
               ),
             ),
             onPressed: () {
-              Navigator.pop(context); // ปิด dialog ก่อน
-              _logout(context);       // เรียก logout
+              Navigator.pop(context); 
+              _logout(context);       
             },
             child: const Text(
               'ออกจากระบบ',
@@ -118,7 +118,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
   Widget build(BuildContext context) {
     return Consumer<ProfileProvider>(
       builder: (context, profile, child) {
-        // ใช้ค่า initials จาก Provider หากมี
+        
         final initialsFromProvider = profile.initials.isNotEmpty ? profile.initials : _initials;
 
         return Padding(
@@ -126,7 +126,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFEAA7), // เปลี่ยนสีกรอบเป็น FFFBDE
+              color: const Color(0xFFFFEAA7), 
               borderRadius: BorderRadius.circular(40),
             ),
             child: Row(

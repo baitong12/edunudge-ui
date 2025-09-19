@@ -52,9 +52,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
 
   Future<void> _loadSavedSettings() async {
     try {
-      // ดึงค่าจาก API
       final settings = await ApiService.getClassroomSettings(widget.classroomId);
-      // settings ควรมี keys: greenTimeMinute, redTimeMinute, isOpen, holidays (List<DateTime>)
       setState(() {
         greenTime = TimeOfDay(hour: 0, minute: (settings['warnGreen'] ?? 1));
         redTime = TimeOfDay(hour: 0, minute: (settings['warnRed'] ?? 1));
@@ -75,7 +73,6 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
   }
 
     Future<void> _selectTime(String level, TimeOfDay current) async {
-    // เก็บค่าปัจจุบัน
     int tempMinute = current.minute;
     final pickerController = FixedExtentScrollController(
     initialItem: tempMinute - 1 < 0 ? 0 : tempMinute - 1,
@@ -106,12 +103,11 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                   SizedBox(height: 10),
                   Expanded(
                     child: CupertinoPicker(
-                      // เริ่ม picker ที่ index = tempMinute - 1
                       scrollController: pickerController,
                       itemExtent: 40,
                       onSelectedItemChanged: (index) {
                         setInner(() {
-                          tempMinute = index + 1; // picker 0–59 → นาที 1–60
+                          tempMinute = index + 1; 
                         });
                       },
                       children: List<Widget>.generate(
@@ -452,7 +448,7 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                   borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () async {
-              Navigator.pop(context); // ปิด dialog ก่อน
+              Navigator.pop(context); 
               try {
                 await ApiService.deleteClassroom(widget.classroomId);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -493,12 +489,9 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
 
   Future<void> _saveSettings() async {
     try {
-      // อัพเดทชื่อวิชาและเลขห้องก่อน
       if (subjectName.isNotEmpty) {
         await ApiService.updateSubjectName(widget.classroomId, subjectName);
       }
-
-      // อัพเดทการตั้งค่าอื่น ๆ
       await Future.wait([
         ApiService.updateWarnTimes(
           widget.classroomId,
@@ -517,7 +510,6 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('บันทึกการตั้งค่าห้องเรียนเรียบร้อยแล้ว')),
       );
-    // ส่งค่ากลับไปบอกหน้าเก่าว่ามีการแก้ไข
     Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -589,8 +581,6 @@ class _ClassroomSettingsPageState extends State<ClassroomSettingsPage> {
                             color: Colors.grey[300],
                             fontSize: 16)),
                     SizedBox(height: 10),
-
-                    // เพิ่มสอง Tile สำหรับแก้ไขชื่อวิชาและเลขห้อง
                     _buildSettingTile(
                       'ชื่อวิชา',
                       subjectName.isNotEmpty ? subjectName : 'กรอกชื่อวิชา',

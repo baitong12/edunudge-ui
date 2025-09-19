@@ -6,7 +6,7 @@ class Register01 extends StatefulWidget {
 }
 
 class _Register01State extends State<Register01> {
-  // Controllers to get text from TextFields
+
   final TextEditingController nameController = TextEditingController();
   final TextEditingController lastnameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -14,12 +14,11 @@ class _Register01State extends State<Register01> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController passwordConfirmationController = TextEditingController();
 
-  // State variable for displaying client-side error messages
   String? _errorMessage; 
 
   @override
   void dispose() {
-    // Dispose controllers to prevent memory leaks
+
     nameController.dispose();
     lastnameController.dispose();
     emailController.dispose();
@@ -29,13 +28,11 @@ class _Register01State extends State<Register01> {
     super.dispose();
   }
 
-  // Function to handle client-side validation and navigate to Register02
   void _navigateToRegister02() {
     setState(() {
-      _errorMessage = null; // Clear previous errors
+      _errorMessage = null; 
     });
 
-    // Basic validation for empty fields
     if (nameController.text.isEmpty || 
         lastnameController.text.isEmpty ||
         emailController.text.isEmpty ||
@@ -48,7 +45,6 @@ class _Register01State extends State<Register01> {
       return;
     }
 
-    // Validate email format
     String email = emailController.text.trim();
     String emailPattern =
         r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+";
@@ -60,7 +56,6 @@ class _Register01State extends State<Register01> {
       return;
     }
 
-    // Validate phone number (must be exactly 10 digits)
     String phone = phoneController.text.trim();
     RegExp phoneRegex = RegExp(r'^[0-9]{10}$');
     if (!phoneRegex.hasMatch(phone)) {
@@ -70,7 +65,7 @@ class _Register01State extends State<Register01> {
       return;
     }
 
-    // Validate password length
+
     if (passwordController.text.length < 8) {
       setState(() {
         _errorMessage = 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร';
@@ -78,7 +73,7 @@ class _Register01State extends State<Register01> {
       return;
     }
 
-    // Validate password match
+
     if (passwordController.text != passwordConfirmationController.text) {
       setState(() {
         _errorMessage = 'รหัสผ่านไม่ตรงกัน';
@@ -86,7 +81,7 @@ class _Register01State extends State<Register01> {
       return;
     }
 
-    // Navigate to Register02 with collected data
+
     Navigator.pushNamed(
       context,
       '/register02',
@@ -140,7 +135,6 @@ class _Register01State extends State<Register01> {
                   _buildTextField('อีเมล', controller: emailController, keyboardType: TextInputType.emailAddress),
                   _buildTextField('เบอร์โทรศัพท์', controller: phoneController, keyboardType: TextInputType.phone),
                   
-                  // รหัสผ่าน + ข้อความโชว์ตลอด
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -163,7 +157,6 @@ class _Register01State extends State<Register01> {
 
                   const SizedBox(height: 20),
 
-                  // Error messages from validation
                   if (_errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 15.0),
@@ -258,7 +251,7 @@ class _Register01State extends State<Register01> {
     );
   }
 
-  // Helper widget to build consistent TextFields
+
   Widget _buildTextField(String hint, {bool obscureText = false, TextEditingController? controller, TextInputType? keyboardType}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),

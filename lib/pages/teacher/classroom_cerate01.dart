@@ -77,7 +77,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
 
     int year = int.tryParse(academicYearController.text) ?? DateTime.now().year;
     if (year > 2100) {
-      year -= 543; // แปลง พ.ศ. → ค.ศ.
+      year -= 543; 
     }
 
     Navigator.pushReplacementNamed(
@@ -120,7 +120,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
               ),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFF91C8E4), // เปลี่ยนสีกรอบเป็น 0xFF00BCD4
+                color: const Color(0xFF91C8E4),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -133,7 +133,6 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
               ),
               child: Column(
                 children: [
-                  // 🔹 Header + คู่มือ
                   Stack(
                     children: [
                       Align(
@@ -171,8 +170,6 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                     thickness: 1,
                     color: Colors.grey,
                   ),
-
-                  // 🔹 เนื้อหาที่เลื่อนข้างในกรอบ
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
@@ -218,8 +215,6 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
                       ),
                     ),
                   ),
-
-                  // 🔹 ปุ่มด้านล่าง
                   Row(
                     children: [
                       Expanded(
@@ -275,8 +270,6 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
       bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
     );
   }
-
-  // 🔹 ฟังก์ชันสร้าง TextField
   Widget buildLabeledField(
       String label, TextEditingController controller, String hintText,
       {bool error = false, TextInputType keyboardType = TextInputType.text}) {
@@ -320,8 +313,6 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
       ],
     );
   }
-
-  // 🔹 Dropdown ภาคการศึกษา
   Widget _buildSemesterDropdownField({bool error = false}) {
     return DropdownButtonFormField<String>(
       decoration: InputDecoration(
@@ -365,8 +356,6 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
       icon: Icon(Icons.arrow_drop_down, color: Colors.grey[600], size: 28),
     );
   }
-
-  // 🔹 ปุ่มเลือกวัน
   Widget _buildDatePickerButton(
       String hintText, DateTime? selectedDate, bool isStartDate,
       {bool error = false}) {
