@@ -269,6 +269,20 @@ class _CreateClassroom03State extends State<CreateClassroom03> {
                     child: buildHeader('สร้างห้องเรียน'),
                   ),
                   const Divider(height: 24, thickness: 1, color: Colors.grey),
+
+                  // 👉 เพิ่มหัวข้อ "เกณฑ์การให้คะแนน"
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8, bottom: 8),
+                    child: Text(
+                      'เกณฑ์การให้คะแนน',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(20),

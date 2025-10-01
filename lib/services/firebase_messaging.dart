@@ -5,7 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/api_service.dart';
-import '../main.dart';
+import '../main.dart';  
 
 class NotificationService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -24,9 +24,7 @@ class NotificationService {
     if (!forceRefresh && classroomLatStr != null && classroomLngStr != null)
       return;
 
- 
-
-    try {
+    try { 
       final res = await ApiService.getLocationClassroom();
       if (res['status'] != 'success') return;
 
@@ -40,8 +38,6 @@ class NotificationService {
         _classroomLatDouble = double.tryParse(lat);
         _classroomLngDouble = double.tryParse(lng);
         _classroomName = name;
-
-        print("✅ Classroom loaded from API: $lat, $lng, name=$_classroomName");
       }
     } catch (e) {
       print("getClassroom Error : $e");
@@ -65,7 +61,6 @@ class NotificationService {
   }
 
   void _handleMessage(RemoteMessage message) async {
-    print("📩 FCM: ${message.data}");
 
     await _ensureClassroomLocationLoaded(forceRefresh: true);
 
@@ -90,10 +85,10 @@ class NotificationService {
         );
         distanceText = _formatDistance(d);
       } else {
-        distanceText = "❌ ไม่มีพิกัดห้องเรียน";
+        distanceText = "ไม่มีพิกัดห้องเรียน";
       }
     } catch (_) {
-      distanceText = "❌ ไม่สามารถคำนวณระยะทางได้";
+      distanceText = "ไม่สามารถคำนวณระยะทางได้";
     }
 
     final type = (message.data['type'] ?? 'green').toString().toLowerCase();

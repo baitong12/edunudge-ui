@@ -93,7 +93,7 @@ class _SubjectPageState extends State<Subject> {
                 ),
               ),
               Text(
-                'อาจารย์: ${classroomDetail?['classroom']['teacher'] ?? '-'} | ห้องเรียน: ${classroomDetail?['classroom']['room_number'] ?? '-'}',
+                'อาจารย์: ${classroomDetail?['classroom']['teacher'] ?? '-'} | เลขห้องเรียน: ${classroomDetail?['classroom']['room_number'] ?? '-'}',
                 style: const TextStyle(color: Colors.black54, fontSize: 14),
               ),
             ],

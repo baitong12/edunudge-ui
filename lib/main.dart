@@ -49,7 +49,6 @@ final notificationService = NotificationService();
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print("📩 Background message: ${message.notification?.title}");
 }
 
 Future<bool> requestLocationPermissionAtStartup() async {

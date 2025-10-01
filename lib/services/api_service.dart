@@ -9,12 +9,12 @@ class ApiService {
   static final String baseUrl =
       dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
   static final String apiKey = dotenv.env['API_KEY'] ?? "";
-  // ดึง token จาก SharedPreferences
+  
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(kAuthToken);
   }
-  // อัปเดตข้อมูล profile
+  
   static Future<Map<String, dynamic>> updateData(
     Map<String, dynamic> body,
   ) async {
@@ -65,16 +65,13 @@ class ApiService {
     );
 
     final decoded = jsonDecode(response.body);
-    print("Confirm OTP Response: $decoded"); // ✅ debug log
-
-    if (response.statusCode == 200) {
-      // สมมติ backend ส่ง {"status":"success","message":"OTP ถูกต้อง"}
+    print("Confirm OTP Response: $decoded"); 
+    if (response.statusCode == 200) {   
       return {
         'status': 'success',
         'message': decoded['message'] ?? 'ยืนยัน OTP สำเร็จ',
       };
     } else if (response.statusCode == 400) {
-      // สมมติ backend ส่ง {"status":"error","message":"OTP ไม่ถูกต้อง"}
       return {
         'status': 'error',
         'message': decoded['message'] ?? 'OTP ไม่ถูกต้องหรือหมดอายุ',
@@ -84,31 +81,27 @@ class ApiService {
     }
   }
 
-  // =======================
-  // ✅ Login
-  // =======================
+  // Login
   static Future<Map<String, dynamic>> login(
     String email,
     String password,
   ) async {
-    final response = await http.post(
+    final response = await http.post(//การส่ง request แบบ POST ไปยัง API
       Uri.parse('$baseUrl/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'password': password}),
     );
     print('Response status: ${jsonDecode(response.body)}');
-    final data = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      // เก็บ token และ user info ใน SharedPreferences
-      final token = data['token'];
-      final user = data['user'];
-      _registerDeviceToken();
+    final data = jsonDecode(response.body);//แปลงข้อความ json เเละเก็บในตัวแปร data
+    if (response.statusCode == 200) { //ถ้าสำเร็จ 
+      final token = data['token']; //ดึง token จาก data มาเก็บในตัวแปร token
+      final user = data['user']; //ดึงข้อมูล user จาก data มาเก็บในตัวแปร user
+      _registerDeviceToken();//การเรียกใช้ฟังชันนี้ เพื่อเอา device token ของมือถือไปเก็บที่หลังบ้าน
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('api_token', token ?? '');
       await prefs.setInt(
-        'role_id',
-        int.tryParse(user['role_id'].toString()) ?? -1,
+        'role_id',int.tryParse(user['role_id'].toString()) ?? -1,
       );
       await prefs.setInt('user_id', user['id'] ?? -1);
       await prefs.setString('user_name', user['name'] ?? '');
@@ -117,7 +110,7 @@ class ApiService {
       await prefs.setString('user_phone', user['phone'] ?? '');
       await prefs.setInt('department_id', user['department_id'] ?? -1);
 
-      return data;
+      return data; //สเตตัส 200 จะรีเทิร์น data เเต่ถถ้าไม่ใช่จะเเสดงข้อความ เข้าสู่ระบบไม่สำเร็จ
     } else {
       throw Exception(
         data['message'] ?? 'เข้าสู่ระบบไม่สำเร็จ (${response.statusCode})',
@@ -125,9 +118,7 @@ class ApiService {
     }
   }
 
-  // =======================
-  // ✅ Logout
-  // =======================
+  // Logout
   static Future<void> logout(String token) async {
     final response = await http.post(
       Uri.parse('$baseUrl/logout'),
@@ -145,9 +136,7 @@ class ApiService {
     await prefs.clear();
   }
 
-  // =======================
-  // ✅ เข้าร่วมห้องเรียน (Student)
-  // =======================
+  //เข้าร่วมห้องเรียนนักศึกษา
   static Future<Map<String, dynamic>> joinClassroom(String code) async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
@@ -160,23 +149,16 @@ class ApiService {
       },
       body: jsonEncode({'code': code}),
     );
-
-    // Debug log
     print('Join Classroom Status: ${response.statusCode}');
     print('Join Classroom Response: ${response.body}');
-
     final data = jsonDecode(response.body);
-
     if (response.statusCode == 200 || response.statusCode == 201) {
       return data;
     } else {
       throw Exception(data['message'] ?? 'เข้าห้องเรียนไม่สำเร็จ');
     }
   }
-
-  // =======================
-  // ✅ สร้างห้องเรียน (Teacher)
-  // =======================
+  // สร้างห้องเรียน (Teacher)
   static Future<Map<String, dynamic>> createClassroom(
     Map<String, dynamic> body,
   ) async {
@@ -191,8 +173,6 @@ class ApiService {
       },
       body: jsonEncode(body),
     );
-
-    // Debug log
     print('Create Classroom Status: ${response.statusCode}');
     print('Create Classroom Response: ${response.body}');
 
@@ -204,8 +184,7 @@ class ApiService {
       throw Exception(data['message'] ?? 'สร้างห้องเรียนไม่สำเร็จ');
     }
   }
-
-  // ✅ ดึงรายละเอียดห้องเรียน (Student)
+  // ดึงรายละเอียดห้องเรียนนักศึกษา
   static Future<Map<String, dynamic>> getClassroomDetail(
     int classroomId,
   ) async {
@@ -228,13 +207,10 @@ class ApiService {
     }
   }
 
-  // =======================
-  // ✅ ดึงห้องเรียนของ Student
-  // =======================
+  // ดึงห้องเรียนนักศึกษา
   static Future<List<dynamic>> getStudentClassrooms() async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
-
     final response = await http.get(
       Uri.parse('$baseUrl/student/getClassroomsList'),
       headers: {
@@ -242,18 +218,15 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
     );
-
     final data = jsonDecode(response.body);
-
     if (response.statusCode == 200) {
-      // ถ้าไม่มีห้องเรียน ให้คืน empty list
       return data['classrooms'] ?? [];
     } else {
       throw Exception(data['message'] ?? 'ไม่สามารถดึงรายการห้องเรียนได้');
     }
   }
 
-  // ✅ ดึงข้อมูล Home ของอาจารย์
+  //ดึงข้อมูล Home ของอาจารย์
   static Future<Map<String, dynamic>> getTeacherHome() async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
@@ -275,7 +248,7 @@ class ApiService {
     }
   }
 
-  // ✅ ดึงรายละเอียดห้องเรียนสำหรับ Teacher
+  // ดึงรายละเอียดห้องเรียนอาจารย์
   static Future<Map<String, dynamic>> getTeacherClassroomDetail(
     int classroomId,
   ) async {
@@ -301,9 +274,7 @@ class ApiService {
     }
   }
 
-  // =======================
-  // ✅ ดึงข้อมูล Home ของ Student (สถิติการเข้าเรียน)
-  // =======================
+  // ดึงข้อมูล Home ของนักศึกษา (สถิติการเข้าเรียน)
   static Future<Map<String, dynamic>> getStudentHome() async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
@@ -317,9 +288,7 @@ class ApiService {
     );
 
     final data = jsonDecode(response.body);
-
     if (response.statusCode == 200) {
-      // คืนค่าเป็น Map<String, dynamic
       return {
         'present': data['present'] ?? 0.0,
         'late': data['late'] ?? 0.0,
@@ -331,9 +300,7 @@ class ApiService {
     }
   }
 
-  // =======================
-  // ✅ ดึงรายละเอียดรายวิชา (Student)
-  // =======================
+  // ดึงรายละเอียดรายวิชา (นักศึกษา)
   static Future<Map<String, dynamic>> getSubjectDetail(int classroomId) async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
@@ -362,25 +329,25 @@ class ApiService {
   }
 
   static Future<void> _registerDeviceToken() async {
-    // ✅ ขอ device token จาก Firebase
+    //  ขอ device token จาก Firebase
     FirebaseMessaging messaging = FirebaseMessaging.instance;
     String? device_token = await messaging.getToken();
     String? token = await getToken();
     print("FCM Device Token: $device_token");
 
     if (device_token != null) {
-      // ✅ ส่ง token ไปเก็บที่ Laravel API
+      //  ส่ง token ไปเก็บที่ Laravel API
       final response = await http.post(
         Uri.parse(
           "http://52.63.155.211/api/save-device-token",
-        ), // เปลี่ยน URL ให้ตรงกับ backend
+        ), 
         headers: {
           "Content-Type": "application/json",
           'Authorization': 'Bearer $token',
         },
         body: json.encode({
-          "device_token": device_token, // ✅ token ที่ได้จาก Firebase
-          "platform": "android", // หรือ "ios"
+          "device_token": device_token, //  token ที่ได้จาก Firebase
+          "platform": "android", 
         }),
       );
 
@@ -392,9 +359,7 @@ class ApiService {
     }
   }
 
-  // =======================
-  // ✅ ลบนักศึกษาออกจากห้องเรียน
-  // =======================
+  // ลบนักศึกษาออกจากห้องเรียน
   static Future<void> removeStudent(int classroomId, int userId) async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
@@ -413,9 +378,7 @@ class ApiService {
     }
   }
 
-  // =======================
-  // ✅ เช็คชื่อ (Mark Attendance)
-  // =======================
+  //  เช็คชื่อ (Mark Attendance)
   static Future<Map<String, dynamic>> markAttendance({
     required int userId,
     required int classroomId,
@@ -445,9 +408,7 @@ class ApiService {
     }
   }
 
-  // =======================
-  // ✅ ดึงสรุปการเข้าเรียนของ Student ตาราง home น้อย
-  // =======================
+  // ดึงสรุปการเข้าเรียนของนักศึกษาในตาราง home
   static Future<Map<String, dynamic>> homeAttendanceSummary() async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
@@ -462,20 +423,15 @@ class ApiService {
 
     final data = jsonDecode(response.body);
     if (response.statusCode == 200) {
-      // data ตัวอย่าง:
-      // {
-      //   "classrooms": [{ "classroom_id": 1, "name_subject": "Math", "present": 5, "late": 1, "absent": 0, "leave_count": 0, "percent": 83.33 }, ...],
-      //   "totals": { "present": 15, "late": 3, "absent": 2, "leave": 1 }
-      // }
       return data;
     } else {
       throw Exception(data['message'] ?? 'ไม่สามารถดึงสรุปการเข้าเรียนได้');
     }
   }
 
-  // =======================
-  // ✅ ดึงรายละเอียดรายวิชาแบบ Student เลือกรายละเอียด home น้อย
-  // =======================
+  
+  // ดึงรายละเอียดรายวิชาแบบ Student เลือกรายละเอียด home น้อย
+  
   static Future<Map<String, dynamic>> homeSubjectDetail(int classroomId) async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
@@ -504,10 +460,7 @@ class ApiService {
       throw Exception(data['message'] ?? 'ไม่สามารถดึงข้อมูลรายวิชาได้');
     }
   }
-
-  // =======================
-  // ✅ ดึงสรุปการเข้าเรียนของนักศึกษาในห้องเรียน
-  // =======================
+  //ดึงสรุปการเข้าเรียนของนักศึกษาในห้องเรียน
   static Future<List<dynamic>> studentAttendanceSummary(int classroomId) async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
@@ -524,10 +477,8 @@ class ApiService {
 
     if (response.statusCode == 200) {
       if (data is List) {
-        // ✅ กรณี backend ส่ง array ตรง ๆ
         return data;
       } else if (data is Map && data.containsKey('students')) {
-        // ✅ กรณี backend ห่อ array ใน key "students"
         return data['students'] ?? [];
       } else {
         throw Exception('โครงสร้างข้อมูลไม่ถูกต้อง');
@@ -537,9 +488,7 @@ class ApiService {
     }
   }
 
-  // =======================
-  // ✅ ดึงรายชื่อนักศึกษา At Risk ของห้องเรียน (Teacher)
-  // =======================
+  // ดึงรายชื่อนักศึกษา At Risk ของห้องเรียน (Teacher)
   static Future<List<dynamic>> getAtRiskStudents(int classroomId) async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
@@ -556,9 +505,9 @@ class ApiService {
 
     if (response.statusCode == 200) {
       if (data is List) {
-        return data; // ✅ ถ้า backend ส่ง array ตรง ๆ
+        return data; 
       } else if (data is Map && data.containsKey('students')) {
-        return data['students'] ?? []; // ✅ ถ้า backend ห่อด้วย key
+        return data['students'] ?? [];
       } else {
         throw Exception('โครงสร้างข้อมูลไม่ถูกต้อง');
       }
@@ -569,17 +518,14 @@ class ApiService {
     }
   }
 
-  // =======================
-  // ✅ ดึงสรุปการเข้าเรียนรายสัปดาห์
-  // =======================
+  //ดึงสรุปการเข้าเรียนรายสัปดาห์
   static Future<List<dynamic>> getWeeklyAttendanceSummary({
     required int classroomId,
-    List<int>? weeks, // ตัวเลือกว่าจะเอาสัปดาห์ไหนบ้าง
+    List<int>? weeks, 
   }) async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
 
-    // สร้าง query string ถ้ามี weeks
     String queryString = '';
     if (weeks != null && weeks.isNotEmpty) {
       queryString = '?weeks=${weeks.join(',')}';
@@ -610,9 +556,7 @@ class ApiService {
     }
   }
 
-  // =======================
-  // ✅ อัปเดตเวลาการแจ้งเตือนของห้องเรียน (warn times)
-  // =======================
+  // อัปเดตเวลาการแจ้งเตือนของห้องเรียน (warn times)
   static Future<Map<String, dynamic>> updateWarnTimes(
     int classroomId, {
     String? warnGreen,
@@ -620,8 +564,6 @@ class ApiService {
   }) async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
-
-    // แปลง string เป็น int
     final int? warnGreenInt = warnGreen != null
         ? int.tryParse(warnGreen)
         : null;
@@ -642,15 +584,13 @@ class ApiService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      return data; // คืนค่า JSON response จาก backend
+      return data; 
     } else {
       throw Exception(data['message'] ?? 'ไม่สามารถอัปเดต warn times ได้');
     }
   }
 
-  // =======================
-  // ✅ อัปเดตสถานะห้องเรียน (เปิด/ปิด)
-  // =======================
+  // อัปเดตสถานะห้องเรียน (เปิด/ปิด)
   static Future<Map<String, dynamic>> updateClassroomStatus(
     int classroomId,
     int status,
@@ -665,30 +605,26 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
       body: jsonEncode({
-        'status': status, // 1 = เปิด, 0 = ปิด
+        'status': status, 
       }),
     );
 
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      return data; // {"message": "...", "status": 1}
+      return data; 
     } else {
       throw Exception(data['message'] ?? 'ไม่สามารถอัปเดตสถานะห้องเรียนได้');
     }
   }
 
-  // =======================
-  // ✅ อัปเดตวันหยุดของห้องเรียน
-  // =======================
+  // อัปเดตวันหยุดของห้องเรียน
   static Future<Map<String, dynamic>> updateHolidays(
     int classroomId,
     List<DateTime> holidays,
   ) async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
-
-    // แปลง List<DateTime> เป็น List<String "yyyy-MM-dd")
     final holidayStrings = holidays
         .map((d) => d.toIso8601String().split('T').first)
         .toList();
@@ -705,15 +641,13 @@ class ApiService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      return data; // {"message": "...", "holidays": [...]}
+      return data; 
     } else {
       throw Exception(data['message'] ?? 'ไม่สามารถอัปเดตวันหยุดได้');
     }
   }
 
-  // =======================
-  // ✅ ลบห้องเรียน (Teacher)
-  // =======================
+  //  ลบห้องเรียน (Teacher)
   static Future<void> deleteClassroom(int classroomId) async {
     final token = await getToken();
     if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
@@ -725,53 +659,15 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
     );
-
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      // ลบสำเร็จ
       print('Delete Classroom Success: ${data['message']}');
     } else {
       throw Exception(data['message'] ?? 'ไม่สามารถลบห้องเรียนได้');
     }
   }
-
-  // ดึง location classroom
-  // static Future<Map<String, dynamic>> getLocationClassroom() async {
-  //   final token = await getToken();
-  //   if (token == null){
-  //     return {"status": 'error','message': 'Token ไม่พบ กรุณาล็อกอินก่อน'};
-  //   }
-
-  //   final response = await http.get(
-  //     Uri.parse('$baseUrl/student/getLocation'),
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       'Authorization': 'Bearer $token',
-  //     },
-  //   );
-
-  //   final data = jsonDecode(response.body);
-
-  //   if (response.statusCode == 200) {
-  //     // ✅ แปลงเป็น String
-  //     final String latitude = data['latitude'].toString();
-  //     final String longitude = data['longitude'].toString();
-
-  //     // ✅ เก็บตำแหน่งล่าสุดลง SharedPreferences เป็น String
-  //     final prefs = await SharedPreferences.getInstance();
-  //     await prefs.setString('last_latitude', latitude);
-  //     await prefs.setString('last_longitude', longitude);
-
-  //     return {
-  //       "classroom_id": data['classroom_id'],
-  //       "latitude": latitude,
-  //       "longitude": longitude,
-  //     };
-  //   } else {
-  //     throw Exception(data['message'] ?? 'Cant get classroom Position');
-  //   }
-  // }
+//ดึงพิกัดห้องเรียน
   static Future<Map<String, dynamic>> getLocationClassroom() async {
     final token = await getToken();
     if (token == null) {
@@ -787,10 +683,7 @@ class ApiService {
         },
       );
       final data = jsonDecode(response.body);
-
       if (response.statusCode == 200) {
-        // ✅ ป้องกัน null หรือ type mismatch
-
         final String latitude = data['latitude']?.toString() ?? '';
         final String longitude = data['longitude']?.toString() ?? '';
 
@@ -814,15 +707,11 @@ class ApiService {
         };
       }
     } catch (e) {
-      // ✅ log error เพื่อ debug
       print("Error getLocationClassroom: $e");
       rethrow;
     }
   }
-
-  // =======================
-  // ✅ ดึงการตั้งค่าห้องเรียน (Teacher หรือ Student)
-  // =======================
+  // ดึงการตั้งค่าห้องเรียน
   static Future<Map<String, dynamic>> getClassroomSettings(
     int classroomId,
   ) async {
@@ -836,21 +725,12 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
     );
-
     final data = jsonDecode(response.body);
-
     if (response.statusCode == 200) {
-      // สมมติ backend ส่งข้อมูลแบบนี้:
-      // {
-      //   "warn_green": 5,
-      //   "warn_red": 10,
-      //   "status": 1,
-      //   "holidays": ["2025-09-05", "2025-09-12"]
-      // }
       return {
         "warnGreen": data['warn_green'] ?? 0,
         "warnRed": data['warn_red'] ?? 0,
-        "status": data['status'] ?? 1, // 1 = เปิด, 0 = ปิด
+        "status": data['status'] ?? 1, 
         "holidays":
             (data['holidays'] as List<dynamic>?)
                 ?.map((e) => DateTime.parse(e))
@@ -861,40 +741,7 @@ class ApiService {
       throw Exception(data['message'] ?? 'ไม่สามารถดึงการตั้งค่าห้องเรียนได้');
     }
   }
-
-  // =======================
-  // ✅ อัปเดตชื่อวิชาและเลขห้อง
-  // =======================
-  // static Future<Map<String, dynamic>> updateClassroomInfo(
-  //     int classroomId, {
-  //     required String subjectName,
-  //     required String roomNumber,
-  //   }) async {
-  //   final token = await getToken();
-  //   if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
-
-  //   final response = await http.put(
-  //     Uri.parse('$baseUrl/teacher/classrooms/$classroomId/update-info'),
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       'Authorization': 'Bearer $token',
-  //     },
-  //     body: jsonEncode({
-  //       'name_subject': subjectName,
-  //       'room_number': roomNumber,
-  //     }),
-  //   );
-
-  //   final data = jsonDecode(response.body);
-
-  //   if (response.statusCode == 200) {
-  //     return {'status': 'success',
-  //             'message': data['message'] ?? 'อัปเดตสำเร็จ'};
-  //   } else {
-  //     throw Exception(data['message'] ?? 'ไม่สามารถอัปเดตข้อมูลห้องเรียนได้');
-  //   }
-  // }
-
+  // อัปเดตชื่อวิชา
   static Future<Map<String, dynamic>> updateSubjectName(
     int classroomId,
     String subjectName,
@@ -921,35 +768,6 @@ class ApiService {
       };
     } else {
       throw Exception(data['message'] ?? 'ไม่สามารถอัปเดตชื่อวิชาได้');
-    }
-  }
-
-  static Future<Map<String, dynamic>> updateRoomNumber(
-    int classroomId,
-    String roomNumber,
-  ) async {
-    final token = await getToken();
-    if (token == null) throw Exception('Token ไม่พบ กรุณาล็อกอินก่อน');
-
-    final response = await http.put(
-      Uri.parse('$baseUrl/classrooms/$classroomId/room-number'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({'room_number': roomNumber}),
-    );
-
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode == 200) {
-      return {
-        'status': 'success',
-        'message': data['message'] ?? 'อัปเดตเลขห้องสำเร็จ',
-        'room_number': data['room_number'],
-      };
-    } else {
-      throw Exception(data['message'] ?? 'ไม่สามารถอัปเดตเลขห้องได้');
     }
   }
 }

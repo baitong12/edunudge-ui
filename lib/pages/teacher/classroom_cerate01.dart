@@ -53,18 +53,35 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
 
   void _validateAndNavigate() {
     setState(() {
-      subjectError = subjectController.text.isEmpty;
-      roomError = roomNumberController.text.isEmpty;
+      subjectError = subjectController.text.isEmpty ||
+          subjectController.text.length > 255;
+      roomError = roomNumberController.text.isEmpty ||
+          roomNumberController.text.length > 255;
       startDateError = selectedStartDate == null;
       endDateError = selectedEndDate == null;
       semesterError = selectedSemester == null;
     });
 
-    if (subjectError || roomError || startDateError || endDateError || semesterError) {
-      _showSnackBar('กรุณากรอกข้อมูลให้ครบถ้วน');
+    if (subjectError) {
+      _showSnackBar('กรุณากรอกชื่อวิชา');
       return;
     }
-
+    if (roomError) {
+      _showSnackBar('กรุณากรอกเลขห้องเรียน');
+      return;
+    }
+    if (semesterError) {
+      _showSnackBar('กรุณาเลือกภาคการศึกษา');
+      return;
+    }
+    if (academicYearController.text.isEmpty) {
+      _showSnackBar('กรุณากรอกปีการศึกษา');
+      return;
+    }
+    if (startDateError || endDateError) {
+      _showSnackBar('กรุณาเลือกวันแรกและวันสุดท้ายของเทอม');
+      return;
+    }
     if (selectedStartDate != null &&
         selectedEndDate != null &&
         selectedEndDate!.isBefore(selectedStartDate!)) {
@@ -75,9 +92,21 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
       return;
     }
 
-    int year = int.tryParse(academicYearController.text) ?? DateTime.now().year;
+    int year = int.tryParse(academicYearController.text) ?? 0;
     if (year > 2100) {
-      year -= 543; 
+      year -= 543;
+    }
+    if (year < 2000 || year > 2100) {
+      _showSnackBar('ปีการศึกษาต้องอยู่ระหว่าง 2000 ถึง 2100');
+      return;
+    }
+
+    String semesterBackend = mapSemesterToBackend(selectedSemester);
+    if (!(semesterBackend == '1' ||
+        semesterBackend == '2' ||
+        semesterBackend.toLowerCase() == 'summer')) {
+      _showSnackBar('ภาคการศึกษาต้องเป็น 1, 2 หรือ summer');
+      return;
     }
 
     Navigator.pushReplacementNamed(
@@ -87,7 +116,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
         'name_subject': subjectController.text,
         'room_number': roomNumberController.text,
         'year': year.toString(),
-        'semester': mapSemesterToBackend(selectedSemester),
+        'semester': semesterBackend,
         'start_date': selectedStartDate,
         'end_date': selectedEndDate,
       },
@@ -382,7 +411,7 @@ class _CreateClassroom01State extends State<CreateClassroom01> {
               child: Text(
                 selectedDate == null
                     ? hintText
-                    : 'วันที่ ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                    : 'วันที่ ${selectedDate.day}/${selectedDate.month}/${selectedDate.year + 543}',
                 style: TextStyle(
                   color:
                       selectedDate == null ? Colors.grey[400] : Colors.black87,

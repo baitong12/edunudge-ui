@@ -397,19 +397,19 @@ class _CreateClassroom02State extends State<CreateClassroom02> {
   String thaiToEnglishDay(String day) {
     switch (day) {
       case 'จันทร์':
-        return 'monday';
+        return 'Monday';
       case 'อังคาร':
-        return 'tuesday';
+        return 'Tuesday';
       case 'พุธ':
-        return 'wednesday';
+        return 'Wednesday';
       case 'พฤหัสบดี':
-        return 'thursday';
+        return 'Thursday';
       case 'ศุกร์':
-        return 'friday';
+        return 'Friday';
       case 'เสาร์':
-        return 'saturday';
+        return 'Saturday';
       case 'อาทิตย์':
-        return 'sunday';
+        return 'Sunday';
       default:
         return '';
     }

@@ -166,7 +166,7 @@ class _ClassroomSubjectState extends State<ClassroomSubject> {
               ),
             ),
             Text(
-              'ห้องเรียน: $roomNumber',
+              'เลขห้องเรียน: $roomNumber',
               style: const TextStyle(color: Colors.black54, fontSize: 14),
             ),
           ],

@@ -49,7 +49,8 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
 
     try {
       Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.high,
+      );
       setState(() {
         selectedLocation = LatLng(position.latitude, position.longitude);
         selectedMarker = Marker(
@@ -65,6 +66,7 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
   void _setDefaultLocation() {
     setState(() {
       selectedLocation = defaultLocation;
+      //print('Using default location: $defaultLocation');
       selectedMarker = Marker(
         markerId: const MarkerId('defaultLocation'),
         position: defaultLocation,
@@ -75,7 +77,8 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
   Future<void> _goToCurrentLocation() async {
     try {
       Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.high,
+      );
       LatLng currentLatLng = LatLng(position.latitude, position.longitude);
 
       setState(() {
@@ -109,14 +112,19 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
         Align(
           alignment: Alignment.centerRight,
           child: IconButton(
-            icon: const Icon(Icons.help_outline, color: Colors.black87, size: 28),
+            icon: const Icon(
+              Icons.help_outline,
+              color: Colors.black87,
+              size: 28,
+            ),
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('คู่มือการใช้งาน'),
                   content: const Text(
-                      'แตะบนแผนที่เพื่อเลือกตำแหน่งห้องเรียน หรือกดปุ่มตำแหน่งปัจจุบัน'),
+                    'แตะบนแผนที่เพื่อเลือกตำแหน่งห้องเรียน หรือกดปุ่มตำแหน่งปัจจุบัน',
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -189,10 +197,66 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
   }
 
   Future<void> submitClassroom() async {
+    // Debug: แสดงค่าทุกช่องที่สำคัญ
+    String debugMsg =
+        '''
+selectedLocation: ${selectedLocation?.latitude}, ${selectedLocation?.longitude}
+required_days: ${classroomInfo['required_days']}
+reward_points: ${classroomInfo['reward_points']}
+points: ${classroomInfo['points']}
+schedules: ${classroomInfo['schedules']}
+semester: ${classroomInfo['semester']}
+year: ${classroomInfo['year']}
+start_date: ${classroomInfo['start_date']}
+end_date: ${classroomInfo['end_date']}
+''';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(debugMsg, style: const TextStyle(fontSize: 12)),
+        backgroundColor: Colors.blueGrey,
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
     if (selectedLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('กรุณาเลือกตำแหน่งห้องเรียน'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    // เช็คข้อมูลตาม validation หลังบ้าน
+    final requiredDays = classroomInfo['required_days'] ?? 0;
+    final rewardPoints = classroomInfo['reward_points'] ?? 0;
+    final points = classroomInfo['points'] ?? [];
+    final schedules = classroomInfo['schedules'] ?? [];
+    final terms = [
+      {
+        "semester": classroomInfo['semester'] ?? '1',
+        "year": classroomInfo['year'] ?? '',
+        "start_date": classroomInfo['start_date'] ?? '',
+        "end_date": classroomInfo['end_date'] ?? '',
+      },
+    ];
+
+    if (requiredDays < 1 ||
+        rewardPoints < 1 ||
+        points.isEmpty ||
+        schedules.isEmpty ||
+        terms[0]['semester'] == '' ||
+        terms[0]['year'] == '' ||
+        terms[0]['start_date'] == '' ||
+        terms[0]['end_date'] == '') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง'),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
@@ -221,23 +285,31 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
       "longitude": selectedLocation!.longitude,
       "required_days": classroomInfo['required_days'] ?? 0,
       "reward_points": classroomInfo['reward_points'] ?? 0,
-      "points": (classroomInfo['points'] ?? []).map((p) => {
-            "point_percent": p['point_percent'] ?? 0,
-            "point_extra": p['point_extra'] ?? 0,
-          }).toList(),
+      "points": (classroomInfo['points'] ?? [])
+          .map(
+            (p) => {
+              "point_percent": p['point_percent'] ?? 0,
+              "point_extra": p['point_extra'] ?? 0,
+            },
+          )
+          .toList(),
       "terms": [
         {
           "semester": classroomInfo['semester'] ?? '1',
           "year": year,
           "start_date": classroomInfo['start_date'] ?? '',
           "end_date": classroomInfo['end_date'] ?? '',
-        }
+        },
       ],
-      "schedules": (classroomInfo['schedules'] ?? []).map((s) => {
-            "day_of_week": s['day_of_week'] ?? '',
-            "time_start": s['time_start'] ?? '',
-            "time_end": s['time_end'] ?? '',
-          }).toList(),
+      "schedules": (classroomInfo['schedules'] ?? [])
+          .map(
+            (s) => {
+              "day_of_week": s['day_of_week'] ?? '',
+              "time_start": s['time_start'] ?? '',
+              "time_end": s['time_end'] ?? '',
+            },
+          )
+          .toList(),
     };
 
     try {
@@ -277,7 +349,7 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           child: Container(
             width: double.infinity,
-            height: screenHeight - bottomNavHeight - 32 - 32, 
+            height: screenHeight - bottomNavHeight - 32 - 32,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: const Color(0xFF91C8E4),
@@ -322,15 +394,20 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                            context, '/classroom_create01', (r) => false),
+                          context,
+                          '/classroom_create01',
+                          (r) => false,
+                        ),
                         child: const Padding(
                           padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text('ยกเลิก',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 16)),
+                          child: Text(
+                            'ยกเลิก',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
                         ),
                       ),
                     ),
@@ -340,14 +417,19 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFFFFEAA7),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         onPressed: submitClassroom,
                         child: const Padding(
                           padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text('ตกลง',
-                              style:
-                                  TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 16)),
+                          child: Text(
+                            'ตกลง',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 0, 0, 0),
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                       ),
                     ),

@@ -57,25 +57,22 @@ class _LoginState extends State<Login> {
     }
 
     try {
-      final data = await ApiService.login(email, password);
-
+      final data = await ApiService.login(email, password); 
       final token = data['token'];
       final user = data['user'];
-      final roleId = int.tryParse(user['role_id'].toString()) ?? -1;
+      final roleId = int.tryParse(user['role_id'].toString()) ?? -1; //การแปลง role_id เป็น int
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('api_token', token ?? '');
-      await prefs.setInt('role_id', roleId);
-
-      
+      final prefs = await SharedPreferences.getInstance(); 
+      await prefs.setString('api_token', token ?? '');//เก็บ token ถ้าไม่มีค่าให้เก็บเป็นค่าว่าง
+      await prefs.setInt('role_id', roleId);//เก็บ role_id ที่แปลงเป็น int เเล้ว
       await prefs.setInt('user_id', user['id'] ?? -1);
       await prefs.setString('user_name', user['name'] ?? '');
       await prefs.setString('user_lastname', user['lastname'] ?? '');
       await prefs.setString('user_email', user['email'] ?? '');
       await prefs.setString('user_phone', user['phone'] ?? '');
-      await prefs.setInt('department_id', user['department_id'] ?? -1);
+      await prefs.setInt('department_id', user['department_id'] ?? -1); //เตรียมข้อมูลเก็บไว้ เพื่อให้หน้าอื่นๆไปเรียกใช้งาน
 
-      
+      //ถ้าไม่มีข้อผิดพลาด ให้ไปหน้าหลักตามสถานะผู้ใช้
       if (roleId == 1) {
         Navigator.pushReplacementNamed(context, '/home_student');
       } else if (roleId == 2) {
@@ -85,11 +82,11 @@ class _LoginState extends State<Login> {
           _errorMessage = 'ไม่สามารถระบุสถานะผู้ใช้ได้ (Role ID: $roleId)';
         });
       }
-    } catch (e) {
+    } catch (e) {//ตัวแปล e เก็บข้อผิดพลาดที่เกิดขึ้น
       setState(() {
         _errorMessage = 'เกิดข้อผิดพลาด: $e';
       });
-    } finally {
+    } finally { //finally จะถูกเรียกใช้เสมอไม่ว่าจะเกิดข้อผิดพลาดหรือไม่
       setState(() {
         _isLoading = false;
       });
@@ -163,7 +160,7 @@ class _LoginState extends State<Login> {
                       ),
                     ),
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
+                    onPressed: _isLoading ? null : _login,//ถ้าเป็น _isLoading เป็น true (ก็จะไม่มีอะไรเกิดขึ้น) จะไม่โหลด และ false เข้าฟังก์ชัน login
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF3F8FAF),
                       foregroundColor: Colors.white,
