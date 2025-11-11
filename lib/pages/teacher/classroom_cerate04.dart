@@ -14,11 +14,11 @@ class CreateClassroom04 extends StatefulWidget {
 class _CreateClassroom04State extends State<CreateClassroom04> {
   LatLng? selectedLocation;
   Marker? selectedMarker;
-  LatLng defaultLocation = const LatLng(13.736717, 100.523186);
   bool isLoading = false;
-
   late Map<String, dynamic> classroomInfo;
   late GoogleMapController _mapController;
+
+  static const LatLng _defaultLocation = LatLng(13.736717, 100.523186);
 
   @override
   void initState() {
@@ -35,8 +35,9 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
   }
 
   Future<void> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return _setDefaultLocation();
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      return _setDefaultLocation();
+    }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
@@ -48,9 +49,8 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
     }
 
     try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+      Position position =
+          await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       setState(() {
         selectedLocation = LatLng(position.latitude, position.longitude);
         selectedMarker = Marker(
@@ -58,27 +58,25 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
           position: selectedLocation!,
         );
       });
-    } catch (_) {
+    } catch (e) {
       _setDefaultLocation();
     }
   }
 
   void _setDefaultLocation() {
     setState(() {
-      selectedLocation = defaultLocation;
-      //print('Using default location: $defaultLocation');
+      selectedLocation = _defaultLocation;
       selectedMarker = Marker(
         markerId: const MarkerId('defaultLocation'),
-        position: defaultLocation,
+        position: _defaultLocation,
       );
     });
   }
 
   Future<void> _goToCurrentLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+      Position position =
+          await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       LatLng currentLatLng = LatLng(position.latitude, position.longitude);
 
       setState(() {
@@ -96,44 +94,29 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
         ),
       );
     } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('ไม่สามารถหาตำแหน่งปัจจุบันได้'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      _showSnackBar('ไม่สามารถหาตำแหน่งปัจจุบันได้', Colors.red);
     }
   }
 
-  Widget buildHeader(String title) {
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Widget _buildHeader(String title) {
     return Stack(
       children: [
         Align(
           alignment: Alignment.centerRight,
           child: IconButton(
-            icon: const Icon(
-              Icons.help_outline,
-              color: Colors.black87,
-              size: 28,
-            ),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('คู่มือการใช้งาน'),
-                  content: const Text(
-                    'แตะบนแผนที่เพื่อเลือกตำแหน่งห้องเรียน หรือกดปุ่มตำแหน่งปัจจุบัน',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('ปิด'),
-                    ),
-                  ],
-                ),
-              );
-            },
+            icon: const Icon(Icons.help_outline, color: Colors.black87, size: 28),
+            onPressed: () => _showHelpDialog(),
           ),
         ),
         Align(
@@ -151,6 +134,23 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
     );
   }
 
+  void _showHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('คู่มือการใช้งาน'),
+        content: const Text(
+            'แตะบนแผนที่เพื่อเลือกตำแหน่งห้องเรียน หรือกดปุ่มตำแหน่งปัจจุบัน'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('ปิด'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLocationPicker() {
     if (selectedLocation == null) {
       return const Center(child: CircularProgressIndicator());
@@ -160,25 +160,9 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
       children: [
         GoogleMap(
           onMapCreated: (controller) => _mapController = controller,
-          initialCameraPosition: CameraPosition(
-            target: selectedLocation!,
-            zoom: 14,
-          ),
+          initialCameraPosition: CameraPosition(target: selectedLocation!, zoom: 14),
           markers: selectedMarker != null ? {selectedMarker!} : {},
-          onTap: (latLng) {
-            setState(() {
-              selectedLocation = latLng;
-              selectedMarker = Marker(
-                markerId: const MarkerId('selectedLocation'),
-                position: latLng,
-                infoWindow: InfoWindow(
-                  title: 'ตำแหน่งที่เลือก',
-                  snippet:
-                      'Lat: ${latLng.latitude.toStringAsFixed(4)}, Lng: ${latLng.longitude.toStringAsFixed(4)}',
-                ),
-              );
-            });
-          },
+          onTap: (latLng) => _updateSelectedLocation(latLng),
           myLocationEnabled: true,
           myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
@@ -196,77 +180,85 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
     );
   }
 
-  Future<void> submitClassroom() async {
-    // Debug: แสดงค่าทุกช่องที่สำคัญ
-    String debugMsg =
-        '''
-selectedLocation: ${selectedLocation?.latitude}, ${selectedLocation?.longitude}
-required_days: ${classroomInfo['required_days']}
-reward_points: ${classroomInfo['reward_points']}
-points: ${classroomInfo['points']}
-schedules: ${classroomInfo['schedules']}
-semester: ${classroomInfo['semester']}
-year: ${classroomInfo['year']}
-start_date: ${classroomInfo['start_date']}
-end_date: ${classroomInfo['end_date']}
-''';
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(debugMsg, style: const TextStyle(fontSize: 12)),
-        backgroundColor: Colors.blueGrey,
-        duration: const Duration(seconds: 5),
-        behavior: SnackBarBehavior.floating,
-      ),
+  void _updateSelectedLocation(LatLng latLng) {
+    _showSnackBar(
+      'เลือกตำแหน่ง: ${latLng.latitude.toStringAsFixed(4)}, ${latLng.longitude.toStringAsFixed(4)}',
+      Colors.green,
     );
-
-    if (selectedLocation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('กรุณาเลือกตำแหน่งห้องเรียน'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
+    setState(() {
+      selectedLocation = latLng;
+      selectedMarker = Marker(
+        markerId: const MarkerId('selectedLocation'),
+        position: latLng,
+        infoWindow: InfoWindow(
+          title: 'ตำแหน่งที่เลือก',
+          snippet:
+              'Lat: ${latLng.latitude.toStringAsFixed(4)}, Lng: ${latLng.longitude.toStringAsFixed(4)}',
         ),
       );
+    });
+  }
+
+  Future<void> submitClassroom() async {
+    if (!_validateLocation()) {
+      _showSnackBar('กรุณาเลือกตำแหน่งห้องเรียน', Colors.red);
       return;
     }
 
-    // เช็คข้อมูลตาม validation หลังบ้าน
-    final requiredDays = classroomInfo['required_days'] ?? 0;
-    final rewardPoints = classroomInfo['reward_points'] ?? 0;
-    final points = classroomInfo['points'] ?? [];
-    final schedules = classroomInfo['schedules'] ?? [];
-    final terms = [
-      {
-        "semester": classroomInfo['semester'] ?? '1',
-        "year": classroomInfo['year'] ?? '',
-        "start_date": classroomInfo['start_date'] ?? '',
-        "end_date": classroomInfo['end_date'] ?? '',
-      },
-    ];
-
-    if (requiredDays < 1 ||
-        rewardPoints < 1 ||
-        points.isEmpty ||
-        schedules.isEmpty ||
-        terms[0]['semester'] == '' ||
-        terms[0]['year'] == '' ||
-        terms[0]['start_date'] == '' ||
-        terms[0]['end_date'] == '') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    if (!_validateClassroomData()) {
+      _showSnackBar('กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง', Colors.red);
       return;
     }
 
     setState(() => isLoading = true);
 
+    try {
+      final payload = _buildPayload();
+      await ApiService.createClassroom(payload);
+      _showSnackBar('สร้างห้องเรียนสำเร็จ', Colors.green);
+      Navigator.pushNamedAndRemoveUntil(context, '/home_teacher', (r) => false);
+    } catch (e) {
+      _showSnackBar('เกิดข้อผิดพลาด: $e', Colors.red);
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  bool _validateLocation() {
+    if (selectedLocation == null) return false;
+
+    final lat = selectedLocation!.latitude;
+    final lng = selectedLocation!.longitude;
+
+    return lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180 &&
+        !(lat == 0.0 && lng == 0.0) &&
+        !(lat == 13.736717 && lng == 100.523186);
+  }
+
+  bool _validateClassroomData() {
+    final requiredDays = classroomInfo['required_days'] ?? 0;
+    final rewardPoints = classroomInfo['reward_points'] ?? 0;
+    final points = classroomInfo['points'] ?? [];
+    final schedules = classroomInfo['schedules'] ?? [];
+    final semester = classroomInfo['semester'] ?? '';
+    final year = classroomInfo['year'] ?? '';
+    final startDate = classroomInfo['start_date'] ?? '';
+    final endDate = classroomInfo['end_date'] ?? '';
+
+    return requiredDays >= 1 &&
+        rewardPoints >= 1 &&
+        points.isNotEmpty &&
+        schedules.isNotEmpty &&
+        semester.isNotEmpty &&
+        year.isNotEmpty &&
+        startDate.isNotEmpty &&
+        endDate.isNotEmpty;
+  }
+
+  Map<String, dynamic> _buildPayload() {
     int year = 2023;
     if (classroomInfo['year'] != null) {
       int? inputYear = classroomInfo['year'] is int
@@ -278,7 +270,7 @@ end_date: ${classroomInfo['end_date']}
       }
     }
 
-    final payload = {
+    return {
       "name_subject": classroomInfo['name_subject'] ?? '',
       "room_number": classroomInfo['room_number'] ?? '',
       "latitude": selectedLocation!.latitude,
@@ -286,12 +278,10 @@ end_date: ${classroomInfo['end_date']}
       "required_days": classroomInfo['required_days'] ?? 0,
       "reward_points": classroomInfo['reward_points'] ?? 0,
       "points": (classroomInfo['points'] ?? [])
-          .map(
-            (p) => {
-              "point_percent": p['point_percent'] ?? 0,
-              "point_extra": p['point_extra'] ?? 0,
-            },
-          )
+          .map((p) => {
+                "point_percent": p['point_percent'] ?? 0,
+                "point_extra": p['point_extra'] ?? 0,
+              })
           .toList(),
       "terms": [
         {
@@ -299,42 +289,16 @@ end_date: ${classroomInfo['end_date']}
           "year": year,
           "start_date": classroomInfo['start_date'] ?? '',
           "end_date": classroomInfo['end_date'] ?? '',
-        },
+        }
       ],
       "schedules": (classroomInfo['schedules'] ?? [])
-          .map(
-            (s) => {
-              "day_of_week": s['day_of_week'] ?? '',
-              "time_start": s['time_start'] ?? '',
-              "time_end": s['time_end'] ?? '',
-            },
-          )
+          .map((s) => {
+                "day_of_week": s['day_of_week'] ?? '',
+                "time_start": s['time_start'] ?? '',
+                "time_end": s['time_end'] ?? '',
+              })
           .toList(),
     };
-
-    try {
-      await ApiService.createClassroom(payload);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('สร้างห้องเรียนสำเร็จ'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      Navigator.pushNamedAndRemoveUntil(context, '/home_teacher', (r) => false);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-
-    setState(() => isLoading = false);
   }
 
   @override
@@ -349,7 +313,7 @@ end_date: ${classroomInfo['end_date']}
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           child: Container(
             width: double.infinity,
-            height: screenHeight - bottomNavHeight - 32 - 32,
+            height: screenHeight - bottomNavHeight - 64,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: const Color(0xFF91C8E4),
@@ -365,7 +329,7 @@ end_date: ${classroomInfo['end_date']}
             ),
             child: Column(
               children: [
-                buildHeader('สร้างห้องเรียน'),
+                _buildHeader('สร้างห้องเรียน'),
                 const Divider(height: 24, thickness: 1, color: Colors.grey),
                 const Text(
                   'เลือกตำแหน่งห้องเรียนด้านล่าง',
@@ -387,60 +351,54 @@ end_date: ${classroomInfo['end_date']}
                 ),
                 const SizedBox(height: 12),
                 if (isLoading) const LinearProgressIndicator(),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/classroom_create01',
-                          (r) => false,
-                        ),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text(
-                            'ยกเลิก',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFFFEAA7),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: submitClassroom,
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text(
-                            'ตกลง',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 0, 0, 0),
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                _buildActionButtons(),
               ],
             ),
           ),
         ),
       ),
       bottomNavigationBar: CustomBottomNav(currentIndex: 1, context: context),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pushNamedAndRemoveUntil(
+              context, '/classroom_create01', (r) => false,
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 14),
+              child: Text('ยกเลิก',
+                  style: TextStyle(color: Colors.white, fontSize: 16)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFEAA7),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: submitClassroom,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 14),
+              child: Text(
+                'ตกลง',
+                style: TextStyle(
+                    color: Color.fromARGB(255, 0, 0, 0), fontSize: 16),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
