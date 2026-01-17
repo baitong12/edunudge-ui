@@ -5,90 +5,123 @@ import 'package:edunudge/services/api_service.dart';
 import 'dart:convert';
 
 class AttendancePage extends StatefulWidget {
-  final int classroomId;
+  final int classroomId; 
+  // classroomId ของห้องเรียนนี้ ใช้เพื่อดึงข้อมูลนักเรียนและเช็คชื่อ
+
   const AttendancePage({super.key, required this.classroomId});
+  // constructor รับ classroomId เป็นค่า required
 
   @override
   State<AttendancePage> createState() => _AttendancePageState();
+  // สร้าง state สำหรับหน้า AttendancePage
 }
 
 class _AttendancePageState extends State<AttendancePage> {
+  // ตัวแปรสำหรับจัดการวันที่ในรูปแบบไทย
   String formattedDate = DateFormat('dd MMMM yyyy', 'th')
       .format(DateTime.now())
       .replaceAllMapped(RegExp(r'\d{4}'), (match) {
     int year = int.parse(match.group(0)!);
-    return (year + 543).toString();
+    return (year + 543).toString(); 
+    // แปลงปี ค.ศ. เป็น พ.ศ.
   });
 
-  bool isLoading = true;
-  bool hasClassToday = true;
-  String message = "";
-  List<Map<String, dynamic>> students = [];
-  List<Map<String, dynamic>> statusList = [];
-  Map<int, String> tempStatusMap = {};
+  bool isLoading = true; 
+  // ใช้แสดง loading ขณะดึงข้อมูลนักเรียน
+  bool hasClassToday = true; 
+  // ตรวจสอบว่ามีเรียนวันนี้หรือไม่
+  String message = ""; 
+  // ข้อความแจ้งเตือนเมื่อไม่มีเรียนวันนี้
+  List<Map<String, dynamic>> students = []; 
+  // รายชื่อนักเรียน
+  List<Map<String, dynamic>> statusList = []; 
+  // สถานะเช็คชื่อของนักเรียน
+  Map<int, String> tempStatusMap = {}; 
+  // เก็บสถานะชั่วคราวก่อนบันทึกจริง
 
   @override
   void initState() {
     super.initState();
-    _loadStudents();
+    _loadStudents(); 
+    // เรียกโหลดรายชื่อนักเรียนทันทีเมื่อเริ่มหน้า
   }
 
   Future<void> _loadStudents() async {
+    // ดึงข้อมูลนักเรียนจาก API และโหลดสถานะจาก SharedPreferences
     try {
       final classroomDetail =
-          await ApiService.getTeacherClassroomDetail(widget.classroomId);
+          await ApiService.getTeacherClassroomDetail(widget.classroomId); 
+          // เรียก API ดึงรายละเอียดห้องเรียน
 
-      hasClassToday = classroomDetail['has_class_today'] ?? true;
-      message = classroomDetail['message'] ?? "";
+      hasClassToday = classroomDetail['has_class_today'] ?? true; 
+      // เช็คว่ามีเรียนวันนี้หรือไม่
+      message = classroomDetail['message'] ?? ""; 
+      // ข้อความแจ้งเตือนถ้าไม่มีเรียน
 
-      final prefs = await SharedPreferences.getInstance();
-      final studentData = (classroomDetail['students'] as List<dynamic>?) ?? [];
+      final prefs = await SharedPreferences.getInstance(); 
+      // ดึง instance ของ SharedPreferences
+      final studentData = (classroomDetail['students'] as List<dynamic>?) ?? []; 
+      // ดึงรายชื่อนักเรียนจาก API
 
       final savedStatusJson =
-          prefs.getString('attendance_${widget.classroomId}');
+          prefs.getString('attendance_${widget.classroomId}'); 
+          // โหลดสถานะเก่าที่บันทึกไว้
       Map<String, dynamic> savedStatus = {};
-      if (savedStatusJson != null) savedStatus = jsonDecode(savedStatusJson);
+      if (savedStatusJson != null) savedStatus = jsonDecode(savedStatusJson); 
+      // แปลง JSON เป็น Map
 
       List<Map<String, dynamic>> loadedStudents = studentData.map((s) {
         int? userId;
-        if (s['user_id'] is int) userId = s['user_id'];
-        else if (s['user_id'] is String) userId = int.tryParse(s['user_id']);
+        if (s['user_id'] is int) userId = s['user_id']; 
+        else if (s['user_id'] is String) userId = int.tryParse(s['user_id']); 
+        // แปลง user_id ให้เป็น int เสมอ
 
         String status = '';
         if (userId != null) {
-          status = savedStatus[userId.toString()] ?? (s['status'] ?? '');
-          tempStatusMap[userId] = status;
+          status = savedStatus[userId.toString()] ?? (s['status'] ?? ''); 
+          // ใช้สถานะเก่าที่บันทึกไว้ ถ้าไม่มีใช้ค่าจาก API
+          tempStatusMap[userId] = status; 
+          // เก็บชั่วคราวใน tempStatusMap
         }
 
         return {
-          'id': userId,
-          'name': s['name'] ?? '',
+          'id': userId, 
+          'name': s['name'] ?? '', 
           'lastname': s['lastname'] ?? '',
         };
-      }).where((s) => s['id'] != null).toList();
+      }).where((s) => s['id'] != null).toList(); 
+      // ลบนักเรียนที่ไม่มี userId
 
       setState(() {
-        students = loadedStudents;
+        students = loadedStudents; 
+        // อัพเดตรายชื่อนักเรียนใน state
         statusList = students.map((s) {
-          int uid = s['id'];
+          int uid = s['id']; 
           String val = tempStatusMap[uid] ?? "";
           return {
-            "value": val,
-            "label": getLabelFromValue(val),
-            "disabled": !hasClassToday,
+            "value": val, 
+            // ค่าที่เลือก
+            "label": getLabelFromValue(val), 
+            // แปลงเป็น label ภาษาไทย
+            "disabled": !hasClassToday, 
+            // ปิดปุ่มถ้าไม่มีเรียนวันนี้
           };
         }).toList();
-        isLoading = false;
+        isLoading = false; 
+        // ปิด loading
       });
     } catch (e) {
-      setState(() => isLoading = false);
+      setState(() => isLoading = false); 
+      // ปิด loading ถ้าเกิด error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ไม่สามารถดึงข้อมูลนักเรียนได้: $e')),
+        SnackBar(content: Text('ไม่สามารถดึงข้อมูลนักเรียนได้: $e')), 
+        // แสดง error
       );
     }
   }
 
   String getLabelFromValue(String value) {
+    // แปลงค่า value เป็น label ภาษาไทย
     switch (value) {
       case "present":
         return "มา";
@@ -104,27 +137,36 @@ class _AttendancePageState extends State<AttendancePage> {
   }
 
   String getInitials(String name, String? lastname) {
+    // คืนค่าตัวย่อจากชื่อและนามสกุล
     String initials = '';
     if (name.isNotEmpty) initials += name[0];
     if (lastname != null && lastname.isNotEmpty) initials += lastname[0];
-    return initials.toUpperCase();
+    return initials.toUpperCase(); 
+    // แปลงเป็นตัวใหญ่
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final avatarRadius = screenWidth * 0.04;
-    final initialFontSize = screenWidth * 0.035;
-    final buttonFontSize = screenWidth * 0.025;
+    final screenWidth = MediaQuery.of(context).size.width; 
+    // ความกว้างหน้าจอ
+    final avatarRadius = screenWidth * 0.04; 
+    // ขนาดวงกลม avatar
+    final initialFontSize = screenWidth * 0.035; 
+    // ขนาดตัวอักษรใน avatar
+    final buttonFontSize = screenWidth * 0.025; 
+    // ขนาดตัวอักษรในปุ่มเช็คชื่อ
 
     return Scaffold(
-      backgroundColor: const Color(0xFF91C8E4),
+      backgroundColor: const Color(0xFF91C8E4), 
+      // สีพื้นหลังหลัก
       appBar: AppBar(
-        backgroundColor: const Color(0xFF91C8E4),
-        elevation: 0,
+        backgroundColor: const Color(0xFF91C8E4), 
+        elevation: 0, 
+        // ไม่มีเงา
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: onBackPressed,
+          icon: const Icon(Icons.arrow_back, color: Colors.white), 
+          onPressed: onBackPressed, 
+          // กลับหน้าก่อนหน้า
         ),
         title: const Text(
           'การเช็คชื่อเข้าเรียน',
@@ -133,7 +175,8 @@ class _AttendancePageState extends State<AttendancePage> {
         centerTitle: false,
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator()) 
+          // แสดง loading ถ้ากำลังดึงข้อมูล
           : Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -150,7 +193,8 @@ class _AttendancePageState extends State<AttendancePage> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
-                          message,
+                          message, 
+                          // ข้อความแจ้งเตือนเมื่อไม่มีเรียน
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -162,8 +206,7 @@ class _AttendancePageState extends State<AttendancePage> {
                     Expanded(
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
@@ -183,11 +226,11 @@ class _AttendancePageState extends State<AttendancePage> {
                                 color: const Color(0xFF91C8E4),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               alignment: Alignment.center,
                               child: Text(
-                                formattedDate,
+                                formattedDate, 
+                                // แสดงวันที่ปัจจุบัน
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -213,9 +256,8 @@ class _AttendancePageState extends State<AttendancePage> {
                               child: students.isEmpty
                                   ? Center(
                                       child: Text(
-                                        'ยังไม่มีนักเรียนในห้อง',
-                                        style: TextStyle(
-                                            color: Colors.grey.shade700),
+                                        'ยังไม่มีนักเรียนในห้อง', 
+                                        style: TextStyle(color: Colors.grey.shade700),
                                       ),
                                     )
                                   : ListView.builder(
@@ -242,8 +284,10 @@ class _AttendancePageState extends State<AttendancePage> {
 
   Widget _buildStudentRow(
       int index, double avatarRadius, double initialFontSize, double buttonFontSize) {
+    // สร้าง row ของนักเรียนแต่ละคน
     final student = students[index];
-    final initials = getInitials(student['name'], student['lastname']);
+    final initials = getInitials(student['name'], student['lastname']); 
+    // ตัวย่อ
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -299,28 +343,33 @@ class _AttendancePageState extends State<AttendancePage> {
 
   Widget _buildStatusButton(
       int index, String value, String label, String hexColor, double fontSize) {
-    final isSelected = statusList[index]["value"] == value;
-    final disabled = statusList[index]["disabled"] ?? false;
+    final isSelected = statusList[index]["value"] == value; 
+    // ตรวจสอบว่านี่คือ status ที่เลือกอยู่หรือไม่
+    final disabled = statusList[index]["disabled"] ?? false; 
+    // ปิดปุ่มถ้าไม่มีเรียนวันนี้
 
     return GestureDetector(
       onTap: disabled
-          ? null
+          ? null 
           : () async {
               int uid = students[index]['id'];
 
-              tempStatusMap[uid] = value;
+              tempStatusMap[uid] = value; 
+              // เก็บสถานะชั่วคราว
               final prefs = await SharedPreferences.getInstance();
               final savedMap =
                   tempStatusMap.map((key, val) => MapEntry(key.toString(), val));
               await prefs.setString(
-                  'attendance_${widget.classroomId}', jsonEncode(savedMap));
+                  'attendance_${widget.classroomId}', jsonEncode(savedMap)); 
+              // บันทึกสถานะใน local storage
 
               try {
                 await ApiService.markAttendance(
                   userId: uid,
                   classroomId: widget.classroomId,
                   status: value,
-                );
+                ); 
+                // เรียก API บันทึกสถานะ
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -331,8 +380,9 @@ class _AttendancePageState extends State<AttendancePage> {
               }
 
               setState(() {
-                statusList[index]["value"] = value;
+                statusList[index]["value"] = value; 
                 statusList[index]["label"] = getLabelFromValue(value);
+                // อัพเดต UI ของปุ่ม
               });
             },
       child: Container(
@@ -358,6 +408,7 @@ class _AttendancePageState extends State<AttendancePage> {
   }
 
   void onBackPressed() {
-    Navigator.pop(context);
+    Navigator.pop(context); 
+    // กลับหน้าก่อนหน้า
   }
 }

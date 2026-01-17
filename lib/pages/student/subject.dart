@@ -1,127 +1,155 @@
+// นำเข้าไลบรารี dart สำหรับจัดการ UI ขั้นพื้นฐาน
 import 'dart:ui';
+// นำเข้าไลบรารี Flutter Material สำหรับ widget ต่างๆ
 import 'package:flutter/material.dart';
+// นำเข้าไลบรารี Google Maps สำหรับใช้งาน GoogleMap widget
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+// นำเข้า service สำหรับเรียก API ของแอป EduNudge
 import 'package:edunudge/services/api_service.dart';
 
+// สร้าง StatefulWidget สำหรับหน้ารายละเอียดวิชา
 class Subject extends StatefulWidget {
+  // ตัวแปรเก็บรหัสห้องเรียนที่ส่งมาจากหน้าก่อนหน้า
   final int classroomId;
 
+  // คอนสตรัคเตอร์ สำหรับรับ classroomId
   const Subject({super.key, required this.classroomId});
 
   @override
   State<Subject> createState() => _SubjectPageState();
 }
 
+// State ของ Subject widget
 class _SubjectPageState extends State<Subject> {
+  // ตัวแปรเก็บรายละเอียดห้องเรียนที่ดึงจาก API
   Map<String, dynamic>? classroomDetail;
+  // ตัวแปรตรวจสอบสถานะการโหลดข้อมูล
   bool isLoading = true;
+  // ตัวแปรเก็บข้อความผิดพลาดถ้ามี
   String? errorMessage;
 
   @override
   void initState() {
     super.initState();
+    // เรียกฟังก์ชันดึงข้อมูลห้องเรียนเมื่อสร้าง State
     fetchClassroomDetail();
   }
 
+  // ฟังก์ชันดึงรายละเอียดห้องเรียนจาก API
   Future<void> fetchClassroomDetail() async {
     try {
+      // เรียก API ผ่าน ApiService
       final data = await ApiService.getClassroomDetail(widget.classroomId);
       setState(() {
+        // เก็บข้อมูลลงตัวแปร classroomDetail
         classroomDetail = data;
+        // เปลี่ยนสถานะ isLoading เป็น false
         isLoading = false;
       });
     } catch (e) {
       setState(() {
+        // เก็บข้อความผิดพลาด
         errorMessage = e.toString();
+        // เปลี่ยนสถานะ isLoading เป็น false
         isLoading = false;
       });
     }
   }
 
+  // ฟังก์ชันกำหนดสีตามสถานะนักเรียน
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'green':
       case 'present':
-        return Colors.green;
+        return Colors.green; // มาเรียน
       case 'yellow':
       case 'late':
-        return Colors.orange;
+        return Colors.orange; // มาเรียนสาย
       case 'red':
       case 'absent':
-        return Colors.red;
+        return Colors.red; // ขาดเรียน
       case 'blue':
       case 'leave':
-        return Colors.blue;
+        return Colors.blue; // ลา
       case 'grey':
       case 'no_class':
-        return Colors.grey;
+        return Colors.grey; // ไม่มีเรียน
       default:
-        return Colors.grey;
+        return Colors.grey; // ค่า default
     }
   }
 
+  // ฟังก์ชันดึงตัวย่อจากชื่อเต็มนักเรียน
   String getInitials(String fullName) {
-    final parts = fullName.split(' ');
+    final parts = fullName.split(' '); // แยกชื่อด้วยช่องว่าง
     if (parts.length >= 2) {
+      // ถ้ามี 2 คำขึ้นไป เอาตัวอักษรตัวแรกของแต่ละคำ
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
+    // ถ้ามีคำเดียว เอาตัวแรก
     return fullName[0].toUpperCase();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.white, // พื้นหลังสีขาว
       body: Scaffold(
         backgroundColor: Colors.white,
+        // AppBar ของหน้ารายละเอียดวิชา
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
+          backgroundColor: Colors.white, // พื้นหลังขาว
+          elevation: 0, // ไม่ให้มีเงา
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context), // กดกลับไปหน้าก่อนหน้า
           ),
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // แสดงชื่อวิชา
               Text(
-                classroomDetail?['classroom']['name_subject'] ?? '-',
+                classroomDetail?['classroom']['name_subject'] ?? '-', 
                 style: const TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
+              // แสดงชื่ออาจารย์และเลขห้องเรียน
               Text(
                 'อาจารย์: ${classroomDetail?['classroom']['teacher'] ?? '-'} | เลขห้องเรียน: ${classroomDetail?['classroom']['room_number'] ?? '-'}',
                 style: const TextStyle(color: Colors.black54, fontSize: 14),
               ),
             ],
           ),
-          centerTitle: false,
+          centerTitle: false, // ชื่อไม่อยู่ตรงกลาง
         ),
+        // ส่วนเนื้อหาหลัก
         body: isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator()) // กำลังโหลด
             : errorMessage != null
-                ? Center(child: Text(errorMessage!))
-                : buildContent(),
+                ? Center(child: Text(errorMessage!)) // มีข้อผิดพลาด
+                : buildContent(), // แสดงข้อมูลเมื่อโหลดเสร็จ
       ),
     );
   }
 
+  // ฟังก์ชันสร้างเนื้อหาหลักของหน้ารายละเอียด
   Widget buildContent() {
-    final students = classroomDetail!['students'] as List<dynamic>;
-    final classroom = classroomDetail!['classroom'];
-    final summary = classroomDetail!['summary'];
+    final students = classroomDetail!['students'] as List<dynamic>; // รายชื่อนักเรียน
+    final classroom = classroomDetail!['classroom']; // ข้อมูลห้องเรียน
+    final summary = classroomDetail!['summary']; // สรุปสถิติการเข้าเรียน
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // แสดงสัปดาห์ที่เรียน
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF00B894).withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFF00B894).withOpacity(0.2), // สีพื้นอ่อน
+            borderRadius: BorderRadius.circular(12), // มุมโค้ง
           ),
           child: Text(
             'สัปดาห์ที่: ${classroom['week']}',
@@ -133,7 +161,8 @@ class _SubjectPageState extends State<Subject> {
             textAlign: TextAlign.center,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 20), // เว้นระยะ
+        // สรุปสถิติการเข้าเรียนและคะแนนสะสม
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
@@ -151,27 +180,31 @@ class _SubjectPageState extends State<Subject> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
+              // การ์ดสถิติขาดเรียน
               _ScoreCard(
                 icon: Icons.close,
                 count: int.tryParse(summary['absent'].toString()) ?? 0,
                 label: 'ขาดเรียน',
                 color: const Color.fromARGB(255, 255, 48, 48),
               ),
-              Container(height: 40, width: 1, color: Colors.white),
+              Container(height: 40, width: 1, color: Colors.white), // เส้นแบ่ง
+              // การ์ดสถิติมาเรียนสาย
               _ScoreCard(
                 icon: Icons.access_time,
                 count: int.tryParse(summary['late'].toString()) ?? 0,
                 label: 'มาเรียนสาย',
                 color: const Color.fromARGB(255, 255, 206, 45),
               ),
-              Container(height: 40, width: 1, color: Colors.white),
+              Container(height: 40, width: 1, color: Colors.white), // เส้นแบ่ง
+              // การ์ดสถิติลา
               _ScoreCard(
                 icon: Icons.event_busy,
                 count: int.tryParse(summary['leave'].toString()) ?? 0,
                 label: 'ลา',
                 color: const Color.fromARGB(255, 69, 143, 255),
               ),
-              Container(height: 40, width: 1, color: Colors.white),
+              Container(height: 40, width: 1, color: Colors.white), // เส้นแบ่ง
+              // การ์ดคะแนนสะสม
               _ScoreCard(
                 icon: Icons.star,
                 count: int.tryParse(summary['earned_points'].toString()) ?? 0,
@@ -182,6 +215,7 @@ class _SubjectPageState extends State<Subject> {
           ),
         ),
         const SizedBox(height: 20),
+        // แสดงเกณฑ์การให้คะแนน
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -207,13 +241,15 @@ class _SubjectPageState extends State<Subject> {
                   color: Colors.white,
                 ),
               ),
-              const Divider(color: Colors.white70, thickness: 0.5, height: 20),
+              const Divider(color: Colors.white70, thickness: 0.5, height: 20), // เส้นแบ่ง
+              // แสดงกฎการให้คะแนนหลัก
               Text(
                 'มาเรียนติดกัน: ${classroomDetail!['required_days']} ครั้ง   '
                 'ได้คะแนนสะสม: ${classroomDetail!['reward_points']} คะแนน',
                 style: const TextStyle(color: Colors.white, fontSize: 14),
               ),
               const SizedBox(height: 12),
+              // แสดงกฎการให้คะแนนพิเศษ
               ...?classroom['rules']?.map(
                 (rule) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -228,6 +264,7 @@ class _SubjectPageState extends State<Subject> {
           ),
         ),
         const SizedBox(height: 20),
+        // แสดงรายชื่อนักเรียน
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -254,6 +291,7 @@ class _SubjectPageState extends State<Subject> {
                 ),
               ),
               const Divider(color: Colors.white70, thickness: 0.5, height: 20),
+              // แสดงสัญลักษณ์สถานะ
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -271,10 +309,12 @@ class _SubjectPageState extends State<Subject> {
                 ],
               ),
               const SizedBox(height: 12),
+              // แสดงรายชื่อนักเรียนแต่ละคน
               ...students.map(
                 (student) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
+                    // รูปวงกลมแสดงตัวย่อ
                     leading: CircleAvatar(
                       backgroundColor: const Color(0xFFFFEAA7),
                       radius: 20,
@@ -294,6 +334,7 @@ class _SubjectPageState extends State<Subject> {
                         color: Colors.white,
                       ),
                     ),
+                    // สัญลักษณ์แสดงสถานะ
                     trailing: Icon(
                       Icons.circle,
                       color: getStatusColor(student['status']),
@@ -306,6 +347,7 @@ class _SubjectPageState extends State<Subject> {
           ),
         ),
         const SizedBox(height: 20),
+        // แสดงตำแหน่งห้องเรียนบนแผนที่
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -338,10 +380,12 @@ class _SubjectPageState extends State<Subject> {
                 ],
               ),
               const SizedBox(height: 12),
+              // ขนาดของ GoogleMap
               SizedBox(
                 height: 200,
                 width: double.infinity,
                 child: GoogleMap(
+                  // กำหนดตำแหน่งเริ่มต้น
                   initialCameraPosition: CameraPosition(
                     target: LatLng(
                       double.tryParse(classroom['latitude']?.toString() ?? '13.736717') ?? 13.736717,
@@ -349,6 +393,7 @@ class _SubjectPageState extends State<Subject> {
                     ),
                     zoom: 16,
                   ),
+                  // กำหนด Marker ของห้องเรียน
                   markers: {
                     Marker(
                       markerId: const MarkerId('classroom'),
@@ -358,10 +403,10 @@ class _SubjectPageState extends State<Subject> {
                       ),
                     ),
                   },
-                  zoomControlsEnabled: false,
-                  myLocationEnabled: false,
-                  myLocationButtonEnabled: false,
-                  mapType: MapType.normal,
+                  zoomControlsEnabled: false, // ปิดปุ่มซูม
+                  myLocationEnabled: false, // ปิดตำแหน่งผู้ใช้
+                  myLocationButtonEnabled: false, // ปิดปุ่มหาตำแหน่ง
+                  mapType: MapType.normal, // ประเภทแผนที่ปกติ
                 ),
               ),
             ],
@@ -373,11 +418,12 @@ class _SubjectPageState extends State<Subject> {
   }
 }
 
+// Widget การ์ดแสดงสถิติ
 class _ScoreCard extends StatelessWidget {
-  final IconData icon;
-  final int count;
-  final String label;
-  final Color color;
+  final IconData icon; // ไอคอน
+  final int count; // จำนวน
+  final String label; // ชื่อสถิติ
+  final Color color; // สีของไอคอนและตัวเลข
 
   const _ScoreCard({
     required this.icon,
@@ -390,10 +436,10 @@ class _ScoreCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color: color, size: 30),
-        const SizedBox(height: 4),
+        Icon(icon, color: color, size: 30), // แสดงไอคอน
+        const SizedBox(height: 4), // เว้นระยะ
         Text(
-          '$count',
+          '$count', // แสดงจำนวน
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: color,
@@ -401,7 +447,7 @@ class _ScoreCard extends StatelessWidget {
           ),
         ),
         Text(
-          label,
+          label, // แสดงชื่อสถิติ
           style: const TextStyle(color: Colors.white, fontSize: 14),
         ),
       ],
@@ -409,9 +455,10 @@ class _ScoreCard extends StatelessWidget {
   }
 }
 
+// Widget แสดงสัญลักษณ์สถานะนักเรียน
 class _LegendDot extends StatelessWidget {
-  final Color color;
-  final String label;
+  final Color color; // สีของจุด
+  final String label; // ชื่อสถานะ
 
   const _LegendDot({required this.color, required this.label});
 
@@ -420,10 +467,10 @@ class _LegendDot extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.circle, color: color, size: 12),
-        const SizedBox(width: 6),
+        Icon(Icons.circle, color: color, size: 12), // จุดสี
+        const SizedBox(width: 6), // เว้นระยะ
         Text(
-          label,
+          label, // ชื่อสถานะ
           style: const TextStyle(
             fontSize: 12,
             color: Colors.white,

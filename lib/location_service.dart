@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -11,7 +10,6 @@ import './shared/constants.dart';
 
 
 const _kTaskSendLastLocation = 'sendLastLocation';
-
 
 @pragma('vm:entry-point')
 void lastLocationWorkmanagerDispatcher() {
@@ -36,22 +34,13 @@ void lastLocationWorkmanagerDispatcher() {
             "longitude": lng,
             "timestamp": ts ?? DateTime.now().toIso8601String(),
           });
-
           final res = await http.post(
             Uri.parse(url),
             headers: headers,
             body: body,
           );
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            print("✅ WorkManager sent last location");
-          } else {
-            print("❌ WorkManager send failed: ${res.statusCode} ${res.body}");
-          }
-        } else {
-          print("⚠️ No cached location found");
         }
       } catch (e) {
-        print("❌ WorkManager error: $e");
       }
     }
     return Future.value(true);
@@ -62,7 +51,6 @@ void lastLocationWorkmanagerDispatcher() {
 class LocationNotificationService with WidgetsBindingObserver {
   StreamSubscription<Position>? _positionStream;
   Position? lastPosition;
-
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
 
   Future<void> init() async {
@@ -80,10 +68,10 @@ class LocationNotificationService with WidgetsBindingObserver {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
+
     if (permission == LocationPermission.deniedForever) {
       await Geolocator.openAppSettings();
     }
-    print("📍 Location permission: $permission");
 
     try {
       final current = await Geolocator.getCurrentPosition(
@@ -91,9 +79,7 @@ class LocationNotificationService with WidgetsBindingObserver {
       );
       lastPosition = current;
       await _cacheLastPosition(current);
-      print("📍 Initial position: ${current.latitude}, ${current.longitude}");
     } catch (e) {
-      print("❌ Error getting current position: $e");
     }
 
     _positionStream =
@@ -105,7 +91,6 @@ class LocationNotificationService with WidgetsBindingObserver {
         ).listen((pos) async {
           lastPosition = pos;
           await _cacheLastPosition(pos);
-          print("🔄 Cached position: ${pos.latitude}, ${pos.longitude}");
         });
   }
 
@@ -124,7 +109,6 @@ class LocationNotificationService with WidgetsBindingObserver {
     final ts = prefs.getString(kLastTs);
 
     if (lat == null || lng == null) {
-      print("❌ ไม่มีข้อมูล location ล่าสุด");
       return;
     }
 
@@ -143,22 +127,13 @@ class LocationNotificationService with WidgetsBindingObserver {
           "timestamp": ts ?? DateTime.now().toIso8601String(),
         }),
       );
-
-      if (res.statusCode == 200) {
-        print("✅ Last location sent: ${res.body}");
-      } else {
-        print("❌ Failed: ${res.statusCode} ${res.body}");
-      }
     } catch (e) {
-      print("❌ Error sending last location: $e");
     }
   }
 
   Future<void> _initNotification() async {
     await _fcm.requestPermission(alert: true, badge: true, sound: true);
     final token = await _fcm.getToken();
-    print("📱 FCM Token: $token");
- 
   }
 
 
@@ -178,9 +153,7 @@ class LocationNotificationService with WidgetsBindingObserver {
         constraints: Constraints(networkType: NetworkType.connected),
         existingWorkPolicy: ExistingWorkPolicy.replace,
       );
-      print("📌 WorkManager scheduled");
     } catch (e) {
-      print("⚠️ WorkManager failed, fallback direct send");
       await sendLastLocationBeforeClose();
     }
   }

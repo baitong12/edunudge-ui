@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.edunudge"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // ndkVersion = flutter.ndkVersion  // Disabled: Not enough disk space. Re-enable if native code is needed.
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

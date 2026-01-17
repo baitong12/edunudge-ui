@@ -5,67 +5,91 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 
 class ReportBecarefulPage extends StatefulWidget {
-  final int classroomId;
+  final int classroomId; 
+  // classroomId ของห้องเรียน ใช้เพื่อดึงรายชื่อนักศึกษาที่เฝ้าระวัง
 
   const ReportBecarefulPage({super.key, required this.classroomId});
+  // constructor รับ classroomId เป็น required
 
   @override
   State<ReportBecarefulPage> createState() => _ReportBecarefulPageState();
+  // สร้าง state ของหน้า ReportBecarefulPage
 }
 
 class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
-  final Color primaryColor = const Color(0xFFFFEAA7);
+  final Color primaryColor = const Color(0xFFFFEAA7); 
+  // สีหลักสำหรับปุ่มดาวน์โหลด PDF
 
-  List<dynamic> students = [];
-  String searchQuery = '';
-  bool isLoading = true;
+  List<dynamic> students = []; 
+  // รายชื่อนักศึกษาที่เฝ้าระวัง
+  String searchQuery = ''; 
+  // ตัวแปรเก็บข้อความค้นหา
+  bool isLoading = true; 
+  // แสดง loading ขณะดึงข้อมูล
 
   @override
   void initState() {
     super.initState();
-    _fetchAtRiskStudents();
+    _fetchAtRiskStudents(); 
+    // โหลดข้อมูลนักศึกษาที่เฝ้าระวังทันทีเมื่อเริ่มหน้า
   }
 
   Future<void> downloadAndOpenPDF(String url, {String? fileName}) async {
+    // ฟังก์ชันดาวน์โหลด PDF และเปิดไฟล์
     try {
-      final dir = await getTemporaryDirectory();
+      final dir = await getTemporaryDirectory(); 
+      // ดึง path ของ temp directory
       final name =
-          fileName ?? 'pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
-      final filePath = '${dir.path}/$name';
+          fileName ?? 'pdf_${DateTime.now().millisecondsSinceEpoch}.pdf'; 
+      // กำหนดชื่อไฟล์ ถ้าไม่ได้ระบุใช้ timestamp
+      final filePath = '${dir.path}/$name'; 
+      // path เต็มของไฟล์ที่จะดาวน์โหลด
 
-      await Dio().download(url, filePath);
-      await OpenFile.open(filePath);
+      await Dio().download(url, filePath); 
+      // ดาวน์โหลดไฟล์จาก URL ไปยัง path
+      await OpenFile.open(filePath); 
+      // เปิดไฟล์ PDF
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เกิดข้อผิดพลาดในการดาวน์โหลด PDF: $e')),
+        SnackBar(content: Text('เกิดข้อผิดพลาดในการดาวน์โหลด PDF: $e')), 
+        // แสดง error ถ้าดาวน์โหลดหรือเปิดไฟล์ล้มเหลว
       );
     }
   }
 
   Future<void> _fetchAtRiskStudents() async {
+    // ฟังก์ชันโหลดรายชื่อนักศึกษาที่เฝ้าระวังจาก API
     try {
-      final data = await ApiService.getAtRiskStudents(widget.classroomId);
+      final data = await ApiService.getAtRiskStudents(widget.classroomId); 
+      // เรียก API
       setState(() {
-        students = data;
-        isLoading = false;
+        students = data; 
+        // เก็บข้อมูลนักศึกษา
+        isLoading = false; 
+        // ปิด loading
       });
     } catch (e) {
-      setState(() => isLoading = false);
+      setState(() => isLoading = false); 
+      // ปิด loading ถ้าเกิด error
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("โหลดข้อมูลล้มเหลว: $e")));
+      ).showSnackBar(SnackBar(content: Text("โหลดข้อมูลล้มเหลว: $e"))); 
+      // แสดงข้อความ error
     }
   }
 
   List<dynamic> get filteredStudents {
+    // คืนค่ารายชื่อนักศึกษา หลังกรองด้วย searchQuery
     if (searchQuery.isEmpty) {
-      return students;
+      return students; 
+      // ถ้าไม่กรอก search คืนทั้งหมด
     } else {
       return students
           .where(
             (student) => "${student['name']} ${student['lastname']}"
                 .toLowerCase()
-                .contains(searchQuery.toLowerCase()),
+                .contains(searchQuery.toLowerCase()), 
+            // ตรวจสอบว่าชื่อหรือนามสกุลตรงกับ searchQuery หรือไม่
           )
           .toList();
     }
@@ -74,34 +98,45 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF91C8E4),
+      backgroundColor: const Color(0xFF91C8E4), 
+      // สีพื้นหลังหลัก
       appBar: AppBar(
-        backgroundColor: const Color(0xFF91C8E4),
-        elevation: 0,
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF91C8E4), 
+        // สี AppBar
+        elevation: 0, 
+        // ไม่มีเงา
+        foregroundColor: Colors.white, 
+        // สี icon และ text
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new), 
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context), 
+          // กลับหน้าก่อนหน้า
         ),
-        title: const Text('รายงานนักศึกษาที่เฝ้าระวัง'),
+        title: const Text('รายงานนักศึกษาที่เฝ้าระวัง'), 
+        // ชื่อ AppBar
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator()) 
+          // ถ้า loading แสดง progress indicator
           : Padding(
               padding: const EdgeInsets.all(16.0),
               child: Container(
-                width: double.infinity,
-
+                width: double.infinity, 
+                // เต็มความกว้าง
                 height:
-                    MediaQuery.of(context).size.height - kToolbarHeight - 32,
+                    MediaQuery.of(context).size.height - kToolbarHeight - 32, 
+                // สูงไม่รวม AppBar และ padding
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.0),
+                  color: Colors.white, 
+                  // สีพื้น container
+                  borderRadius: BorderRadius.circular(16.0), 
+                  // มุมโค้ง
                   boxShadow: const [
                     BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
+                      color: Colors.black26, 
+                      blurRadius: 4, 
+                      offset: Offset(0, 2), 
+                      // เงาเล็ก
                     ),
                   ],
                 ),
@@ -116,9 +151,10 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                       Row(
                         children: [
                           const Icon(
-                            Icons.warning_amber_rounded,
-                            color: Colors.red,
-                            size: 28,
+                            Icons.warning_amber_rounded, 
+                            color: Colors.red, 
+                            size: 28, 
+                            // ไอคอนแจ้งเตือน
                           ),
                           const SizedBox(width: 8),
                           RichText(
@@ -133,7 +169,8 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                                   ),
                                 ),
                                 TextSpan(
-                                  text: '${filteredStudents.length}',
+                                  text: '${filteredStudents.length}', 
+                                  // แสดงจำนวนคนที่ผ่าน filter
                                   style: const TextStyle(
                                     color: Colors.red,
                                     fontSize: 16,
@@ -159,6 +196,7 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                           child: Column(
                             children: [
                               Container(
+                                // Header ของตาราง
                                 decoration: const BoxDecoration(
                                   color: Colors.white,
                                   border: Border(
@@ -241,6 +279,7 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                               ),
                               filteredStudents.isEmpty
                                   ? Container(
+                                      // แสดงเมื่อไม่มีนักศึกษา
                                       width: double.infinity,
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 20.0,
@@ -272,17 +311,22 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                                       ),
                                     )
                                   : Column(
+                                      // แสดงข้อมูลนักศึกษา
                                       children: filteredStudents.asMap().entries.map((
                                         entry,
                                       ) {
-                                        int idx = entry.key;
-                                        var student = entry.value;
+                                        int idx = entry.key; 
+                                        // ดัชนีนักศึกษา
+                                        var student = entry.value; 
+                                        // ข้อมูลนักศึกษา
                                         final bool isLast =
-                                            idx == filteredStudents.length - 1;
+                                            idx == filteredStudents.length - 1; 
+                                        // ตรวจสอบ row สุดท้าย
 
                                         final Color rowColor = idx % 2 == 0
                                             ? const Color(0x336D6D6D)
-                                            : const Color(0x6E3F8FAF);
+                                            : const Color(0x6E3F8FAF); 
+                                        // สลับสี background table
 
                                         return Container(
                                           decoration: BoxDecoration(
@@ -317,7 +361,8 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                                                 flex: 3,
                                                 child: Center(
                                                   child: Text(
-                                                    "${student['name']} ${student['lastname']}",
+                                                    "${student['name']} ${student['lastname']}", 
+                                                    // แสดงชื่อ-นามสกุล
                                                     style: const TextStyle(
                                                       color: Colors.black,
                                                     ),
@@ -333,7 +378,8 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                                                 flex: 1,
                                                 child: Center(
                                                   child: Text(
-                                                    "${student['absent'] ?? 0}",
+                                                    "${student['absent'] ?? 0}", 
+                                                    // แสดงจำนวนขาด
                                                     style: const TextStyle(
                                                       color: Color(0xFFFF0000),
                                                     ),
@@ -349,7 +395,8 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                                                 flex: 1,
                                                 child: Center(
                                                   child: Text(
-                                                    "${student['late'] ?? 0}",
+                                                    "${student['late'] ?? 0}", 
+                                                    // แสดงจำนวนสาย
                                                     style: const TextStyle(
                                                       color: Color(0xFFF18D00),
                                                     ),
@@ -365,7 +412,8 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                                                 flex: 1,
                                                 child: Center(
                                                   child: Text(
-                                                    "${student['leave_count'] ?? 0}",
+                                                    "${student['leave_count'] ?? 0}", 
+                                                    // แสดงจำนวนลา
                                                     style: TextStyle(
                                                       color: Color.fromARGB(
                                                         255,
@@ -391,30 +439,36 @@ class _ReportBecarefulPageState extends State<ReportBecarefulPage> {
                       Center(
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
+                            backgroundColor: primaryColor, 
+                            // ใช้สีปุ่มหลัก
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                           ),
                           onPressed: () async {
+                            // กดดาวน์โหลด PDF
                             try {
-                              final token = await ApiService.getToken();
+                              final token = await ApiService.getToken(); 
+                              // ดึง token
                               final url =
-                                  'http://52.63.155.211/classrooms/${widget.classroomId}/student-atrisk-pdf/$token';
+                                  'http://52.63.155.211/classrooms/${widget.classroomId}/student-atrisk-pdf/$token'; 
+                              // URL สำหรับดาวน์โหลด PDF
                               await downloadAndOpenPDF(
                                 url,
                                 fileName:
-                                    'ReportBecareful_${widget.classroomId}.pdf',
+                                    'ReportBecareful_${widget.classroomId}.pdf', 
+                                // ตั้งชื่อไฟล์
                               );
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+                                SnackBar(content: Text('เกิดข้อผิดพลาด: $e')), 
+                                // แสดง error ถ้าดาวน์โหลดล้มเหลว
                               );
                             }
                           },
                           icon: const Icon(
-                            Icons.picture_as_pdf,
-                            color: Color.fromARGB(255, 0, 0, 0),
+                            Icons.picture_as_pdf, 
+                            color: Color.fromARGB(255, 0, 0, 0), 
                           ),
                           label: const Text(
                             'ดาวน์โหลดเอกสาร (pdf.)',
