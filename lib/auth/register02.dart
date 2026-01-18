@@ -22,7 +22,7 @@ class Register02 extends StatefulWidget {
 class _Register02State extends State<Register02> {
 
   // baseUrl อ่านจาก .env ถ้าไม่มีใช้ default เป็น "http://52.63.155.211/api"
-  static final String baseUrl = dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
+  static final String baseUrl = dotenv.env['API_URL'] ?? "http://15.135.78.110/api";
   // ประกาศตัวแปรคงที่สำหรับเก็บ URL หลักของ API เพื่อให้ง่ายต่อการเรียกใช้
 
   // ตัวแปรเก็บค่าที่ผู้ใช้เลือกจาก DropdownButtonFormField
@@ -94,7 +94,7 @@ class _Register02State extends State<Register02> {
       _isLoading = true;  // เริ่ม loading: กำหนดสถานะการโหลดเป็นจริง เพื่อแสดง Progress Indicator
       _errorMessage = null; // ลบ error เก่า: เคลียร์ข้อความ error ก่อนเริ่มทำงาน
     });
-
+    print('registerUser');
     // ตรวจสอบว่าผู้ใช้เลือกครบทุก dropdown
     if (_selectedFacultyId == null ||
         _selectedDepartmentId == null ||
@@ -105,7 +105,7 @@ class _Register02State extends State<Register02> {
       });
       return; // ออกจากฟังก์ชัน
     }
-
+    print('registerUser2');
     // ดึงข้อมูล arguments จากหน้า Register01 (ข้อมูลส่วนตัว: ชื่อ, อีเมล, รหัสผ่าน ฯลฯ)
     final Map<String, dynamic> args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
@@ -113,7 +113,16 @@ class _Register02State extends State<Register02> {
 
     // URL API สำหรับลงทะเบียน
     final String apiUrl = '$baseUrl/register'; // สร้าง URL เต็ม
-
+    print('registerUser3: $apiUrl');
+    print('registerUser3: ${args['name']}');
+    print('registerUser3: ${args['lastname']}');
+    print('registerUser3: ${args['email']}');
+    print('registerUser3: ${args['phone']}');
+    print('registerUser3: ${args['password']}');
+    print('registerUser3: ${args['password_confirmation']}');
+    print('registerUser3: ${_selectedFacultyId}');
+    print('registerUser3: ${_selectedDepartmentId}');
+    print('registerUser3: ${_selectedRoleId}');
     try {
       // ส่ง POST request ไปยัง API
       final response = await http.post(
@@ -133,7 +142,7 @@ class _Register02State extends State<Register02> {
           'role_id': _selectedRoleId,
         }),
       );
-
+      print('registerUser4: ${response.statusCode}');
       // ถ้าสำเร็จ (HTTP Status Code 200 หรือ 201)
       if (response.statusCode == 200 || response.statusCode == 201) {
         showDialog( // แสดง Dialog แจ้งผู้ใช้ว่าลงทะเบียนสำเร็จ
@@ -167,7 +176,7 @@ class _Register02State extends State<Register02> {
             message += '${value[0]}\n'; // รวม error ของทุก field มาแสดงผล
           });
         }
-
+        print('registerUser5: $message');
         setState(() {
           _errorMessage = message; // แสดง error บน UI
         });

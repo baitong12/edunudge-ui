@@ -22,7 +22,7 @@
         <!-- Google Maps/Places (ถ้าใช้ Map/Geocoding) -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDqsAi8eVba8JV_VJekrt4BozrkMGWfjDk" />
+            android:value="AIzaSyCc_jmE5x1e07nc3UqzHDsDAOD-_9meBX8" />
 
         <!-- ช่องแจ้งเตือนดีฟอลต์ (ต้องสร้าง channel ตรงชื่อเดียวกันในโค้ดด้วย) -->
         <meta-data

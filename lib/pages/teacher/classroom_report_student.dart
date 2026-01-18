@@ -3,6 +3,7 @@ import 'package:edunudge/services/api_service.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class StudentReportPage extends StatefulWidget {
   final int classroomId;
@@ -480,8 +481,10 @@ class _StudentReportPageState extends State<StudentReportPage> {
                       onPressed: () async {
                         try {
                           final token = await ApiService.getToken();
+                          final apiUrl = dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
+                          final baseUrl = apiUrl.replaceAll('/api', '');
                           final url =
-                              'http://52.63.155.211/classrooms/${widget.classroomId}/attendance-pdf/$token';
+                              '$baseUrl/classrooms/${widget.classroomId}/attendance-pdf/$token';
                           // URL สำหรับดาวน์โหลด PDF
 
                           await downloadAndOpenPDF(

@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import './shared/constants.dart';
 
 
@@ -23,7 +24,8 @@ void lastLocationWorkmanagerDispatcher() {
         final token = prefs.getString(kAuthToken);
 
         if (lat != null && lng != null) {
-          const url = "http://52.63.155.211/api/student/location";
+          final apiUrl = dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
+          final url = "$apiUrl/student/location";
           final headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -113,7 +115,8 @@ class LocationNotificationService with WidgetsBindingObserver {
     }
 
     try {
-      const url = "http://52.63.155.211/api/student/location";
+      final apiUrl = dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
+      final url = "$apiUrl/student/location";
       final res = await http.post(
         Uri.parse(url),
         headers: {

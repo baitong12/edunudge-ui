@@ -2,6 +2,7 @@
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
         <!-- เปลี่ยนเป็นโดเมนหรือ IP ของ API ที่ใช้งาน -->
-        <domain includeSubdomains="true">52.63.155.211</domain>
+        <!-- ใช้ 52.63.155.211 เป็น default แต่ควรตั้งค่า API_URL ใน .env -->
+        <domain includeSubdomains="true">3.106.127.188</domain>
     </domain-config>
 </network-security-config>

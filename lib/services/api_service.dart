@@ -317,7 +317,7 @@ class ApiService {
     if (device_token != null) {
       final response = await http.post(
         Uri.parse(
-          "http://52.63.155.211/api/save-device-token",
+          "$baseUrl/save-device-token",
         ), 
         headers: {
           "Content-Type": "application/json",

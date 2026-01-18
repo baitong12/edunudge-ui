@@ -3,6 +3,7 @@ import 'package:edunudge/services/api_service.dart'; // นำเข้า ApiSe
 import 'package:dio/dio.dart'; // นำเข้า Dio สำหรับการจัดการ HTTP requests (โดยเฉพาะการดาวน์โหลดไฟล์)
 import 'package:path_provider/path_provider.dart'; // นำเข้า path_provider สำหรับจัดการพาธของระบบไฟล์
 import 'package:open_file/open_file.dart'; // นำเข้า open_file สำหรับเปิดไฟล์ที่ดาวน์โหลดมา
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // นำเข้า dotenv เพื่ออ่านค่า environment variables
 
 class Attendance extends StatefulWidget { // ประกาศคลาส Attendance ซึ่งเป็น StatefulWidget
   const Attendance({super.key}); // คอนสตรักเตอร์ของ Attendance พร้อม key
@@ -419,8 +420,10 @@ class _AttendanceState extends State<Attendance> { // ประกาศคล�
                 onPressed: () async { // สิ่งที่เกิดขึ้นเมื่อกดปุ่ม
                   try {
                     final token = await ApiService.getToken(); // ดึง Token สำหรับใช้ใน URL
+                    final apiUrl = dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
+                    final baseUrl = apiUrl.replaceAll('/api', '');
                     final url = // สร้าง URL สำหรับดาวน์โหลด PDF โดยใช้ Token
-                        'http://52.63.155.211/student/home-attendance-pdf/$token';
+                        '$baseUrl/student/home-attendance-pdf/$token';
 
                     await downloadAndOpenPDF( // เรียกฟังก์ชันดาวน์โหลดและเปิด PDF
                       url,

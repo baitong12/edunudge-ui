@@ -16,6 +16,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 // นำเข้าไลบรารี open_file เพื่อใช้เปิดไฟล์ที่ดาวน์โหลดมา (เช่น PDF)
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+// นำเข้าไลบรารี dotenv เพื่ออ่านค่า environment variables
+
 class ReportBsummarizePage extends StatefulWidget {
   // คลาส ReportBsummarizePage เป็น Stateful Widget เนื่องจากมีการเปลี่ยนแปลงสถานะข้อมูล (เช่น ข้อมูลที่โหลดมา)
   final int
@@ -735,8 +738,10 @@ class _ReportBsummarizePageState extends State<ReportBsummarizePage>
                             try {
                               final token = await ApiService.getToken();
                               // ดึง Token สำหรับใช้ในการเข้าถึง
+                              final apiUrl = dotenv.env['API_URL'] ?? "http://52.63.155.211/api";
+                              final baseUrl = apiUrl.replaceAll('/api', '');
                               final url =
-                                  'http://52.63.155.211/classrooms/${widget.classroomId}/weekly-pdf/$token';
+                                  '$baseUrl/classrooms/${widget.classroomId}/weekly-pdf/$token';
                               // สร้าง URL สำหรับดาวน์โหลด PDF (ใช้ classroomId และ token)
                               await downloadAndOpenPDF(
                                 url,

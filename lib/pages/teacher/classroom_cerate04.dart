@@ -201,6 +201,14 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
 
   Future<void> submitClassroom() async {
     if (!_validateLocation()) {
+      print('validateLocation: false');
+      print('selectedLocation: $selectedLocation');
+      print('lat: ${selectedLocation!.latitude}');
+      print('lng: ${selectedLocation!.longitude}');
+      print('lat >= -90: ${selectedLocation!.latitude >= -90}');
+      print('lng >= -180: ${selectedLocation!.longitude >= -180}');
+      print('lat == 0.0 && lng == 0.0: ${selectedLocation!.latitude == 0.0 && selectedLocation!.longitude == 0.0}');
+      print('lat == 13.736717 && lng == 100.523186: ${selectedLocation!.latitude == 13.736717 && selectedLocation!.longitude == 100.523186}');
       _showSnackBar('กรุณาเลือกตำแหน่งห้องเรียน', Colors.red);
       return;
     }
@@ -225,17 +233,33 @@ class _CreateClassroom04State extends State<CreateClassroom04> {
   }
 
   bool _validateLocation() {
+    print('selectedLocation: $selectedLocation');
+    print('selectedLocation: ${selectedLocation!.latitude}');
+    print('selectedLocation: ${selectedLocation!.longitude}');
+
     if (selectedLocation == null) return false;
 
-    final lat = selectedLocation!.latitude;
-    final lng = selectedLocation!.longitude;
-
-    return lat >= -90 &&
+    final location = selectedLocation!;
+    final lat = location.latitude;
+    final lng = location.longitude;
+    print('lat: $lat');
+    print('lng: $lng');
+    // ตรวจสอบว่าเป็นพิกัดที่ถูกต้อง
+    final isValidCoordinate = lat >= -90 &&
         lat <= 90 &&
         lng >= -180 &&
-        lng <= 180 &&
-        !(lat == 0.0 && lng == 0.0) &&
-        !(lat == 13.736717 && lng == 100.523186);
+        lng <= 180;
+    print('isValidCoordinate: $isValidCoordinate');
+    // ตรวจสอบว่าไม่ใช่พิกัด (0, 0) - มักเป็นค่า default ที่ไม่ถูกต้อง
+    final isNotZero = !(lat == 0.0 && lng == 0.0);
+    print('isNotZero: $isNotZero');
+    // ตรวจสอบว่าไม่ใช่ default location (ตำแหน่งเริ่มต้น)
+    final isNotDefault = lat != _defaultLocation.latitude ||
+        lng != _defaultLocation.longitude;
+    print('defaultLocation: ${_defaultLocation.latitude}');
+    print('defaultLocation: ${_defaultLocation.longitude}');
+    print('isNotDefault: $isNotDefault');
+    return isValidCoordinate && isNotZero && isNotDefault;
   }
 
   bool _validateClassroomData() {
