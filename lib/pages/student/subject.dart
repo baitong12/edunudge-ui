@@ -148,7 +148,7 @@ class _SubjectPageState extends State<Subject> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF00B894).withOpacity(0.2), // สีพื้นอ่อน
+            color: const Color(0xFF91C8E4).withOpacity(0.2), // สีพื้นอ่อน
             borderRadius: BorderRadius.circular(12), // มุมโค้ง
           ),
           child: Text(
@@ -166,7 +166,7 @@ class _SubjectPageState extends State<Subject> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF00B894),
+            color: const Color(0xFF91C8E4),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -219,7 +219,7 @@ class _SubjectPageState extends State<Subject> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF00B894),
+            color: const Color(0xFF91C8E4),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -268,7 +268,7 @@ class _SubjectPageState extends State<Subject> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF00B894),
+            color: const Color(0xFF91C8E4),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -351,7 +351,7 @@ class _SubjectPageState extends State<Subject> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFF00B894),
+            color: const Color(0xFFFFFFFF),
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
               BoxShadow(

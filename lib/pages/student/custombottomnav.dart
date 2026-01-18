@@ -25,7 +25,7 @@ class CustomBottomNav extends StatelessWidget { // กำหนดคลาส C
     return Container( // คืนค่า Container หลักสำหรับแถบนำทางด้านล่าง
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding), // กำหนด padding ให้กับ Container หลัก
       decoration: BoxDecoration( // กำหนดการตกแต่งให้กับ Container
-        color: const Color(0xFF91C8E4), // กำหนดสีพื้นหลัง (สีเขียวเทอร์ควอยซ์)
+        color: const Color(0xFF91C8E4), // กำหนดสีพื้นหลัง (สีฟ้า)
         borderRadius: BorderRadius.circular(30), // กำหนดรัศมีขอบโค้ง
         boxShadow: [ // กำหนดเงาให้กับ Container
           BoxShadow( // เงาอันแรก

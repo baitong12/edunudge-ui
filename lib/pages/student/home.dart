@@ -64,10 +64,10 @@ class Home extends StatelessWidget { // สร้าง class Home ซึ่ง�
                     child: Container( // กล่องสำหรับกราฟ
                       padding: const EdgeInsets.all(16.0), // กำหนด padding รอบกล่อง
                       decoration: BoxDecoration( // ตกแต่งกล่อง
-                        color: const Color(0xFF00B894).withOpacity(0.1), // พื้นหลังสีเขียวอ่อนใส
+                        color: const Color(0xFF91C8E4).withOpacity(0.1), // พื้นหลังสีฟ้าอ
                         borderRadius: BorderRadius.circular(20), // มุมกล่องโค้ง 20
                         border: Border.all( // เส้นขอบกล่อง
-                          color: const Color(0xFF00B894), // สีเส้นขอบ
+                          color: const Color(0xFF91C8E4), // สีพื้นหลังของ AppBar
                           width: 2, // ความหนาเส้นขอบ 2
                         ),
                         boxShadow: [ // เงากล่อง
@@ -98,10 +98,10 @@ class Home extends StatelessWidget { // สร้าง class Home ซึ่ง�
                   const SizedBox(height: 20), // เว้นระยะห่างแนวตั้ง 20
                   Container( // กล่องแสดง progress bar
                     decoration: BoxDecoration( // ตกแต่งกล่อง
-                      color: const Color(0xFF00B894).withOpacity(0.1), // พื้นหลังสีเขียวอ่อนใส
+                      color: const Color(0xFF91C8E4).withOpacity(0.1), // พื้นหลังสีฟ้าอ่อนใส
                       borderRadius: BorderRadius.circular(20), // มุมกล่องโค้ง
                       border: Border.all( // เส้นขอบกล่อง
-                        color: const Color(0xFF00B894),
+                        color: const Color(0xFF91C8E4),
                         width: 2,
                       ),
                       boxShadow: [ // เงากล่อง

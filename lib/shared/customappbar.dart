@@ -132,7 +132,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             // เว้นระยะภายใน container ซ้าย-ขวา 20, บน-ล่าง 12
             decoration: BoxDecoration(
-              color: const Color(0xFFFFEAA7), // สีพื้นหลังของ AppBar
+              color: const Color(0xFF91C8E4), // สีพื้นหลังของ AppBar
               borderRadius: BorderRadius.circular(40), // มุมโค้ง container
             ),
             child: Row(

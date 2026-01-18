@@ -117,7 +117,7 @@ class _AttendanceState extends State<Attendance> { // ประกาศคล�
       extendBody: true, // อนุญาตให้ body ขยายไปด้านล่าง bottom navigation bar (ถ้ามี)
       backgroundColor: Colors.white, // ตั้งค่าสีพื้นหลังเป็นสีขาว
       appBar: AppBar( // AppBar ส่วนหัวของหน้า
-        backgroundColor: const Color(0xFF00B894), // ตั้งค่าสีพื้นหลังของ AppBar เป็นสีเขียวมิ้นท์
+        backgroundColor: const Color(0xFF91C8E4), // ตั้งค่าสีพื้นหลังของ AppBar เป็นสีฟ้า
         elevation: 0, // ยกเลิกเงาใต้ AppBar
         leading: IconButton( // ปุ่มนำทางด้านซ้าย (ย้อนกลับ)
           icon: const Icon(Icons.arrow_back, color: Colors.white), // ไอคอนลูกศรย้อนกลับสีขาว
@@ -142,10 +142,10 @@ class _AttendanceState extends State<Attendance> { // ประกาศคล�
                 : Container( // Container สำหรับตารางสรุป
                     width: double.infinity, // ความกว้างเต็มที่
                     decoration: BoxDecoration( // ตกแต่งกล่องตาราง
-                      color: const Color(0xFF00B894).withOpacity(0.08), // สีพื้นหลังจางๆ
+                      color: const Color(0xFF91C8E4).withOpacity(0.08), // สีพื้นหลังจางๆ
                       borderRadius: BorderRadius.circular(20), // มุมโค้งมน
                       border: Border.all( // ขอบตาราง
-                          color: const Color(0xFF00B894), width: 1.5),
+                          color: const Color(0xFF91C8E4), width: 1.5),
                       boxShadow: [ // เงาตาราง
                         BoxShadow(
                           color: Colors.black.withOpacity(0.08),
@@ -158,7 +158,7 @@ class _AttendanceState extends State<Attendance> { // ประกาศคล�
                       children: [
                         Container( // Container สำหรับส่วนหัวตาราง
                           decoration: const BoxDecoration(
-                            color: Color(0xFF00B894), // สีพื้นหลังส่วนหัว
+                            color: Color(0xFF91C8E4), // สีพื้นหลังส่วนหัว
                             borderRadius: BorderRadius.only( // มุมโค้งมนเฉพาะด้านบน
                               topLeft: Radius.circular(20),
                               topRight: Radius.circular(20),
@@ -343,9 +343,9 @@ class _AttendanceState extends State<Attendance> { // ประกาศคล�
                 padding: // Padding ภายใน Dropdown
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration( // ตกแต่งกล่อง Dropdown
-                  color: const Color(0xFF00B894).withOpacity(0.08), // สีพื้นหลังจางๆ
+                  color: const Color(0xF91C8E4).withOpacity(0.08), // สีพื้นหลังจางๆ
                   borderRadius: BorderRadius.circular(24), // มุมโค้งมน
-                  border: Border.all(color: const Color(0xFF00B894), width: 1.5), // ขอบสีเขียว
+                  border: Border.all(color: const Color(0xF91C8E4), width: 1.5), // ขอบสีเขียว
                 ),
                 child: DropdownButtonHideUnderline( // ซ่อนเส้นใต้ Dropdown
                   child: DropdownButton<String>( // Dropdown สำหรับเลือกวิชา
@@ -377,9 +377,9 @@ class _AttendanceState extends State<Attendance> { // ประกาศคล�
               margin: const EdgeInsets.only(top: 8), // Margin ด้านบน
               padding: const EdgeInsets.all(16), // Padding ภายใน
               decoration: BoxDecoration( // ตกแต่งกล่องรายละเอียด
-                color: const Color(0xFF00B894).withOpacity(0.08),
+                color: const Color(0xFF91C8E4).withOpacity(0.08),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF00B894), width: 1.5),
+                border: Border.all(color: const Color(0xFF91C8E4), width: 1.5),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),

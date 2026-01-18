@@ -151,7 +151,7 @@ class _ClassroomJoinState extends State<ClassroomJoin> {
                 color: Colors.white, // พื้นหลังสีขาว
                 borderRadius: BorderRadius.circular(20), // มุมโค้ง 20
                 border: Border.all(
-                  color: const Color(0xFF00B894), // ขอบสีเขียว
+                  color: const Color(0xFF91C8E4), // ขอบสีฟ้า
                   width: 2,
                 ),
                 boxShadow: [
@@ -196,7 +196,7 @@ class _ClassroomJoinState extends State<ClassroomJoin> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: const BorderSide(
-                            color: Color(0xFF00B894), width: 2), // ขอบเมื่อโฟกัส
+                            color: Color(0xFF91C8E4), width: 2), // ขอบเมื่อโฟกัส
                       ),
                       contentPadding: EdgeInsets.symmetric(
                           horizontal: screenWidth * 0.04,
